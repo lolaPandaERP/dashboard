@@ -1,0 +1,53 @@
+# Copyright (C) 2022 SuperAdmin
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+
+# Module label 'ModuleTabName'
+ModuleTabName = Tab
+# Module description 'ModuleTabDesc'
+ModuleTabDesc = Tableau de bord interne pour visualiser rapidement ses chiffres clés en une unique interface. Il fournit des tableaux de bord opérationnels et stratégiques (tatistiques) précises sur votre activité. 
+
+#
+# Admin page
+#
+TabSetup = Tab setup
+Settings = Settings
+TabSetupPage = Tab setup page
+TAB_MYPARAM1 = My param 1
+TAB_MYPARAM1Tooltip = My param 1 tooltip
+TAB_MYPARAM2=My param 2
+TAB_MYPARAM2Tooltip=My param 2 tooltip
+
+
+#
+# About page
+#
+About = About
+TabAbout = About Tab
+TabAboutPage = Tab about page
+
+#
+# Sample page
+#
+MyPageName = My page name
+
+#
+# Sample widget
+#
+MyWidget = My widget
+MyWidgetDescription = My widget description
