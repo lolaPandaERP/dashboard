@@ -18,57 +18,29 @@
 			<div class="grid-container-2">
 
 			<!-- bloc 1 -->
-				<div class="grid-1">
+			<div class="grid-1">
 					<div class="card bg-c-blue order-card">
 						<!-- Corps de la carte -->
 						<div class="card-body">
 							<div class="card-block">
-								<h4 class="text-left">
-									<?php print $titleItem1 ?> <!-- Titre de la boxe -->
+								<h4 class="text-center">
+									<?php print $titleItem1 ?>
 								</h4>
-								<h1 class="text-left"><span id="info">
-								<i class="bi bi-graph-up"></i>
+								<h1 class="text-center"><span class="success">
 									<?php
 										print $dataItem1;  // Donnée chiffré à afficher
 									?>
 									</span></h1>
-									<p class="text-left">Total  : <span class="f-center"><?php print $currentData1 ?></span></p> <!-- Total de la donnée courante -->
-									<p class="text-left"><?php print $info1 ?> : <?php print $dataInfo1?></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
-									<p class="text-left"><?php print $info2 ?><?php print $dataInfo2?></p>
-									<div class="element-flexible">
-										<canvas id="myChart" width="50" height="20"></canvas>
-										<script>
-											var ctx = document.getElementById("myChart").getContext("2d");
-											var myChart = new Chart(ctx, {
-											type: "line",
-											data: {
-												labels: [
-												"Monday",
-												"Tuesday",
-												"Wednesday",
-												"Thursday",
-												"Friday",
-												"Saturday",
-												"Sunday",
-												],
-												datasets: [
-												{
-													label: "work load",
-													data: [2, 9, 3, 17, 6, 3, 7],
-													backgroundColor: "rgba(153,205,1,0.6)",
-												},
-												{
-													label: "free hours",
-													data: [2, 2, 5, 5, 2, 1, 10],
-													backgroundColor: "rgba(155,153,10,0.6)",
-												},
-												],
-											},
-											});
-										</script>
+									<p class="text-center" id="total">Total  : <span class="f-center"><?php print $currentData1 ?> € </span></p> <!-- Total de la donnée courante -->
+									<hr>
+									<div class="element">
+										<p class="text-right"><?php print $info1 ?> : <?php print $dataInfo1?> € </p> <!-- Donnée par rapport à l'année ou au mois dernier -->
+										<hr class="vertical">
+										<p class="text-left"><?php print $info2 ?> : <?php print $dataInfo2?> % </p> <!-- Progression -->
 									</div>
-								 </div>
+								</div>
 							</div>
+							<a href="#" class="btn btn-primary">GRAPHIQUE</a>
 						</div>
 					</div>
 					<!-- end bloc 1 -->

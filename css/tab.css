@@ -4,6 +4,19 @@
 	border-radius: 5px;
 }
 
+.element {
+	display: flex;
+	height: 25px;
+	border-right: grey;
+}
+
+hr.vertical {
+	width : 0.5px;
+	height : 25px;
+	white-space: U+000A;
+}
+
+
 /* Tabs */
 a.nav-link{
 	color : #fff;
@@ -13,6 +26,17 @@ a.nav-link{
 h5 {
 	color: #fff;
 	justify-content: left;
+}
+
+/* Color for informations */
+.success {
+	color:#90C274;
+	font-weight: bold;
+}
+
+.warning {
+	color:#E55934;
+	font-weight: bold;
 }
 
 .card {
