@@ -224,60 +224,6 @@ class General extends CommonObject
 	}
 
 
-	/**
-	 * Loading NavBar Template :
-	 * /TODO/ : on peux passer en parametre l'onglet actif
-	 */
-	public function load_navbar()
-	{
-			$html = '';
-			$tab1 = DOL_URL_ROOT.'/custom/tab/global/overview.php';
-			$tab2 = DOL_URL_ROOT.'/custom/tab/global/encoursCF.php';
-			$tab3 = DOL_URL_ROOT.'/custom/tab/global/treso_previ.php';
-			$tab4 = DOL_URL_ROOT.'/custom/tab/global/netProduce.php';
-
-			$html .= "\n";
-			/**
-			 * Dashboard header for Global activity
-			 */
-			$html .= '<div class="container-fluid">';
-			$html .= '<nav class="navbar-brand">';
-			$html .= '<ul class="nav justify-content-end">';
-			$html .=' <img src="../img/icon/global.png" alt="" class="d-inline-block align-text-top" width=50px>';
-			$html .= '<li class="nav"><a class="nav-link" href="'.$tab1.'" >Général</a></li>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab2.'">Encours C/F</a></li>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab3.'">Trésorerie et prévisionnel</a></li>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab4.'">Net à produire</a></li>';
-			$html .= '</ul>	</nav> </div>';
-			return $html;
-	}
-
-	// Fetch list of thridparty for each validated orders
-	public function fetchOrdersValidated() {
-			global $db;
-
-			$sql = 'SELECT * FROM '.MAIN_DB_PREFIX.'commande c';
-			$sql .= ' INNER JOIN '.MAIN_DB_PREFIX.'societe s';
-			$sql .= ' ON s.rowid = c.fk_soc';
-			$sql .= 'WHERE c.fk_statut = 1';
-			$resql = $db->query($sql);
-			$result = $db->fetch_object($resql);
-
-			return $result;
-	}
-
-	public function fetchAmountOrdersValidated(){
-		global $db;
-
-			$sql = 'SELECT c.fk_soc, c.date_livraison, total_ttc FROM '.MAIN_DB_PREFIX.'commande c';
-			$sql .= ' INNER JOIN '.MAIN_DB_PREFIX.'societe s';
-			$sql .= ' ON s.rowid = c.fk_soc';
-			$sql .= ' WHERE c.fk_statut = 1';
-			$resql = $db->query($sql);
-			$result = $db->fetch_object($resql);
-			return $result;
-	}
-
 
 
 
@@ -1094,18 +1040,72 @@ class General extends CommonObject
 	 * Functions for dashboard
 	*/
 
-	public function solde($option = 0)
-	{
-		$solde = 0;
-
-		$sql = "SELECT SUM(amount) as amount"; // on fait la somme des montants
-		$sql .= " FROM ".MAIN_DB_PREFIX."bank"; // depuis la table des comptes
-		$sql .= " WHERE fk_account = ".$this->id; // quand l'id est le compte courant
-
+	public function getIdBankAccount(){
+		$sql = "SELECT rowid";
+		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
 		$resql = $this->db->query($sql);
-
-		return price2num($solde, 'MU');
+		$result = $this->db->fetch_object($resql);
+		return $result;
 	}
+
+
+	/**
+	 * Loading NavBar Template :
+	 * /TODO/ : on peux passer en parametre l'onglet actif
+	 */
+	public function load_navbar()
+	{
+			$html = '';
+			$tab1 = DOL_URL_ROOT.'/custom/tab/global/overview.php';
+			$tab2 = DOL_URL_ROOT.'/custom/tab/global/encoursCF.php';
+			$tab3 = DOL_URL_ROOT.'/custom/tab/global/treso_previ.php';
+			$tab4 = DOL_URL_ROOT.'/custom/tab/global/netProduce.php';
+
+			$html .= "\n";
+			/**
+			 * Dashboard header for Global activity
+			 */
+			$html .= '<div class="container-fluid">';
+			$html .= '<nav class="navbar-brand">';
+			$html .= '<ul class="nav justify-content-end">';
+			$html .=' <img src="../img/icon/global.png" alt="" class="d-inline-block align-text-top" width=50px>';
+			$html .= '<li class="nav"><a class="nav-link" href="'.$tab1.'" >Général</a></li>';
+			$html .= '<li class="nav"><a class="nav-link " href="'.$tab2.'">Encours C/F</a></li>';
+			$html .= '<li class="nav"><a class="nav-link " href="'.$tab3.'">Trésorerie et prévisionnel</a></li>';
+			$html .= '<li class="nav"><a class="nav-link " href="'.$tab4.'">Net à produire</a></li>';
+			$html .= '</ul>	</nav> </div>';
+			return $html;
+	}
+
+	// Fetch list of thridparty for each validated orders
+	public function fetchOrdersValidated() {
+			global $db;
+
+			$sql = 'SELECT * FROM '.MAIN_DB_PREFIX.'commande c';
+			$sql .= ' INNER JOIN '.MAIN_DB_PREFIX.'societe s';
+			$sql .= ' ON s.rowid = c.fk_soc';
+			$sql .= 'WHERE c.fk_statut = 1';
+			$resql = $db->query($sql);
+			$result = $db->fetch_object($resql);
+
+			return $result;
+	}
+
+	public function fetchAmountOrdersValidated(){
+		global $db;
+
+			$sql = 'SELECT c.fk_soc, c.date_livraison, total_ttc FROM '.MAIN_DB_PREFIX.'commande c';
+			$sql .= ' INNER JOIN '.MAIN_DB_PREFIX.'societe s';
+			$sql .= ' ON s.rowid = c.fk_soc';
+			$sql .= ' WHERE c.fk_statut = 1';
+			$resql = $db->query($sql);
+			$result = $db->fetch_object($resql);
+			return $result;
+	}
+
+
+
+
 }
 
 
