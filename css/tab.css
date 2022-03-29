@@ -10,11 +10,6 @@
 	border-right: grey;
 }
 
-hr.vertical {
-	width : 0.5px;
-	height : 25px;
-	white-space: U+000A;
-}
 
 
 /* Tabs */
@@ -26,6 +21,10 @@ a.nav-link{
 h5 {
 	color: #fff;
 	justify-content: left;
+}
+
+hr.vertical{
+	white-space: 10px;
 }
 
 /* Color for informations */
