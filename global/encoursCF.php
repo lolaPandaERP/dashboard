@@ -54,10 +54,195 @@ require_once DOL_DOCUMENT_ROOT . '/custom/tab/class/general.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/dolgraph.class.php';
 require_once DOL_DOCUMENT_ROOT . '/compta/bank/class/account.class.php';
 
+global $db, $conf, $user;
+
+
+
 // Load translation files required by the page
 $langs->loadLangs(array("tab@tab"));
-
 $action = GETPOST('action', 'aZ09');
+
+$month = date('m');
+$year = date('Y');
+$day = date('Y-m-d');
+
+// First day and last day of month on n years
+$firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
+$lastDayCurrentMonth = date('Y-m-t', mktime(0, 0, 0, $month, 1, $year));
+
+// First day and last day of current years
+$firstDayYear = date('Y-m-d', mktime(0, 0, 0, 1, 1, $year));
+$lastDayYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year));
+
+// N - 1
+$firstDayLastYear = date('Y-m-d', mktime(0, 0, 1, 1, 1, $year - 1));
+$lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
+
+// M - 1
+$firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
+$lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
+
+
+/* BEGIN CUSTOMER */
+
+$titleItem1 = "Encours clients";
+
+//  Unpaid customer invoices on current year
+$sql = "SELECT SUM(total) as total";
+$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' AND paye=0 AND fk_statut != 0 ";
+$resql = $db->query($sql);
+
+$resql = $db->query($sql);
+if ($resql) {
+	if ($db->num_rows($resql)) {
+		$obj = $db->fetch_object($resql);
+		$totalCustomer = $obj->total;
+	}
+	$db->free($resql);
+}
+
+$dataItem1 = price($totalCustomer);
+
+$info1 = "Encours M-1";
+
+// Encours M : for calculate progress between M and M-1
+$sql = "SELECT SUM(total) as total";
+$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' AND paye=0 AND fk_statut !=0 ";
+$resql = $db->query($sql);
+
+if ($resql) {
+	if ($db->num_rows($resql)) {
+		$obj = $db->fetch_object($resql);
+		$outstandingCurrentMonth = $obj->total;
+	}
+	$db->free($resql);
+}
+
+$outstandingCurrentMonth = price($outstandingCurrentMonth);
+
+// Encours M - 1
+$sql = "SELECT SUM(total) as total";
+$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+$sql .= " WHERE datef BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "' AND paye=0 AND fk_statut !=0 ";
+$resql = $db->query($sql);
+
+if ($resql) {
+	if ($db->num_rows($resql)) {
+		$obj = $db->fetch_object($resql);
+		$outstandingLastMonth = $obj->total;
+	}
+	$db->free($resql);
+}
+
+$dataInfo1 = price2num($outstandingLastMonth, 'MU');
+$outstandingCurrentMonth = price2num($outstandingCurrentMonth, 'MU');
+
+$info2 = "Progression ";
+$dataInfo2 = intval((($outstandingCurrentMonth - $outstandingLastMonth) / $outstandingLastMonth) * 100);
+
+
+// Customer outstandings exceeded
+$sql = "SELECT SUM(total_ttc) as total_ttc";
+$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+$sql .= "AND date_lim_reglement <= '" . $db->idate(dol_now()) . "'";
+$sql .= "AND paye = 0";
+
+$resql = $db->query($sql);
+
+if ($resql) {
+	if ($db->num_rows($resql)) {
+		$obj = $db->fetch_object($resql);
+		$outExceed = $obj->total_ttc;
+	}
+	$db->free($resql);
+}
+
+$dataItem2 = price($outExceed);
+
+// Customer outstandings exceeded
+$sql = "SELECT SUM(total_ttc) as total_ttc";
+$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+$sql .= "AND date_lim_reglement <= '" . $db->idate(dol_now()) . "'";
+$sql .= "AND paye = 0";
+
+$resql = $db->query($sql);
+
+if ($resql) {
+	if ($db->num_rows($resql)) {
+		$obj = $db->fetch_object($resql);
+		$outSupplierExceed = $obj->total_ttc;
+	}
+	$db->free($resql);
+}
+
+
+price($outSupplierExceed);
+/* END CUSTOMER */
+
+
+// TODO : encours clients et fournisseurs depasses (petites boxes)
+$titleItem2 = "Encours fournisseurs";
+$info3 = "Encours M-1";
+
+$info4 = "Progression ";
+$dataInfo4;
+
+/* SUPPLIERS */
+
+// Unpaid supplier invoices on current year
+$sql = "SELECT SUM(total_ht) as total_ht";
+$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' AND paye=0 AND fk_statut != 0 ";
+$resql = $db->query($sql);
+
+$resql = $db->query($sql);
+if ($resql) {
+	if ($db->num_rows($resql)) {
+		$obj = $db->fetch_object($resql);
+		$totalSupplier = $obj->total_ht;
+	}
+	$db->free($resql);
+}
+
+$dataItem2 = price($totalSupplier);
+
+// Encours M supplier : for calculate progress between M and M-1
+$sql = "SELECT SUM(total_ht) as total_ht";
+$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' AND paye=0 AND fk_statut !=0 ";
+$resql = $db->query($sql);
+
+if ($resql) {
+	if ($db->num_rows($resql)) {
+		$obj = $db->fetch_object($resql);
+		$outSupplierCurrentMonth = $obj->total_ht;
+	}
+	$db->free($resql);
+}
+$outSupplierCurrentMonth = price2num($outSupplierCurrentMonth, 'MU');
+
+// Encours M - 1
+$sql = "SELECT SUM(total_ht) as total_ht";
+$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+$sql .= " WHERE datef BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "' AND paye=0 AND fk_statut !=0 ";
+$resql = $db->query($sql);
+
+if ($resql) {
+	if ($db->num_rows($resql)) {
+		$obj = $db->fetch_object($resql);
+		$outSupplierLastMonth = $obj->total_ht;
+	}
+	$db->free($resql);
+}
+
+$dataInfo3 = price2num($outSupplierLastMonth, 'MU');
+
+$dataInfo4 = intval((($outSupplierCurrentMonth - $outSupplierLastMonth) / $outSupplierLastMonth) * 100);
+
 
 /*
  * Actions
@@ -79,104 +264,126 @@ llxHeader('', $langs->trans("Encours Client/Fournisseur"));
 
 print load_fiche_titre($langs->trans("Encours Client/Fournisseur"));
 
-// Chargement du template de navigation pour l'activité "Global"
+// Template for nav
 print $object->load_navbar();
 
-// title of items from global activity
-$titleItem1 = "Encours clients";
-$titleItem4 = "Encours Fournisseurs";
-$titleItem5 = "Encours C/F";
-$titleItem2 = "Encours C dépassés";
-$titleItem3 = "Encours F dépassés";
+// template for boxes
+include DOL_DOCUMENT_ROOT . '/custom/tab/template/template_boxes2.php';
 
-// For oustanding customer
-$info1 = "Encours M-1";
-$info2 = "Progression";
+$titleItem3 = "Encours C/F";
+$dataItem3 = price($totalCustomer - $totalSupplier); // total ttc E.C - total TTC E.F on current years
 
-$info3 = "Encours clients M-1";
-$info4 = "Progression";
+$info5 = "Total encours C/F du mois dernier";
+$dataInfo5 = ($outstandingLastMonth - $outSupplierLastMonth); // total outstanding CF on m-1
 
-// For customer and supplier oustanding
-$info5 = "Encours clients / fournisseurs M-1";
 $info6 = "Progression";
+$totalCFCurrentMonth = ($outstandingCurrentMonth - $outSupplierCurrentMonth); // total ttc E.C - total TTC E.F current month
 
-$info3 = "Banque 1 ";
-$info4 = "Banque 2";
-$info5 = "Banque 3";
-
-// For overdue customer and supplier outstandings
-$compareToLastMounth = "par rapport au mois dernier";
-
-// Template inclusion for page boxes
-include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
+$dataInfo6 = intval(($totalCFCurrentMonth - $dataInfo5) / $totalCFCurrentMonth) * 100;
+var_dump($outstandingCurrentMonth);
 
 ?>
-				<div class="grid-exceed">
-					<div class="card bg-c-blue order-card">
-						<!-- Corps de la carte -->
-						<div class="card-body">
-							<div class="card-block">
-								<h4 class="text-left">
-									<?php print $titleItem3 ?> <!-- Titre de la boxe -->
-								</h4>
-								<h1 class="text-left"><span id="info">
-								<i class="bi bi-graph-up"></i>
-									<?php
-										print $dataItem3;  // Donnée chiffré à afficher
-									?>
-									</span></h1>
-									<p class="text-left">Total  : <span class="f-center"><?php print $currentData1 ?> €</span></p> <!-- Total de la donnée courante -->
-									<p class="text-left"><?php print $info1 ?> : <?php print $dataInfo1?>€ </p> <!-- Donnée par rapport à l'année ou au mois dernier -->
-									<p class="text-left"><?php print $info2 ?><?php print $dataInfo2?> % </p> <!-- Progression -->
-								 </div>
-							</div>
-						</div>
-					</div>
+<!-- Outstanding supplier -->
+<div class="grid-3">
+	<div class="card bg-c-blue order-card">
+		<!-- Corps de la carte -->
+		<div class="card-body">
+			<div class="card-block">
+				<h4 class="text-center">
+					<?php print $titleItem3 ?>
+					<!-- Titre de la boxe -->
+				</h4>
+				<h1 class="text-center">
+					<span class="success">
+						<?= print $dataItem3 ?> €
+					</span>
+				</h1>
+				<hr>
+				<div class="element">
+					<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
+					<?php print $info5 ?> :
+					<?php print $dataInfo5 ?> € </p>
+					<hr class="vertical">
+					<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
+					<?php print $info6 ?> : </hr>
+					<p class="text-right" id="progress"><?php print $dataInfo6 ?>% </p>
+				</div>
+			</div>
+		</div>
+		<a href="#" class="btn btn-primary">GRAPHIQUE</a>
+	</div>
+</div>
+<!-- end outstanding suppliers -->
 
-					<div class="grid-exceed">
-					<div class="card bg-c-blue order-card">
-						<!-- Corps de la carte -->
-						<div class="card-body">
-							<div class="card-block">
-								<h4 class="text-left">
-									<?php print $titleItem4 ?> <!-- Titre de la boxe -->
-								</h4>
-								<h1 class="text-left"><span id="info">
-								<i class="bi bi-graph-up"></i>
-									<?php
-										print $dataItem4;  // Donnée chiffré à afficher
-									?>
-									</span></h1>
-									<p class="text-left">Total  : <span class="f-center"><?php print $currentData1 ?> €</span></p> <!-- Total de la donnée courante -->
-									<p class="text-left"><?php print $info1 ?> : <?php print $dataInfo1?>€ </p> <!-- Donnée par rapport à l'année ou au mois dernier -->
-									<p class="text-left"><?php print $info2 ?><?php print $dataInfo2?> % </p> <!-- Progression -->
-								 </div>
-							</div>
-						</div>
-					</div>
-
-					<div class="grid-exceed">
-					<div class="card bg-c-blue order-card">
-						<!-- Corps de la carte -->
-						<div class="card-body">
-							<div class="card-block">
-								<h4 class="text-left">
-									<?php print $titleItem5 ?> <!-- Titre de la boxe -->
-								</h4>
-								<h1 class="text-left"><span id="info">
-								<i class="bi bi-graph-up"></i>
-									<?php
-										print $dataItem3;  // Donnée chiffré à afficher
-									?>
-									</span></h1>
-									<p class="text-left">Total  : <span class="f-center"><?php print $currentData1 ?> €</span></p> <!-- Total de la donnée courante -->
-									<p class="text-left"><?php print $info1 ?> : <?php print $dataInfo1?>€ </p> <!-- Donnée par rapport à l'année ou au mois dernier -->
-									<p class="text-left"><?php print $info2 ?><?php print $dataInfo2?> % </p> <!-- Progression -->
-								 </div>
-							</div>
-						</div>
-					</div>
 <?php
+
+$titleItem4 = "Encours clients dépassés";
+$info7 = "par rapport au mois dernier";
+
+
+?>
+<!-- Outstanding customer exceed -->
+<div class="grid-3">
+	<div class="card bg-c-blue order-card">
+		<!-- Corps de la carte -->
+		<div class="card-body">
+			<div class="card-block">
+				<h4 class="text-center">
+					<?php print $titleItem4 ?>
+					<!-- Titre de la boxe -->
+				</h4>
+				<h1 class="text-center">
+					<span class="success">
+						<?= print $dataItem4 ?> €
+					</span>
+				</h1>
+				<hr>
+				<div class="element">
+					<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
+					<?php print $info7?> : </hr>
+					<p class="text-right" id="progress"><?php print $dataInfo8 ?> % </p>
+				</div>
+			</div>
+		</div>
+		<a href="#" class="btn btn-primary">GRAPHIQUE</a>
+	</div>
+</div>
+<!-- end Outstanding customer exceed -->
+
+<!-- Outstanding suppliers exceed -->
+<div class="grid-3">
+	<div class="card bg-c-blue order-card">
+		<!-- Corps de la carte -->
+		<div class="card-body">
+			<div class="card-block">
+				<h4 class="text-center">
+					<?php print $titleItem5 ?>
+					<!-- Titre de la boxe -->
+				</h4>
+				<h1 class="text-center">
+					<span class="success">
+						<?= print $dataItem5 ?> €
+					</span>
+				</h1>
+				<hr>
+				<div class="element">
+					<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
+					<?php print $info9 ?> :
+					<?php print $dataInfo9 ?> € </p>
+					<hr class="vertical">
+					<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
+					<?php print $info10 ?> : </hr>
+					<p class="text-right" id="progress"><?php print $dataInfo10 ?>% </p>
+				</div>
+			</div>
+		</div>
+		<a href="#" class="btn btn-primary">GRAPHIQUE</a>
+	</div>
+</div>
+<!-- end Outstanding suppliers exceed -->
+
+<?php
+
 // End of page
 llxFooter();
 $db->close();
