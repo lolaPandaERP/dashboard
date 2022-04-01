@@ -27,19 +27,17 @@
 									<?php print $titleItem1 ?> <!-- Titre de la boxe -->
 								</h4>
 									<h1 class="text-center">
-										<span class="success">
 											<?= print $dataItem1?> €
-										</span>
 									</h1>
 									<hr>
-									<div class="element">
+									<div class="element"></br>
 										<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
 										<?php print $info1 ?> :
-										<?php print $dataInfo1?> € </p>
+										</br><?php print $dataInfo1?>
 										<hr class="vertical">
 										<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
 										<?php print $info2 ?> :
-										<p class="text-right" id="progress"><?php print $dataInfo2?> % </p>
+										<p class="text-right" id="progress"><?php print $dataInfo2?></p>
 									</div>
 								</div>
 							</div>
@@ -59,19 +57,17 @@
 									<?php print $titleItem2 ?>
 								</h4>
 								<h1 class="text-center">
-										<span class="success">
 											<?= print $dataItem2?> €
-										</span>
 									</h1>
 									<hr>
 									<div class="element">
 										<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
 										<?php print $info3 ?> :
-										<?php print $dataInfo3?> € </p>
+										<p class="text-right"><?php print $dataInfo3?>
 										<hr class="vertical">
 										<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
 										<?php print $info4 ?> :
-										<?php print $dataInfo4?> € </p>
+										<?php print $dataInfo4?>
 									</div>
 								</div>
 							</div>
@@ -91,15 +87,13 @@
 										<?php print $titleItem3 ?>
 									</h4>
 									<h1 class="text-center">
-									<span class="success">
 											<?= print $dataItem3?> €
-									</span>
 									</h1>
 									<hr>
 									<div class="element">
 										<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
 											<?php print $info5 ?> :
-											<?php print $dataInfo5?> € </p>
+											</br><?php print $dataInfo5?>
 										<hr class="vertical">
 										<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
 											<?php print $info6 ?> :
@@ -121,15 +115,13 @@
 										<?php print $titleItem4 ?>
 									</h4>
 									<h1 class="text-center">
-										<span class="success">
 											<?= print $dataItem4?> €
-										</span>
 									</h1>
 									<hr>
 									<div class="element">
 										<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
 											<?php print $info7 ?> :
-											<?php print $dataInfo?> € </p>
+											</br><?php print $dataInfo7?>
 										<hr class="vertical">
 										<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
 											<?php print $info8 ?> :
