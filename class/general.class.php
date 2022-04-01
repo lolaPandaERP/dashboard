@@ -1077,6 +1077,26 @@ class General extends CommonObject
 			return $html;
 	}
 
+	public function ReturnMonth($month){
+		$listMonth = [
+			'Janvier',
+			'Février',
+			'Mars',
+			'Avril',
+			'Mai',
+			'Juin',
+			'Juillet',
+			'Août',
+			'Septembre',
+			'Octobre',
+			'Novembre',
+			'Décembre',
+		];
+
+		if ($month >= 1 AND $month <= 12) return $listMonth[$month - 1];
+		else return 'Mois inconnu';
+	}
+
 	// Fetch list of thridparty for each validated orders
 	public function fetchOrdersValidated() {
 			global $db;
