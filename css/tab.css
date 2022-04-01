@@ -11,32 +11,10 @@
 }
 
 
-
-/* Tabs */
-a.nav-link{
-	color : #fff;
-}
-
-/* Html basic */
-h5 {
-	color: #fff;
-	justify-content: left;
-}
-
 hr.vertical{
-	white-space: 10px;
+	white-space: 5px;
 }
 
-/* Color for informations */
-.success {
-	color:#90C274;
-	font-weight: bold;
-}
-
-.warning {
-	color:#E55934;
-	font-weight: bold;
-}
 
 .card {
     border-radius: 5px;
@@ -71,10 +49,6 @@ hr.vertical{
 }
 
 
-.h1, span#warning{
-	color: #E55934;
-}
-
 .card-body{
 	text-align: left;
 }
@@ -101,22 +75,15 @@ hr.vertical{
 	margin: 12px;
 }
 
-.grid-container-encours{
-	grid-template-columns: auto;
-	width: 100%;
-}
-
 canvas {
 	width:50%;
 	height:50px;
 }
 
-div.col-3{
-	text-align: center;
-}
 
-.element-flexible {
+.element {
 	flex:auto;
+	height: auto;
 	width: 100%;
 }
 
