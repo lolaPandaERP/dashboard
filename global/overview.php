@@ -59,8 +59,6 @@ global $db;
 // Load translation files required by the page
 $langs->loadLangs(array("tab@tab"));
 $action = GETPOST('action', 'aZ09');
-
-// Get parameters
 $socid = GETPOST('socid', 'int');
 $action = GETPOST('action', 'aZ09');
 
@@ -84,8 +82,8 @@ $firstDayLastYear = date('Y-m-d', mktime(0, 0, 1, 1, 1, $year - 1));
 $lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
 
 // M - 1
-$firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month -1, 1, $year));
-$lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month -1, 1, $year));
+$firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
+$lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
 
 
 /**
@@ -96,7 +94,6 @@ $info1 = "Chiffre d'affaire n-1";
 $info2 = "Progression ";
 
 
-// TURNOVER
 $sql = "SELECT SUM(total_ht) as total_ht";
 $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 $sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
@@ -132,16 +129,18 @@ if ($resql) {
 
 $dataInfo1 = price($turnoverLastYear);
 
-if($turnover < $turnoverLastYear){
+if ($turnover < $turnoverLastYear) {
 } else {
-	$dataInfo2 = intval(($dataItem1 - $dataInfo1) / $dataInfo1 * 100)."%"; // turnover progress
+	$dataInfo2 = intval(($dataItem1 - $dataInfo1) / $dataInfo1 * 100) . "%"; // turnover progress
 }
+
+
+
 
 // OUTSTANDING CUSTOMER AND SUPPLIER
 $titleItem2 = "Encours C/F";
-$info3 = "Encours C/mois ";
-$info4 = "Encours F/mois";
-
+$info3 = "Encours C / mois ";
+$info4 = "Encours F / mois";
 
 //  Unpaid customer invoices on current year
 $sql = "SELECT SUM(total_ht) as total_ht";
@@ -154,7 +153,7 @@ $resql = $db->query($sql);
 if ($resql) {
 	if ($db->num_rows($resql)) {
 		$obj = $db->fetch_object($resql);
-		$totalCustomer = $obj->total;
+		$totalCustomer = $obj->total_ht;
 	}
 	$db->free($resql);
 }
@@ -174,14 +173,16 @@ if ($resql) {
 	}
 	$db->free($resql);
 }
-// Total C/F outstanding
-$dataItem2 = price($totalCustomer + $totalSupplier);
+$totalCustomer = price($totalCustomer);
+$totalSupplier = price($totalSupplier);
 
+// Total C/F outstanding
+$dataItem2 = price($totalCustomer + $totalSupplier) ." €";
 
 // Unpaid customers invoices on current mounth
 $sql = "SELECT SUM(total_ht) as total_ht";
 $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMounth . "' AND '" . $lastDayCurrentMounth . "' AND  ";
+$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMounth . "' AND '" . $lastDayCurrentMounth . "' ";
 $sql .= " AND paye=0 ";
 $sql .= " AND fk_statut != 0 ";
 $resql = $db->query($sql);
@@ -189,22 +190,22 @@ $resql = $db->query($sql);
 if ($resql) {
 	if ($db->num_rows($resql)) {
 		$obj = $db->fetch_object($resql);
-		$totalCustomerByMounth = $obj->total_ht;
+		$dataInfo3 = $obj->total_ht;
 	}
 	$db->free($resql);
 }
+$dataInfo3 = price($dataInfo3) ." €";
 
-if($dataInfo3 <= 0) {
-	$dataInfo3 = "<p style='color : #90C274'>Aucun encours client pour ".htmlspecialchars($generalActivity->ReturnMonth($month))." </p>";
+if ($dataInfo3 <= 0) {
+	$dataInfo3 = "<h4 style='color : #90C274'>Aucun encours client pour " . htmlspecialchars($generalActivity->ReturnMonth($month)) . "</h4>";
 } else {
-	$dataInfo3 = price($totalCustomerByMounth);
-	$dataInfo4 = (($outSupplierCurrentMonth - $outSupplierLastMonth) / $outSupplierLastMonth) * 100 ."%";
+	$dataInfo3 = intval(($outSupplierCurrentMonth - $dataInfo3) / $dataInfo3) * 100 . "%";
 }
 
 // Unpaid suppliers invoices on current mounth
 $sql = "SELECT SUM(total_ht) as total_ht";
 $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMounth . "' AND '" . $lastDayCurrentMounth . "' AND ";
+$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMounth . "' AND '" . $lastDayCurrentMounth . "' ";
 $sql .= " AND paye=0 ";
 $sql .= " AND fk_statut != 0 ";
 $resql = $db->query($sql);
@@ -212,18 +213,22 @@ $resql = $db->query($sql);
 if ($resql) {
 	if ($db->num_rows($resql)) {
 		$obj = $db->fetch_object($resql);
-		$totalSupplierByMounth = $obj->total_ht;
+		$dataInfo4 = $obj->total_ht;
 	}
 	$db->free($resql);
 }
+$dataInfo4 = price($dataInfo4);
 
 
-if($dataInfo4 <= 0) {
-	$dataInfo4 = "<p style='color : #90C274'>Aucun encours fournisseur pour ".htmlspecialchars($generalActivity->ReturnMonth($month))." </p>";
+if ($dataInfo4 <= 0) {
+	$dataInfo4 = "<h4 style='color : #90C274'>Aucun encours client pour " . htmlspecialchars($generalActivity->ReturnMonth($month)) . "</h4>";
 } else {
-	$dataInfo4 = price($totalSupplierByMounth);
-	$dataInfo4 = (($outSupplierCurrentMonth - $outSupplierLastMonth) / $outSupplierLastMonth) * 100 ."%";
+	$dataInfo4 = intval(($outSupplierCurrentMonth - $dataInfo3) / $dataInfo3) * 100 . "%";
 }
+
+
+
+
 
 // MARGIN BOXE
 
@@ -233,7 +238,7 @@ $titleItem3 = "Marge brute N";
 $sql = "SELECT SUM(total_ht) as total_ht";
 $sql .= " FROM " . MAIN_DB_PREFIX . "commande";
 $sql .= " WHERE date_commande BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-$sql .= " AND fk_statut = 1";
+$sql .= " AND fk_statut =1";
 $resql = $db->query($sql);
 
 if ($resql) {
@@ -247,12 +252,16 @@ $dataItem3 = price($marginGross);
 
 // Margin To produce on current mounth : marginGross - configuration'< margin
 $info5 = "Marges restant à produire";
+$dataInfo5 = 100 ." €";
 // Todo : montant total des commandes validées sur le mois courant - marge definit dans le module (anthony)
 $info6 = "Marge brut prévisionnelle";
+$dataInfo6 = 10 ." %";
 // Todo : marge à definir dans la configuration (anthony)
 
-// TREASURY BOX
 
+
+
+// TREASURY BOX
 $titleItem4 = "Trésorerie nette";
 $info7 = "Charges mensuelles";
 
@@ -287,8 +296,8 @@ if ($resql) {
 
 $info8 = "Recurrent mensuel";
 
-if($dataInfo7 <= 0) {
-	$dataInfo7 = "<p style='color : #90C274'> Aucune factures fournisseur pour ".htmlspecialchars($generalActivity->ReturnMonth($month))." </p>";
+if ($dataInfo7 <= 0) {
+	$dataInfo7 = "<p style='color : #90C274'>Aucune factures fournisseur pour " . htmlspecialchars($generalActivity->ReturnMonth($month)) . " ";
 } else {
 	$dataInfo7 = price($monthlyCharges);
 	$dataInfo8 = '';

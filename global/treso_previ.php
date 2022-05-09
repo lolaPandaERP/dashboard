@@ -44,12 +44,13 @@ require_once DOL_DOCUMENT_ROOT.'/custom/tab/class/general.class.php';
 
 // Load translation files required by the page
 $langs->loadLangs(array("tab@tab"));
-
 $action = GETPOST('action', 'aZ09');
-
 $month = date('m');
 $year = date('Y');
 $day = date('Y-m-d');
+$object = new General($db);
+$ret = $object->getIdBankAccount();
+
 
 // First day and last day of month on n years
 $firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
@@ -67,6 +68,23 @@ $lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
 $firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
 $lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
 
+$titleItem1 = "Trésorerie";
+$info1 = "Trésorerie M-1";
+$info2 = "Progression";
+
+
+$titleItem2 = "Charge totale du mois";
+$info3 = "Charges fixes";
+$info4 = "Charges variables";
+
+
+$titleItem3 = "Encours clients à 30 jours";
+$info5 = "Clients à encaisser";
+$info6 = "Fournisseurs à payer";
+$info7 = "Reste en banque";
+$info8 = "Solde des comptes";
+
+
 /*
  * Actions
  */
@@ -80,20 +98,6 @@ $lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
 
 $form = new Form($db);
 $formfile = new FormFile($db);
-$object = new General($db);
-
-llxHeader('', $langs->trans("Trésorerie et Prévisionnel"));
-
-print load_fiche_titre($langs->trans("Trésorerie et Prévisionnel"));
-
-// Chargement du template de navigation pour l'activité "Global"
-print $object->load_navbar();
-
-$titleItem1 = "Trésorerie";
-$info1 = "Trésorerie M-1";
-$info2 = "Progression";
-
-$ret = $object->getIdBankAccount();
 
 $sql = "SELECT SUM(amount) as amount";
 $sql .= " FROM " . MAIN_DB_PREFIX . "bank";
@@ -110,21 +114,12 @@ if ($resql) {
 
 $dataItem1 = price($solde);
 
+llxHeader('', $langs->trans("Trésorerie et Prévisionnel"));
 
+print load_fiche_titre($langs->trans("Trésorerie et Prévisionnel"));
 
-
-
-
-$titleItem2 = "Charge totale du mois";
-$info3 = "Charges fixes";
-$info4 = "Charges variables";
-
-
-$titleItem3 = "Encours clients à 30 jours";
-$info5 = "Clients à encaisser";
-$info6 = "Fournisseurs à payer";
-$info7 = "Reste en banque";
-$info8 = "Solde des comptes";
+// Chargement du template de navigation pour l'activité "Global"
+print $object->load_navbar();
 
 include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
 ?>
