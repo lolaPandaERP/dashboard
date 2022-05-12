@@ -54,8 +54,7 @@ require_once DOL_DOCUMENT_ROOT . '/core/class/dolgraph.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 
-global $db;
-
+global $db, $conf;
 // Load translation files required by the page
 $langs->loadLangs(array("tab@tab"));
 $action = GETPOST('action', 'aZ09');
@@ -69,9 +68,13 @@ $ret = $generalActivity->getIdBankAccount();
 $month = date('m');
 $year = date('Y');
 
-// First day and last day of month on n years
+// First day and last day of current mounth
 $firstDayCurrentMounth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
 $lastDayCurrentMounth = date('Y-m-t', mktime(0, 0, 0, $month, 1, $year));
+
+// M - 1
+$firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
+$lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
 
 // First day and last day of current years
 $firstDayYear = date('Y-m-d', mktime(0, 0, 0, 1, 1, $year));
@@ -81,19 +84,16 @@ $lastDayYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year));
 $firstDayLastYear = date('Y-m-d', mktime(0, 0, 1, 1, 1, $year - 1));
 $lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
 
-// M - 1
-$firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
-$lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
 
 
 /**
- * CA BOX
+ * TURNOVER
  */
 $titleItem1 = "Chiffre d'affaires";
 $info1 = "Chiffre d'affaire n-1";
 $info2 = "Progression ";
 
-
+// Chiffre d'affaires de l'annee en cours
 $sql = "SELECT SUM(total_ht) as total_ht";
 $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 $sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
@@ -109,10 +109,9 @@ if ($resql) {
 	$db->free($resql);
 }
 
-$dataItem1 = price($turnover); // GLOBAL TURNOVER
+$dataItem1 = price($turnover). " € "; // GLOBAL TURNOVER
 
-
-// request for the last turnover (n-1)
+// chiffre d'affaire de l'annee precedente
 $sql = "SELECT SUM(total_ht) as total_ht";
 $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 $sql .= " WHERE datef BETWEEN '" . $firstDayLastYear . "' AND '" . $lastDayLastYear . "' ";
@@ -129,20 +128,20 @@ if ($resql) {
 
 $dataInfo1 = price($turnoverLastYear);
 
-if ($turnover < $turnoverLastYear) {
+$dataInfo2 = intval((($turnover - $turnoverLastYear) / $turnoverLastYear) * 100)."\n%";
+
+if($dataInfo2 < 0){
+	$dataInfo2 = '<p style=color:red>'.$dataInfo2.'</p>';
 } else {
-	$dataInfo2 = intval(($dataItem1 - $dataInfo1) / $dataInfo1 * 100) . "%"; // turnover progress
+	$dataInfo2 = '<p style=color:green>'.$dataInfo2.'</p>';
 }
-
-
-
 
 // OUTSTANDING CUSTOMER AND SUPPLIER
 $titleItem2 = "Encours C/F";
 $info3 = "Encours C / mois ";
 $info4 = "Encours F / mois";
 
-//  Unpaid customer invoices on current year
+//  YEARS
 $sql = "SELECT SUM(total_ht) as total_ht";
 $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 $sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
@@ -157,29 +156,9 @@ if ($resql) {
 	}
 	$db->free($resql);
 }
+$totalCustomer = intval($totalCustomer);
 
-//  Unpaid suppliers invoices on current year
-$sql = "SELECT SUM(total_ht) as total_ht";
-$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'  ";
-$sql .= " AND paye=0 ";
-$sql .= " AND fk_statut != 0 ";
-$resql = $db->query($sql);
 
-if ($resql) {
-	if ($db->num_rows($resql)) {
-		$obj = $db->fetch_object($resql);
-		$totalSupplier = $obj->total_ht;
-	}
-	$db->free($resql);
-}
-$totalCustomer = price($totalCustomer);
-$totalSupplier = price($totalSupplier);
-
-// Total C/F outstanding
-$dataItem2 = price($totalCustomer + $totalSupplier) ." €";
-
-// Unpaid customers invoices on current mounth
 $sql = "SELECT SUM(total_ht) as total_ht";
 $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 $sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMounth . "' AND '" . $lastDayCurrentMounth . "' ";
@@ -194,13 +173,28 @@ if ($resql) {
 	}
 	$db->free($resql);
 }
-$dataInfo3 = price($dataInfo3) ." €";
 
 if ($dataInfo3 <= 0) {
-	$dataInfo3 = "<h4 style='color : #90C274'>Aucun encours client pour " . htmlspecialchars($generalActivity->ReturnMonth($month)) . "</h4>";
+	$dataInfo3 = "<h5 style='color : #90C274'>Aucun encours client pour " . htmlspecialchars($generalActivity->ReturnMonth($month)) . "</h5>";
 } else {
-	$dataInfo3 = intval(($outSupplierCurrentMonth - $dataInfo3) / $dataInfo3) * 100 . "%";
+	$dataInfo3 = price($dataInfo3) ." €";
 }
+
+$sql = "SELECT SUM(total_ht) as total_ht";
+$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'  ";
+$sql .= " AND paye = 0 ";
+$sql .= " AND fk_statut != 0 ";
+$resql = $db->query($sql);
+
+if ($resql) {
+	if ($db->num_rows($resql)) {
+		$obj = $db->fetch_object($resql);
+		$totalSupplier = $obj->total_ht;
+	}
+	$db->free($resql);
+}
+$totalSupplier = intval($totalSupplier);
 
 // Unpaid suppliers invoices on current mounth
 $sql = "SELECT SUM(total_ht) as total_ht";
@@ -217,21 +211,19 @@ if ($resql) {
 	}
 	$db->free($resql);
 }
-$dataInfo4 = price($dataInfo4);
-
 
 if ($dataInfo4 <= 0) {
-	$dataInfo4 = "<h4 style='color : #90C274'>Aucun encours client pour " . htmlspecialchars($generalActivity->ReturnMonth($month)) . "</h4>";
+	$dataInfo4 = "<h5 style='color : #90C274'>Aucun encours fournisseurs pour " . htmlspecialchars($generalActivity->ReturnMonth($month)) . "</h5>";
 } else {
-	$dataInfo4 = intval(($outSupplierCurrentMonth - $dataInfo3) / $dataInfo3) * 100 . "%";
+	$dataInfo4 = price($dataInfo4) ." €";
 }
 
-
+// TOTAL CF
+$dataItem2 = price($totalCustomer - $totalSupplier) . "\n€";
 
 
 
 // MARGIN BOXE
-
 $titleItem3 = "Marge brute N";
 
 // request for gross margin on N years
@@ -248,17 +240,39 @@ if ($resql) {
 	}
 	$db->free($resql);
 }
-$dataItem3 = price($marginGross);
+$dataItem3 = price($marginGross) ."\n€";
 
-// Margin To produce on current mounth : marginGross - configuration'< margin
-$info5 = "Marges restant à produire";
-$dataInfo5 = 100 ." €";
+// Margin To produce on current mounth
 // Todo : montant total des commandes validées sur le mois courant - marge definit dans le module (anthony)
+$info5 = "Marges restant à produire";
+
+// request for gross margin on current mounth for calculate the margin to be produced
+$sql = "SELECT SUM(total_ht) as total_ht";
+$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
+$sql .= " WHERE date_commande BETWEEN '" . $firstDayCurrentMounth . "' AND '" . $lastDayCurrentMounth . "' ";
+$sql .= " AND fk_statut =1";
+$resql = $db->query($sql);
+
+if ($resql) {
+	if ($db->num_rows($resql)) {
+		$obj = $db->fetch_object($resql);
+		$marginByCurrentMounth = $obj->total_ht;
+	}
+	$db->free($resql);
+}
+
+// saisie manuelle
+$marginToBeProduced = $conf->global->MARGIN_PRODUCED;
+// conversion
+$marginToBeProduced = (int)$marginToBeProduced;
+
+// calcul for remaining margin to produce
+$dataInfo5 = price($marginByCurrentMounth - $marginToBeProduced)."\n€";
+
 $info6 = "Marge brut prévisionnelle";
-$dataInfo6 = 10 ." %";
-// Todo : marge à definir dans la configuration (anthony)
-
-
+$forecastMargin = $conf->global->FORECAST_MARGIN;
+$forecastMargin = (int)$forecastMargin;
+$dataInfo6 = $forecastMargin."\n€";
 
 
 // TREASURY BOX
@@ -278,7 +292,7 @@ if ($resql) {
 	$db->free($resql);
 }
 
-$dataItem4 = price($solde);
+$dataItem4 = price($solde) . "\n€";
 
 // Monthly Charge
 $sql = "SELECT SUM(total_ht) as total_ht";
@@ -297,10 +311,8 @@ if ($resql) {
 $info8 = "Recurrent mensuel";
 
 if ($dataInfo7 <= 0) {
-	$dataInfo7 = "<p style='color : #90C274'>Aucune factures fournisseur pour " . htmlspecialchars($generalActivity->ReturnMonth($month)) . " ";
-} else {
-	$dataInfo7 = price($monthlyCharges);
-	$dataInfo8 = '';
+$dataInfo7 = "A CONFIRME";
+	// $dataInfo7 = "<p style='color : #90C274'>Aucune factures fournisseur pour " . htmlspecialchars($generalActivity->ReturnMonth($month)) . " ";
 }
 
 /*
