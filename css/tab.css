@@ -1,3 +1,7 @@
+div.grid-container-4 {
+	background-color: rgb(247, 247, 247);
+}
+
 .container-fluid {
 	background-color: #5B86E5;
 	border-radius: 5px;
@@ -9,70 +13,23 @@
 	border-right: grey;
 }
 
+div{
+	padding-bottom: 2px;
+}
 
 hr.vertical {
 	white-space: 5px;
-}
-
-
-.card {
-	border-radius: 5px;
-	-webkit-box-shadow: 0 1px 2.94px 0.06px rgba(4, 26, 55, 0.16);
-	box-shadow: 0 1px 2.94px 0.06px rgba(4, 26, 55, 0.16);
-	border: none;
-	margin-bottom: 30px;
-	-webkit-transition: all 0.3s ease-in-out;
-	transition: all 0.3s ease-in-out;
 }
 
 .card .card-block {
 	padding: 15px;
 }
 
-
-.container {
-
-	display: grid;
-	grid-template-columns: 0.9fr 1fr 1.1fr 1fr;
-	grid-template-rows: 1fr 1fr 1fr;
-	gap: 0px 0px;
-	grid-auto-flow: row;
-}
-
-
-.f-left {
-	float: left;
-}
-
-.f-right {
-	float: right;
-}
-
-
-.card-body {
-	text-align: left;
-}
-
-.grid-container-3 {
-	display: grid;
-	width: 100%;
-	grid-template-columns: 50% 50%;
-	gap: 30px;
-	padding: 30px;
-}
-
 .grid-container-4 {
 	display: grid;
 	grid-template-areas: "a b";
 	gap: 30px;
-	padding: 30px;
-}
-
-.grid-container-2 {
-	display: grid;
-	grid-template-columns: 3fr 3fr;
-	gap: 30px;
-	margin: 12px;
+	padding: 20px;
 }
 
 canvas {
@@ -86,3 +43,9 @@ canvas {
 	height: auto;
 	width: 100%;
 }
+
+a.nav-link {
+	color: white;
+}
+
+
