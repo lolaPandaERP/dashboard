@@ -26,13 +26,16 @@
 
 // Put here all includes required by your class file
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facturestats.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
+
+
 
 /**
  * Class for General
  */
-class General extends CommonObject
+class General extends FactureStats
 {
 	/**
 	 * @var string ID of module.
@@ -1035,7 +1038,6 @@ class General extends CommonObject
 		return $error;
 	}
 
-
 	/**
 	 * Functions for dashboard
 	*/
@@ -1048,13 +1050,13 @@ class General extends CommonObject
 		return $result;
 	}
 
-
 	/**
 	 * Loading NavBar Template :
 	 * /TODO/ : on peux passer en parametre l'onglet actif
 	 */
 	public function load_navbar()
 	{
+
 			$html = '';
 			$tab1 = DOL_URL_ROOT.'/custom/tab/global/overview.php';
 			$tab2 = DOL_URL_ROOT.'/custom/tab/global/encoursCF.php';
@@ -1065,18 +1067,26 @@ class General extends CommonObject
 			/**
 			 * Dashboard header for Global activity
 			 */
+			$active_tab = '';
+
 			$html .= '<div class="container-fluid">';
 			$html .= '<nav class="navbar-brand">';
 			$html .= '<ul class="nav justify-content-end">';
 			$html .=' <img src="../img/icon/global.png" alt="" class="d-inline-block align-text-top" width=50px>';
+
 			$html .= '<li class="nav"><a class="nav-link" href="'.$tab1.'" >Général</a></li>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab2.'">Encours C/F</a></li>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab3.'">Trésorerie et prévisionnel</a></li>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab4.'">Net à produire</a></li>';
+			$html .= '<li class="nav"><a class="nav-link" href="'.$tab2.'">Encours C/F</a></li>';
+			$html .= '<li class="nav"><a class="nav-link" href="'.$tab3.'">Trésorerie et prévisionnel</a></li>';
+			$html .= '<li class="nav"><a class="nav-link" href="'.$tab4.'">Net à produire</a></li>';
+
 			$html .= '</ul>	</nav> </div>';
+
 			return $html;
 	}
 
+	/**
+	 * Return the 12 months of the year
+	 */
 	public function ReturnMonth($month){
 		$listMonth = [
 			'Janvier',
@@ -1097,37 +1107,168 @@ class General extends CommonObject
 		else return 'Mois inconnu';
 	}
 
-	// Fetch list of thridparty for each validated orders
-	public function fetchOrdersValidated() {
-			global $db;
 
-			$sql = 'SELECT * FROM '.MAIN_DB_PREFIX.'commande c';
-			$sql .= ' INNER JOIN '.MAIN_DB_PREFIX.'societe s';
-			$sql .= ' ON s.rowid = c.fk_soc';
-			$sql .= 'WHERE c.fk_statut = 1';
-			$resql = $db->query($sql);
-			$result = $db->fetch_object($resql);
+	/**
+	 * Return all order by passing the status as a parameter to filter the search
+	 */
+	function fetchOrder($fk_statut=''){
 
-			return $result;
-	}
-
-	public function fetchAmountOrdersValidated(){
 		global $db;
 
-			$sql = 'SELECT c.fk_soc, c.date_livraison, total_ttc FROM '.MAIN_DB_PREFIX.'commande c';
-			$sql .= ' INNER JOIN '.MAIN_DB_PREFIX.'societe s';
-			$sql .= ' ON s.rowid = c.fk_soc';
-			$sql .= ' WHERE c.fk_statut = 1';
-			$resql = $db->query($sql);
-			$result = $db->fetch_object($resql);
-			return $result;
+		$sql = "SELECT * FROM ".MAIN_DB_PREFIX."commande";
+		$sql .= " WHERE fk_statut = ".$fk_statut;
+		$resql = $db->query($sql);
+		$result = [];
+		if($resql){
+			while($obj = $db->fetch_object(($resql))){
+				$result[] = $obj;
+			}
+		}
+
+		return $result;
+	}
+
+	function fetchDeliveredOrderToday(){
+
+		global $db;
+		$today = date('Y-m-d');
+
+		// request
+		// $sql = "SELECT * FROM " . MAIN_DB_PREFIX . "commande";
+		// $sql .= " WHERE fk_statut = 3";
+		// $sql .= "AND date_commande = ".$today;
+		$sql = "SELECT * FROM `llx_commande` WHERE fk_statut = 3 AND date_commande = \"2022-05-12\";";
+		$resql = $db->query($sql);
+		$result = [];
+
+		if($resql){
+			while($obj = $db->fetch_object(($resql))){
+				$result[] = $obj;
+			}
+		}
+		return $result;
 	}
 
 
+	function fetchValidatedOrderOnCurrentYears($firstDayYear, $lastDayYear){
+
+		global $db;
+		// request
+		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
+		$sql .= " WHERE date_creation BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+		$sql .= "AND fk_statut = 1";
+		$resql = $db->query($sql);
+
+		if ($resql) {
+			if ($db->num_rows($resql)) {
+				$obj = $db->fetch_object($resql);
+				$result = $obj->total_ht;
+			}
+			$db->free($resql);
+		}
+
+		return $result;
+	}
+
+	function fetchOrderSortedByDeliveryDate($firstDayYear, $lastDayYear){
+
+		global $db;
+		// request
+		$sql = "SELECT * FROM " . MAIN_DB_PREFIX . "commande";
+		$sql .= " WHERE date_commande BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+		$sql .= "AND fk_statut = 1 ORDER BY date_livraison ASC";
+		$resql = $db->query($sql);
+		$result = [];
+
+		if($resql){
+			while($obj = $db->fetch_object(($resql))){
+				$result[] = $obj;
+			}
+		}
+		return $result;
+	}
+
+	function fetchDeliveredOrderOnLastMonth($firstDayLastMonth, $lastDayLastMonth){
+
+		global $db;
+		// request
+		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
+		$sql .= " WHERE date_commande BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "' ";
+		$sql .= "AND fk_statut = 3";
+		$resql = $db->query($sql);
+
+		if ($resql) {
+			if ($db->num_rows($resql)) {
+				$obj = $db->fetch_object($resql);
+				$result = $obj->total_ht;
+			}
+			$db->free($resql);
+		}
+
+		return $result;
+	}
 
 
+	function fetchDeliveredOrderOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth){
+
+		global $db;
+		// request
+		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
+		$sql .= " WHERE date_commande BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
+		$sql .= "AND fk_statut = 3";
+		$resql = $db->query($sql);
+
+		if ($resql) {
+			if ($db->num_rows($resql)) {
+				$obj = $db->fetch_object($resql);
+				$result = $obj->total_ht;
+			}
+			$db->free($resql);
+		}
+		return $result;
+	}
+
+	function fetchNbDeliveryOrderByYear($firstDayYear, $lastDayYear){
+
+		global $db;
+		// request
+		$sql = "SELECT * ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
+		$sql .= " WHERE date_commande BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+		$sql .= "AND fk_statut = 3";
+		$resql = $db->query($sql);
+		$result = [];
+		if($resql){
+			while($obj = $db->fetch_object(($resql))){
+				$result[] = $obj;
+			}
+		}
+
+		return $result;
+	}
+
+	function fetchNbDeliveryOrderByMonth($firstDayLastMonth, $lastDayLastMonth){
+
+		global $db;
+		// request
+		$sql = "SELECT * ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
+		$sql .= " WHERE date_commande BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "' ";
+		$sql .= "AND fk_statut = 3";
+		$resql = $db->query($sql);
+		$result = [];
+		if($resql){
+			while($obj = $db->fetch_object(($resql))){
+				$result[] = $obj;
+			}
+		}
+
+		return $result;
+	}
 }
-
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobjectline.class.php';
 
