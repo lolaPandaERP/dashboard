@@ -36,7 +36,7 @@
 							</div>
 							</div>
 						</div>
-					<a ef="#" class="btn btn-primary">GRAPHIQUE</a>
+					<a href="#" class="btn btn-primary">GRAPHIQUE</a>
 				</div>
 			</div>
 			<!-- end bloc 1 -->
@@ -61,7 +61,7 @@
 							</div>
 							</div>
 						</div>
-					<a ef="#" class="btn btn-primary">GRAPHIQUE</a>
+					<a href="#" class="btn btn-primary">GRAPHIQUE</a>
 				</div>
 			</div>
 			<!-- end bloc 1 -->
@@ -116,6 +116,7 @@
 				</div>
 			</div>
 			<!-- end bloc 1 -->
+
 
 
 

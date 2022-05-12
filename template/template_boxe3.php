@@ -18,10 +18,10 @@
 					<div class="card-body">
 						<!-- <div class="card-block"> -->
 						<h4 class="text-center">
-							<?php print $titleItem1 ?>
+							<?php print $titleItem3 ?>
 						</h4>
 						<h1 class="text-center">
-							<?php print $dataItem1 ?>
+							<?php print $dataItem3 ?>
 						</h1>
 						<hr>
 						<div class="col-lg-14">
@@ -57,5 +57,3 @@
 					<a href="#" class="btn btn-primary">GRAPHIQUE</a>
 				</div>
 			<!-- end bloc 1 -->
-
-
