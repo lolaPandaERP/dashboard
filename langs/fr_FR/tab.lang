@@ -25,9 +25,11 @@ ModuleTabDesc = Tableau de bord interne pour visualiser rapidement ses chiffres 
 #
 # Page d'administration
 #
-TabSetup = Configuration du module Tab
+TabSetup = Configuration du module Dashboard
 Settings = Réglages
-TabSetupPage = Page de configuration du module Tab
+TabSetupPage = Page de configuration du module Dashboard
+MARGIN_PRODUCED = Marge restant à produire
+FORECAST_MARGIN = Marge brut prévisionnelle
 
 #
 # Page À propos
