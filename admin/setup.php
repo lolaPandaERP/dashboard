@@ -59,8 +59,8 @@ $scandir = GETPOST('scan_dir', 'alpha');
 $type = 'myobject';
 
 $arrayofparameters = array(
-	'TAB_MYPARAM1'=>array('css'=>'minwidth200', 'enabled'=>1),
-	'TAB_MYPARAM2'=>array('css'=>'minwidth500', 'enabled'=>1)
+	'MARGIN_PRODUCED'=>array('css'=>'minwidth200', 'enabled'=>1),
+	'FORECAST_MARGIN'=>array('css'=>'minwidth200', 'enabled'=>1),
 );
 
 $error = 0;
