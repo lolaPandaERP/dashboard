@@ -48,17 +48,71 @@ require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 $langs->loadLangs(array("tab@tab"));
 $action = GETPOST('action', 'aZ09');
 
-$nowyear = strftime("%Y", dol_now());
-$year = GETPOST('year') > 0 ?GETPOST('year') : $nowyear;
+/**
+ * DEFINE TIME FOR REQUEST
+ */
 
-$startyear = $year - 1;
-$endyear = $year;
+$month = date('m');
+$year = date('Y');
+$day = date('Y-m-d');
+
+// First day and last day of month on n years
+$firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
+$lastDayCurrentMonth = date('Y-m-t', mktime(0, 0, 0, $month, 1, $year));
+
+// First day and last day of current years
+$firstDayYear = date('Y-m-d', mktime(0, 0, 0, 1, 1, $year));
+$lastDayYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year));
+
+// N - 1
+$firstDayLastYear = date('Y-m-d', mktime(0, 0, 1, 1, 1, $year - 1));
+$lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
+
+// M - 1
+$firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
+$lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
+
+
+// PRODUCTION EN COURS
+$titleItem1 = "Productions en cours";
+$object = new General($db);
+$dataItem1 = $object->fetchValidatedOrderOnCurrentYears($firstDayYear, $lastDayYear);
+$dataItem1 = price($dataItem1). "\n€";
+
+// commande m- 1
+$info1 = "Montant des commandes livrées du mois dernier";
+$dataInfo1 = $object->fetchDeliveredOrderOnLastMonth($firstDayLastMonth, $lastDayLastMonth);
+
+if($dataInfo1 != NULL){
+	$dataInfo1 = price($dataInfo1)."\n€";
+} else {
+	$dataInfo1 = '<h5 style=color:blue;>Il n\'y aucune commandes validées pour le mois de '. htmlspecialchars($object->ReturnMonth($month)) . "</h5>";
+}
+
+// Progression
+$info2 = "Progression";
+$deliveryOrderOnCurrentMonth = $object->fetchDeliveredOrderOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
+// $dataInfo2 = trader($deliveryOrderOnCurrentMonth)."\n%";
+
+// NB DE PRODUCTION EN COURS
+$titleItem2 = "Nb de productions en cours";
+$result1 = $object->fetchNbDeliveryOrderByYear($firstDayYear, $lastDayYear);
+$nbDeliveryOrderByYear = count($result1);
+$dataItem2 = $nbDeliveryOrderByYear;
+
+// nb de commande livrées le mois dernier
+$info3 = "Nb des productions du mois dernier";
+$result2 = $object->fetchNbDeliveryOrderByMonth($firstDayLastMonth, $lastDayLastMonth);
+$nbDeliveryOrderByMonth = count($result2);
+$dataInfo3 = $nbDeliveryOrderByMonth;
+
+$info4 = "Progression";
+
+
 
 /*
  * Actions
  */
-
-// None
 
 
 /*
@@ -69,8 +123,6 @@ $form = new Form($db);
 $formfile = new FormFile($db);
 $object = new General($db);
 
-// CSS
-$head = '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">';
 llxHeader($head, $langs->trans("Net à produire"));
 
 print load_fiche_titre($langs->trans("Net à produire"));
@@ -78,85 +130,58 @@ print load_fiche_titre($langs->trans("Net à produire"));
 // Chargement du template de navigation pour l'activité "Global"
 print $object->load_navbar();
 
-$titleItem1 = "Productions en cours";
-$titleItem2 = "Nb de productions en cours";
-$titleItem3 = "Productions les + proches";
-$titleItem4 = "Date et client la + proche";
-$titleItem5 = "Clients à produire";
-
-
-// Montant des production en cours
- $info1 = "Montant des productions M-1 ";
- $info2 = "Progression du montant du montant des productions :";
-
-// Nombre des production du mois dernier
-$info3 = "Nombre des productions du mois dernier ";
-$info4 = "Progression en % ";
-
-// Nombre des production du mois dernier
-$info5 = "Nombre des productions du mois dernier ";
-$info6 = "Progression en % ";
-
-// Nombre des production du mois dernier
-$info7 = "Nombre des productions du mois dernier ";
-$info8 = "Progression en % ";
-
-// Nombre des production du mois dernier
-$info9 = "Nombre des productions du mois dernier ";
-$info10 = "Progression en % ";
-
-
-
 include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
 
+
+// PRODUCTION LES + PROCHES
+$titleItem3 = "Productions les + proches";
+
+// Date et client la + proche
+$titleItem4 = "Date et client la + proche";
+
+// Client à produire
+$titleItem5 = "Clients à produire";
+
 ?>
-		<!-- BOXE WITHOUT STATS : box list -->
+
+		<!-- DATE ET CLIENT LA + PROCHE  -->
 				<div class="grid-list">
 					<div class="card bg-c-blue order-card">
 						<!-- Corps de la carte -->
 						<div class="card-body">
 							<div class="card-block">
 								<h4 class="text-center">
-									<?= print $titleItem3 ?>
+									<?php print $titleItem4 ?>
 								</h4>
+								<hr>
 								<p class="text-center">
 									<?php
 
-									// Total amount of validated customer orders
+									$result3 = $object->fetchOrderSortedByDeliveryDate($firstDayYear, $lastDayYear);
 
-									// $ret = $object->fetchAmountOrdersValidated(); // on recupere toutes les commandes validées
+									if(is_array($result3) && $result3 != null){
 
-									// foreach($ret as $rets){
+										foreach ($result3 as $res)
+										{
+											$societe = new Societe($db);
+											$societe->fetch($res->fk_soc);
 
-									// 	print '<p class="text-center">'.$rets->fk_soc.' - '.date($rets->date_livraison).'</p>';
-									// 	print '<hr>';
-									// }
+											$commande = new Commande($db);
+											$commande->fetch($res->rowid);
 
-									?>
-									</p>
+											print '<ul class="list-group">';
+											print '<li class="list-group-item d-flex justify-content-between align-items-center">';
+											print $societe->name; // redirection vers fiche client
 
-								 </div>
-							</div>
-						</div>
-					</div>
-					<!-- BOXE WITHOUT STATS -->
+											if($commande->date_livraison != null) {
+												print '<span class="badge badge-pill badge-light">'.date('j-m-Y', $commande->date_livraison).'</span></li>';
+											} else {
+												print '<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
+											}
+											print '</ul>';
+										}
 
-
-		<!-- BOXE WITHOUT STATS : box list -->
-				<div class="grid-list">
-					<div class="card bg-c-blue order-card">
-						<!-- Corps de la carte -->
-						<div class="card-body">
-							<div class="card-block">
-								<h4 class="text-center">
-									<?php print $titleItem4 ?> <!-- Titre de la boxe -->
-								</h4>
-								<p class="text-center">
-									<?php
-									// List of third parties for each validated order
-									// with the validation date
-									$soc = new Societe($db);
-
+									}
 
 									?>
 									</p>
@@ -166,8 +191,55 @@ include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
 					</div>
 					<!-- BOXE WITHOUT STATS -->
 
+					<!-- PRODUCTION LES + PROCHES -->
+				<div class="grid-list">
+					<div class="card bg-c-blue order-card">
+						<!-- Corps de la carte -->
+						<div class="card-body">
+							<div class="card-block">
+								<h4 class="text-center">
+									<?php print $titleItem3 ?>
+								</h4>
+								<hr>
+								<p class="text-center">
+									<?php
 
-		<!-- BOXE WITHOUT STATS : box list -->
+									 $result = $object->fetchDeliveredOrderToday();
+
+									if($result != null){
+
+										foreach ($result as $res)
+										{
+											$societe = new Societe($db);
+											$societe->fetch($res->fk_soc);
+
+											$commande = new Commande($db);
+											$commande->fetch($res->rowid);
+
+											print '<ul class="list-group">';
+											print '<li class="list-group-item d-flex justify-content-between align-items-center">';
+											print $societe->name; // redirection vers fiche client
+
+											if($commande->date_livraison != null) {
+												print '<span class="badge badge-pill badge-light">'.date('j-m-Y', $commande->date_commande).'</span></li>';
+											} else {
+												print '<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
+											}
+											print '</ul>';
+										}
+									} else {
+										print '<p class="center"><pan class="badge badge-pill badge-danger">Aucune commande validées pour ce jour </spa</p>';
+									}
+
+									?>
+									</p>
+								 </div>
+							</div>
+						</div>
+					</div>
+
+
+			<!-- CUSTOMER TO BE PRODUCED  -->
 				<div class="grid-list">
 					<div class="card bg-c-blue order-card">
 						<!-- Corps de la carte -->
@@ -179,18 +251,26 @@ include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
 								<hr>
 								<p class="text-center">
 									<?php
-									// List of third parties for each validated order
-									// with the validation date
-									$soc = new Societe($db);
-									$order = new Commande($db);
 
-									$rets = $object->fetchOrdersValidated(); // On recupère toutes les commandes validées qu'on regroupe dans
+									$rets = $object->fetchOrder(1);
 
+									if(is_array($rets) && $rets != null){
 
-									print '<p class="text-center">'.$ret->fk_soc.' - '.$ret->date_livraison.'</p>';
-									print '<hr>';
+										foreach ($rets as $ret)
+										{
+											$societe = new Societe($db);
+											$societe->fetch($ret->fk_soc);
 
+											$commande = new Commande($db);
+											$commande->fetch($ret->rowid);
 
+											print '<ul class="list-group">';
+											print '<li class="list-group-item d-flex justify-content-between align-items-center">';
+											print  '<i class="fas fa-address-card"></i>'.$societe->name; // redirection vers module tiers - onglet client
+											print '<span class="badge badge-pill badge-light">Réf. commande :  '.$commande->ref.'</span></li>';
+											print '</ul>';
+										}
+									}
 
 									?>
 									</p>
@@ -198,10 +278,8 @@ include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
 							</div>
 						</div>
 					</div>
-					<!-- BOXE WITHOUT STATS -->
-
-
 <?php
+
 // End of page
 llxFooter();
 $db->close();
