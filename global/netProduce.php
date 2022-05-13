@@ -73,29 +73,32 @@ $firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
 $lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
 
 
-// PRODUCTION EN COURS
+/**
+ * PRODUCTION EN COURS
+ */
 $titleItem1 = "Productions en cours";
 $object = new General($db);
-$dataItem1 = $object->fetchValidatedOrderOnCurrentYears($firstDayYear, $lastDayYear);
-$dataItem1 = price($dataItem1). "\n€";
-
+$result = $object->fetchValidatedOrderOnCurrentYears($firstDayYear, $lastDayYear);
+$dataItem1 = price($result). "\n€";
 
 // commande m- 1
 $info1 = "Montant des commandes livrées du mois dernier";
-$dataInfo1 = $object->fetchDeliveredOrderOnLastMonth($firstDayLastMonth, $lastDayLastMonth);
-
-if($dataInfo1 != NULL){
-	$dataInfo1 = price($dataInfo1)."\n€";
-} else {
-	$dataInfo1 = '<h5 style=color:blue;>Il n\'y aucune commandes validées pour le mois de '. htmlspecialchars($object->ReturnMonth($month)) . "</h5>";
-}
+$deliveryOrderOnLastMonth = $object->fetchDeliveredOrderOnLastMonth($firstDayLastMonth, $lastDayLastMonth);
+$dataInfo1 = price($deliveryOrderOnLastMonth) . "\n€";
 
 // Progression
 $info2 = "Progression";
 $deliveryOrderOnCurrentMonth = $object->fetchDeliveredOrderOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
-// $dataInfo2 = trader($deliveryOrderOnCurrentMonth)."\n%";
 
-// NB DE PRODUCTION EN COURS
+$result = $object->progress($deliveryOrderOnCurrentMonth, $deliveryOrderOnLastMonth);
+$dataInfo2 = $result  ."\n%";
+
+
+
+
+/**
+ * NOMBRE DE PRODUCTION EN COURS
+ */
 $titleItem2 = "Nb de productions en cours";
 $result1 = $object->fetchNbDeliveryOrderByYear($firstDayYear, $lastDayYear);
 $nbDeliveryOrderByYear = count($result1);
@@ -103,13 +106,20 @@ $dataItem2 = $nbDeliveryOrderByYear;
 
 // nb de commande livrées le mois dernier
 $info3 = "Nb des productions du mois dernier";
-$result2 = $object->fetchNbDeliveryOrderByMonth($firstDayLastMonth, $lastDayLastMonth);
-$nbDeliveryOrderByMonth = count($result2);
-$dataInfo3 = $nbDeliveryOrderByMonth;
+$result2 = $object->fetchNbDeliveryOrderByLastMonth($firstDayLastMonth, $lastDayLastMonth);
+$nbDeliveryOrderByLastMonth = count($result2);
+$dataInfo3 = $nbDeliveryOrderByLastMonth;
+
+// sur le mois dernier
+$result3 = $object->fetchNbDeliveryOrderByCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
+$nbDeliveryOrderByCurrentMonth = count($result3);
+$dataInfo4 = $nbDeliveryOrderByCurrentMonth;
 
 $info4 = "Progression";
+$result = $object->progress($nbDeliveryOrderByCurrentMonth, $nbDeliveryOrderByLastMonth);
+$dataInfo4 = $result . "\n%";
 
-
+// todo : creation d'une fonction javascript pour coloriser la diminution ou l'augmentation
 
 /*
  * Actions
