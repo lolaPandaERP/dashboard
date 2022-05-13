@@ -1109,6 +1109,23 @@ class General extends FactureStats
 
 
 	/**
+	 * Return the progress between 2 values.
+	 * It's variation rate
+	 */
+	public function progress($VA, $VD){
+
+		// ( (VA - VD) / VA) * 100
+		$VA;
+		$VD;
+		$res = $VA - $VD;
+		$res = $res / $VD;
+		$resultat = $res * 100;
+		$resultat = round($resultat, 2);
+
+		return $resultat;
+	}
+
+	/**
 	 * Return all order by passing the status as a parameter to filter the search
 	 */
 	function fetchOrder($fk_statut=''){
@@ -1134,10 +1151,10 @@ class General extends FactureStats
 		$today = date('Y-m-d');
 
 		// request
-		// $sql = "SELECT * FROM " . MAIN_DB_PREFIX . "commande";
-		// $sql .= " WHERE fk_statut = 3";
-		// $sql .= "AND date_commande = ".$today;
-		$sql = "SELECT * FROM `llx_commande` WHERE fk_statut = 3 AND date_commande = \"2022-05-12\";";
+		// $sql = "SELECT * FROM `llx_commande` WHERE date_commande = \"2022-05-12\" AND fk_statut = 3;";
+		$sql = "SELECT * FROM " . MAIN_DB_PREFIX . "commande";
+		$sql .= " WHERE date_commande = \"$today\" ";
+		$sql .= "AND fk_statut = 3";
 		$resql = $db->query($sql);
 		$result = [];
 
@@ -1266,6 +1283,201 @@ class General extends FactureStats
 			}
 		}
 
+		return $result;
+	}
+
+
+
+	/**
+	 * INVOICES
+	 */
+
+	 public function outstandingBillOnYear($firstDayYear, $lastDayYear){
+
+			global $db;
+
+		 	// Encours total sur l'annee
+			$sql = "SELECT SUM(total_ht) as total_ht";
+			$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+			$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+			$sql .= " AND paye = 0";
+			$sql .= " AND fk_statut != 0 ";
+
+			$resql = $this->db->query($sql);
+
+			if ($resql) {
+				if ($db->num_rows($resql)) {
+					$obj = $db->fetch_object($resql);
+					$result = $obj->total_ht;
+				}
+				$db->free($resql);
+			}
+			return $result;
+	 }
+
+	 // total des encours cumulés sur les années passées
+	 public function total_outstandingBillPastYear($firstDayLastMonth, $lastDayLastMonth){
+
+		// Encours total sur l'année n - 1 (cumul des montants)
+		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE datef BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "' ";
+		$sql .= " AND paye= 0";
+		$sql .= " AND fk_statut != 0 ";
+
+		$resql = $this->db->query($sql);
+
+			if ($resql) {
+				if ($this->db->num_rows($resql)) {
+					$obj = $this->db->fetch_object($resql);
+					$result = $obj->total_ht;
+				}
+				$this->db->free($resql);
+			}
+			return $result;
+	 }
+
+	 /**
+	  * Return all unpaid customer invoice on current month
+	  */
+	 public function outstandingCustomerOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth){
+
+		// Encours client sur le mois courant
+		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
+		$sql .= " AND paye = 0 ";
+		$sql .= " AND fk_statut != 0 ";
+
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->total_ht;
+			}
+			$this->db->free($resql);
+		}
+		return $result;
+	 }
+
+	 // Fetch all unpaid customer invoices whose due date has passed
+	public function fetchCustomerBillExceed(){
+		global $db;
+
+		$day = date('Y-m-d');
+		$sql = "SELECT SUM(total_ttc) as total_ttc FROM ".MAIN_DB_PREFIX."facture";
+		$sql .= " WHERE date_lim_reglement < \"$day\" ";
+		$sql .= "AND paye = 0 ";
+		$sql .= "AND fk_statut != 0 ";
+
+		$resql = $db->query($sql);
+
+		if ($resql) {
+			if ($db->num_rows($resql)) {
+				$obj = $db->fetch_object($resql);
+				$result = $obj->total_ttc;
+			}
+			$db->free($resql);
+		}
+		return $result;
+	}
+
+
+	/**
+	 * -------- SUPPLIER INVOICE ----------
+	 */
+
+	 /**
+	  * Return all unpaid supplier invoices on current year
+	  */
+	 public function outstandingSupplierOnYear($firstDayYear, $lastDayYear){
+			// Encours fournisseur sur l'année courante
+		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+		$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+		$sql .= " AND paye=0 ";
+		$sql .= " AND fk_statut != 0 ";
+
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->total_ht;
+			}
+			$this->db->free($resql);
+		}
+		return $result;
+	 }
+
+	 /**
+	  * Return all inpaid supplier invoice on current month
+	  */
+	 public function outstandingSupplierOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth){
+
+		// Encours fournisseur du mois courant
+	   $sql = "SELECT SUM(total_ht) as total_ht";
+	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+	   $sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
+	   $sql .= " AND paye=0 ";
+	   $sql .= " AND fk_statut != 0 ";
+
+	   $resql = $this->db->query($sql);
+
+	   if ($resql) {
+		   if ($this->db->num_rows($resql)) {
+			   $obj = $this->db->fetch_object($resql);
+			   $result = $obj->total_ht;
+		   }
+		   $this->db->free($resql);
+	   }
+	   return $result;
+	}
+
+	 /**
+	  * Return all inpaid supplier invoice on last month
+	  */
+	  public function outstandingSupplierOnLastMonth($firstDayLastMonth, $lastDayLastMonth){
+
+		// Encours fournisseur du mois courant
+	   $sql = "SELECT SUM(total_ht) as total_ht";
+	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+	   $sql .= " WHERE datef BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "'";
+	   $sql .= " AND paye=0 ";
+	   $sql .= " AND fk_statut != 0 ";
+
+	   $resql = $this->db->query($sql);
+
+	   if ($resql) {
+		   if ($this->db->num_rows($resql)) {
+			   $obj = $this->db->fetch_object($resql);
+			   $result = $obj->total_ht;
+		   }
+		   $this->db->free($resql);
+	   }
+	   return $result;
+	}
+
+	// Fetch all unpaid supplier invoices whose due date has passed
+	public function fetchSupplierBillExceed(){
+		global $db;
+
+		$day = date('Y-m-d');
+		$sql = "SELECT SUM(total_ttc) as total_ttc FROM ".MAIN_DB_PREFIX."facture_fourn";
+		$sql .= " WHERE date_lim_reglement < \"$day\" ";
+		$sql .= "AND paye = 0 ";
+		$sql .= "AND fk_statut != 0 ";
+
+		$resql = $db->query($sql);
+
+		if ($resql) {
+			if ($db->num_rows($resql)) {
+				$obj = $db->fetch_object($resql);
+				$result = $obj->total_ttc;
+			}
+			$db->free($resql);
+		}
 		return $result;
 	}
 }
