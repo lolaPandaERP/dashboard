@@ -88,92 +88,26 @@ $firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
 $lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
 
 
-
-
-/* BOX 1 */
+/**
+ * CUSTOMER OUTSTANDING
+ */
 $titleItem1 = "Encours clients";
-$info1 = "Encours du mois dernier";
-$info2 = "Progression ";
-
-// Encours total sur l'annee
-$sql = "SELECT SUM(total_ht) as total_ht";
-$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-$sql .= " AND paye= 0";
-$sql .= " AND fk_statut != 0 ";
-
-$resql = $db->query($sql);
-
-if ($resql) {
-	if ($db->num_rows($resql)) {
-		$obj = $db->fetch_object($resql);
-		$dataItem1 = $obj->total_ht;
-	}
-	$db->free($resql);
-}
-
-// Encours total sur l'année dernière
-$sql = "SELECT SUM(total_ht) as total_ht";
-$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-$sql .= " WHERE datef BETWEEN '" . $firstDayLastYear . "' AND '" . $lastDayLastYear . "' ";
-$sql .= " AND paye= 0";
-$sql .= " AND fk_statut != 0 ";
-
-$resql = $db->query($sql);
-
-if ($resql) {
-	if ($db->num_rows($resql)) {
-		$obj = $db->fetch_object($resql);
-		$amountLastsYears = $obj->total_ht;
-	}
-	$db->free($resql);
-}
-
-$dataItem1 = floatval($dataItem1 + $amountLastsYears) . "\n€";
+$outstandingBillOnYear = $general->outstandingBillOnYear($firstDayYear, $lastDayYear);
+$dataItem1 = price($outstandingBillOnYear)."\n€";
 
 // Encours C sur le mois dernier
-$sql = "SELECT SUM(total_ht) as total_ht";
-$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-$sql .= " WHERE datef BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "' ";
-$sql .= " AND paye=0 ";
-$sql .= " AND fk_statut != 0 ";
+$info1 = "Encours du mois dernier";
+$accOfPastYears = $general->total_outstandingBillPastYear($firstDayLastMonth, $lastDayLastMonth);
+$dataInfo1 = price($accOfPastYears)."\n€";
 
-$resql = $db->query($sql);
-
-if ($resql) {
-	if ($db->num_rows($resql)) {
-		$obj = $db->fetch_object($resql);
-		$dataInfo1 = $obj->total_ht;
-	}
-	$db->free($resql);
-}
-
-if ($dataInfo1 <= 0) {
-	$dataInfo1 = "<h5 style='color : #90C274'>Aucun encours client </>";
-} else {
-	// conversion
-	$dataInfo1 = floatval($dataInfo1) . "\n€";
-}
-
-// Encours client sur le mois courant
-$sql = "SELECT SUM(total_ht) as total_ht";
-$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
-$sql .= " AND paye=0 ";
-$sql .= " AND fk_statut != 0 ";
-
-$resql = $db->query($sql);
-
-if ($resql) {
-	if ($db->num_rows($resql)) {
-		$obj = $db->fetch_object($resql);
-		$outstandingCurrentMonth = $obj->total_ht;
-	}
-	$db->free($resql);
-}
+// sur le mois courant (pour calcul progression)
+$outstandingCurrentMonth = $general->outstandingCustomerOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
 
 // progression de l'encours client par rapport au mois dernier
-$dataInfo2 = intval((($outstandingCurrentMonth - $dataInfo1) / $dataInfo1) * 100)."\n%";
+$info2 = "Progression ";
+
+$resultat = $general->progress($outstandingCurrentMonth, $accOfPastYears);
+$dataInfo2 = $resultat."\n%";
 
 // Condition d'affichage pour la progression
 if($dataInfo2 > 0){
@@ -181,145 +115,47 @@ if($dataInfo2 > 0){
 } else {
 	$dataInfo2 = '<p style=color:green>'.$dataInfo2;
 }
-/* END BOX 1 */
 
 
-/* SUPPLIERS OUTSTANDING */
+
+/**
+ *  SUPPLIERS OUTSTANDING
+ */
+
 $titleItem2 = "Encours fournisseurs";
-$info3 = "Encours du mois dernier";
+$outstandingSupplierOnYear = $general->outstandingSupplierOnYear($firstDayYear, $lastDayYear);
+$dataItem2 = price($outstandingSupplierOnYear) . "\n€";
+
+$info3 = "Encours fournisseur du mois dernier";
+$outstandingSupplierOnLastMonth = $general->outstandingSupplierOnLastMonth($firstDayLastMonth, $lastDayLastMonth);
+$dataInfo3 = price($outstandingSupplierOnLastMonth)."\n€";
+
 $info4 = "Progression";
+$outSupplierCurrentMonth = $general->outstandingSupplierOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
 
-// Encours fournisseur sur l'année courante
-$sql = "SELECT SUM(total_ht) as total_ht";
-$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-$sql .= " AND paye=0 ";
-$sql .= " AND fk_statut != 0 ";
-
-$resql = $db->query($sql);
-
-if ($resql) {
-	if ($db->num_rows($resql)) {
-		$obj = $db->fetch_object($resql);
-		$dataItem2 = $obj->total_ht;
-	}
-	$db->free($resql);
-}
-
-$dataItem2 = floatval($dataItem2) . "\n€";
-
-// Encours fournisseur du mois courant
-$sql = "SELECT SUM(total_ht) as total_ht";
-$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
-$sql .= " AND paye=0 ";
-$sql .= " AND fk_statut != 0 ";
-
-$resql = $db->query($sql);
-
-if ($resql) {
-	if ($db->num_rows($resql)) {
-		$obj = $db->fetch_object($resql);
-		$outSupplierCurrentMonth = $obj->total_ht;
-	}
-	$db->free($resql);
-}
-$outSupplierCurrentMonth = floatval($outSupplierCurrentMonth);
-
-// Encours fournisseur du mois dernier
-$sql = "SELECT SUM(total_ht) as total_ht";
-$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-$sql .= " WHERE datef BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "'";
-$sql .= " AND paye= 0 ";
-$sql .= " AND fk_statut != 0 ";
-
-$resql = $db->query($sql);
-
-if ($resql) {
-	if ($db->num_rows($resql)) {
-		$obj = $db->fetch_object($resql);
-		$dataInfo3 = $obj->total_ht;
-	}
-	$db->free($resql);
-}
-$dataInfo3 = floatval($dataInfo3) . "\n€";
+$resultat = $general->progress($outSupplierCurrentMonth, $outstandingSupplierOnLastMonth);
+$dataInfo4 = $resultat."\n%";
 
 // Condition d'affichage pour l'augmentation/diminution des encours fournisseurs
 if ($dataInfo3 <= 0) {
 	$dataInfo3 = "<p style='color : #90C274'>Aucun encours fournisseur </p>";
 }
 
-// Progression des encours fournisseurs par rapport au mois dernier
-$dataInfo4 = intval(($outSupplierCurrentMonth - $dataInfo3) / $dataInfo3 * 100). "\n%";
 
-if($dataInfo4 < 0){
-	$dataInfo4 = '<p style=color:green>'.$dataInfo4.'</p>';
-} else {
-	$dataInfo4 = '<p style=color:red>'.$dataInfo4.'</p>';
-}
+/**
+ * CUSTOMER AND SUPPLIERS OUTSATNDING
+ */
+$titleItem3 = "Encours C/F";
+$dataItem3 = price($outstandingBillOnYear - $outstandingSupplierOnYear)."\n€"; // soustraction des encours client et encours fournisseur
 
-// ENCOURS CLIENT ET FOURNISSEUR
-$dataItem3 = floatval($dataItem1 - $dataItem2) ."\n€";
-
-$info5 = "Total du mois dernier";
-$dataInfo5 = floatval($dataInfo1 - $dataInfo3) . "\n€";
+$info5 = "Total des encours C/F du mois dernier";
+$dataInfo5 = floatval($accOfPastYears - $outstandingSupplierOnLastMonth) . "\n€"; // encours client m-1 - encours fourn m-1
 
 $info6 = "Progression";
+$outCFCurrentMonth = ($outstandingCurrentMonth - $outstandingSupplierOnLastMonth); //
 
-// encours fournisseur du mois courant
-$sql = "SELECT SUM(total_ht) as total_ht";
-$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
-$sql .= " AND paye=0 ";
-$sql .= " AND fk_statut != 0 ";
-$resql = $db->query($sql);
-
-if ($resql) {
-	if ($db->num_rows($resql)) {
-		$obj = $db->fetch_object($resql);
-		$total_outSupplierCurrentMonth = $obj->total_ht;
-	}
-	$db->free($resql);
-}
-
-// encours CLIENT du mois courant
-$sql = "SELECT SUM(total_ht) as total_ht";
-$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
-$sql .= " AND paye=0 ";
-$sql .= " AND fk_statut != 0 ";
-$resql = $db->query($sql);
-
-if ($resql) {
-	if ($db->num_rows($resql)) {
-		$obj = $db->fetch_object($resql);
-		$outCustomerCurrentMonth = $obj->total_ht;
-	}
-	$db->free($resql);
-}
-
-// encours fournisseur du mois dernier
-$sql = "SELECT SUM(total_ht) as total_ht";
-$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
-$sql .= " AND paye=0 ";
-$sql .= " AND fk_statut != 0 ";
-$resql = $db->query($sql);
-
-if ($resql) {
-	if ($db->num_rows($resql)) {
-		$obj = $db->fetch_object($resql);
-		$outSupplierLastMonth = $obj->total_ht;
-	}
-	$db->free($resql);
-}
-
-$total_outCFCurrentMonth = $outCustomerCurrentMonth - $outSupplierCurrentMonth;
-$dataInfo6 = (($total_outCFCurrentMonth - $dataInfo5) / $dataInfo5) * 100 . "\n%";
-
-/*
- * Actions
- */
+$resultat = $general->progress($outCFCurrentMonth, $dataInfo5);
+$dataInfo6= $resultat."\n%";
 
 
 /*
@@ -340,54 +176,9 @@ print $object->load_navbar();
 
 // template for boxes
 include DOL_DOCUMENT_ROOT . '/custom/tab/template/template_boxes2.php';
-
-// OUTSTANDING C/F
-$titleItem3 = "Encours C/F";
-
-
-// Customer outstandings exceeded
-// $sql = "SELECT SUM(total_ttc) as total_ttc";
-// $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-// $sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-// $sql .= "AND date_lim_reglement <= '" . $db->idate(dol_now()) . "'";
-// $sql .= "AND paye = 0";
-
-// $resql = $db->query($sql);
-
-// if ($resql) {
-// 	if ($db->num_rows($resql)) {
-// 		$obj = $db->fetch_object($resql);
-// 		$outExceed = $obj->total_ttc;
-// 	}
-// 	$db->free($resql);
-// }
-
-// $dataItem2 = price($outExceed);
-
-// // Customer outstandings exceeded
-// $sql = "SELECT SUM(total_ttc) as total_ttc";
-// $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-// $sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-// $sql .= "AND date_lim_reglement <= '" . $db->idate(dol_now()) . "'";
-// $sql .= "AND paye = 0";
-
-// $resql = $db->query($sql);
-
-// if ($resql) {
-// 	if ($db->num_rows($resql)) {
-// 		$obj = $db->fetch_object($resql);
-// 		$outSupplierExceed = $obj->total_ttc;
-// 	}
-// 	$db->free($resql);
-// }
-
-// price($outSupplierExceed);
-
-
 ?>
 
-
-<!-- Outstanding supplier -->
+<!-- CUSTOMER OUTSTANDING -->
 			<!-- bloc 1 -->
 			<div class="grid-1">
 				<div class="card bg-c-blue order-card">
@@ -417,70 +208,44 @@ $titleItem3 = "Encours C/F";
 
 <?php
 
+// Customer outstandings exceeded
 $titleItem4 = "Encours clients dépassés";
-$info7 = "par rapport au mois dernier";
+$outCustomerExceeded = $general->fetchCustomerBillExceed();
+$dataItem4 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustomerExceeded) . "\n€";
 
+// Supplier outstandings exceeded
 $titleItem5 = "Encours fournisseurs dépassés";
-$info8 = "par rapport au mois dernier";
-
+$outSupplierExceeded = $general->fetchSupplierBillExceed();
+$dataItem5 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outSupplierExceeded) . "\n€";
 
 ?>
-<!-- Outstanding customer exceed -->
-<div class="grid-3">
-	<div class="card bg-c-blue order-card">
-		<!-- Corps de la carte -->
-		<div class="card-body">
-			<div class="card-block">
-				<h4 class="text-center">
-					<?php print $titleItem4 ?>
-					<!-- Titre de la boxe -->
-				</h4>
-				<h1 class="text-center">
-					<span class="success">
-						<?php print $dataItem4 ?> €
-					</span>
-				</h1>
-				<hr>
-				<div class="element">
-					<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
-					<p class="text-right" id="progress"><?php print $dataInfo8 ?> %
-					<?php print $info8 ?>
-				</div>
-			</div>
-		</div>
-		<a href="#" class="btn btn-primary">GRAPHIQUE</a>
-	</div>
-</div>
-<!-- end Outstanding customer exceed -->
 
-<!-- Outstanding suppliers exceed -->
-<div class="grid-3">
-	<div class="card bg-c-blue order-card">
-		<!-- Corps de la carte -->
-		<div class="card-body">
-			<div class="card-block">
-				<h4 class="text-center">
-					<?php print $titleItem5 ?>
-					<!-- Titre de la boxe -->
-				</h4>
-				<h1 class="text-center">
-					<span class="success">
-						<?php print $dataItem5 ?> €
-					</span>
-				</h1>
-				<hr>
-				<div class="element">
-					<p class="text-right"></p> <!-- Donnée par rapport à l'année ou au mois dernier -->
-					<p class="text-right" id="progress"><?php print $dataInfo8 ?> %
-					<?php print $info8 ?>
-				</div>
-			</div>
-		</div>
-		<a href="#" class="btn btn-primary">GRAPHIQUE</a>
-	</div>
-</div>
-</body>
 <!-- end Outstanding suppliers exceed -->
+<div class="card-deck">
+  <div class="card">
+    <div class="card-body">
+		<h4 class="text-center">
+			<?php print $titleItem4 ?>
+		</h4><hr>
+		</br>
+		<h1 class="text-center">
+			<?php print $dataItem4 ?>
+		</h1>
+    </div>
+
+  </div>
+  <div class="card">
+    <div class="card-body">
+		<h4 class="text-center">
+			<?php print $titleItem5 ?>
+		</h4><hr>
+		</br>
+		<h1 class="text-center">
+			<?php print $dataItem5 ?>
+		</h1>
+    </div>
+  </div>
+
 
 <?php
 
