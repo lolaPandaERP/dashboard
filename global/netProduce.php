@@ -79,6 +79,7 @@ $object = new General($db);
 $dataItem1 = $object->fetchValidatedOrderOnCurrentYears($firstDayYear, $lastDayYear);
 $dataItem1 = price($dataItem1). "\n€";
 
+
 // commande m- 1
 $info1 = "Montant des commandes livrées du mois dernier";
 $dataInfo1 = $object->fetchDeliveredOrderOnLastMonth($firstDayLastMonth, $lastDayLastMonth);
@@ -171,12 +172,12 @@ $titleItem5 = "Clients à produire";
 
 											print '<ul class="list-group">';
 											print '<li class="list-group-item d-flex justify-content-between align-items-center">';
-											print $societe->name; // redirection vers fiche client
+											print  '<i class="fas fa-address-card fa-2x"></i>'.$societe->name;
 
 											if($commande->date_livraison != null) {
-												print '<span class="badge badge-pill badge-light">'.date('j-m-Y', $commande->date_livraison).'</span></li>';
+												print '<span class="badge-* badge-pill badge-primary">Date de livraison prévue : '.date('j-m-Y', $commande->date_livraison).'</span></li>';
 											} else {
-												print '<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
+												print '<span class="badge-* badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
 											}
 											print '</ul>';
 										}
@@ -218,17 +219,17 @@ $titleItem5 = "Clients à produire";
 
 											print '<ul class="list-group">';
 											print '<li class="list-group-item d-flex justify-content-between align-items-center">';
-											print $societe->name; // redirection vers fiche client
+											print  '<i class="fas fa-address-card fa-2x"></i>'.$societe->name;
 
 											if($commande->date_livraison != null) {
-												print '<span class="badge badge-pill badge-light">'.date('j-m-Y', $commande->date_commande).'</span></li>';
+												print '<span class="badge-* badge-pill badge-primary">Date de création : '.date('j-m-Y', $commande->date_commande).'</span></li>';
 											} else {
-												print '<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
+												print '<span class="badge-* badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
 											}
 											print '</ul>';
 										}
 									} else {
-										print '<p class="center"><pan class="badge badge-pill badge-danger">Aucune commande validées pour ce jour </spa</p>';
+										print '<p class="center"><pan class="badge-* badge-pill badge-danger">Aucune commande validées pour ce jour </spa</p>';
 									}
 
 									?>
@@ -266,8 +267,8 @@ $titleItem5 = "Clients à produire";
 
 											print '<ul class="list-group">';
 											print '<li class="list-group-item d-flex justify-content-between align-items-center">';
-											print  '<i class="fas fa-address-card"></i>'.$societe->name; // redirection vers module tiers - onglet client
-											print '<span class="badge badge-pill badge-light">Réf. commande :  '.$commande->ref.'</span></li>';
+											print  '<i class="fas fa-address-card fa-2x"></i>'.$societe->name; // redirection vers module tiers - onglet client
+											print '<span class="badge-* badge-pill badge-primary">Réf. commande :  '.$commande->ref.'</span></li>';
 											print '</ul>';
 										}
 									}
