@@ -1064,10 +1064,10 @@ class General extends FactureStats
 			$tab4 = DOL_URL_ROOT.'/custom/tab/global/netProduce.php';
 
 			$html .= "\n";
+
 			/**
 			 * Dashboard header for Global activity
 			 */
-			$active_tab = '';
 
 			$html .= '<div class="container-fluid">';
 			$html .= '<nav class="navbar-brand">';
@@ -1083,6 +1083,52 @@ class General extends FactureStats
 
 			return $html;
 	}
+
+	/**
+	 * Return le cumul des montants du compte courant sur l'année
+	 */
+	public function fetchSoldeOnYear(){
+
+		$ret = $this->getIdBankAccount();
+
+		$sql = "SELECT SUM(amount) as amount";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "bank";
+		$sql .= " WHERE fk_account = " . $ret->rowid;
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->amount;
+			}
+			$this->db->free($resql);
+		}
+		return $result;
+	}
+
+	/**
+	 * Retourne le solde du compte dsur le mois dernier
+	 */
+	public function fetchSoldeOnLastMonth($firstDayLastMonth, $lastDayLastMonth){
+
+		$ret = $this->getIdBankAccount();
+
+		$sql = "SELECT SUM(amount) as amount";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "bank";
+		$sql .= " WHERE fk_account = " . $ret->rowid;
+		$sql .= "AND dateo BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "' ";
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->amount;
+			}
+			$this->db->free($resql);
+		}
+		return $result;
+	}
+
 
 	/**
 	 * Return the 12 months of the year
@@ -1267,7 +1313,7 @@ class General extends FactureStats
 		return $result;
 	}
 
-	function fetchNbDeliveryOrderByMonth($firstDayLastMonth, $lastDayLastMonth){
+	function fetchNbDeliveryOrderByLastMonth($firstDayLastMonth, $lastDayLastMonth){
 
 		global $db;
 		// request
@@ -1285,6 +1331,26 @@ class General extends FactureStats
 
 		return $result;
 	}
+
+	function fetchNbDeliveryOrderByCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth){
+
+		global $db;
+		// request
+		$sql = "SELECT * ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
+		$sql .= " WHERE date_commande BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
+		$sql .= "AND fk_statut = 3";
+		$resql = $db->query($sql);
+		$result = [];
+		if($resql){
+			while($obj = $db->fetch_object(($resql))){
+				$result[] = $obj;
+			}
+		}
+
+		return $result;
+	}
+
 
 
 
