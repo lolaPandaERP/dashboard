@@ -65,8 +65,6 @@ $formfile = new FormFile($db);
 $general = new General($db);
 $object = new Commercial($db);
 
-// Template NavBar
-$head = '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">';
 llxHeader($head, $langs->trans("Devis en cours"));
 
 print load_fiche_titre($langs->trans("Devis en cours"));
@@ -74,7 +72,60 @@ print load_fiche_titre($langs->trans("Devis en cours"));
 // Chargement du template de navigation pour l'activité "Global"
 print $object->load_navbar();
 
-include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes4.php';
+
+$titleItem5 = "Devis en cours";
+
+$titleItem1 = "Devis en cours ALBERT";
+$titleItem2 = "Devis en cours ANTHONY";
+$titleItem3 = "Montant des devis en cours";
+
+
+?>
+
+<!-- CUSTOMER TO BE PRODUCED  -->
+<div class="grid-list">
+	<div class="card bg-c-blue order-card">
+		<!-- Corps de la carte -->
+		<div class="card-body">
+			<div class="card-block">
+				<h4 class="text-center">
+					<?php print $titleItem5 ?>
+				</h4>
+				<hr>
+				<p class="text-center">
+					<?php
+
+					// $rets = $object->fetchOrder(1);
+
+					if(is_array($rets) && $rets != null){
+
+						foreach ($rets as $ret)
+						{
+							$societe = new Societe($db);
+							$societe->fetch($ret->fk_soc);
+
+							$commande = new Commande($db);
+							$commande->fetch($ret->rowid);
+
+							print '<ul class="list-group">';
+							print '<li class="list-group-item d-flex justify-content-between align-items-center">';
+							print  '<i class="fas fa-address-card fa-2x"></i>'.$societe->name; // redirection vers module tiers - onglet client
+							print '<span class="badge-* badge-pill badge-primary">Réf. commande :  '.$commande->ref.'</span></li>';
+							print '</ul>';
+						}
+					}
+
+					?>
+					</p>
+				 </div>
+			</div>
+		</div>
+	</div>
+
+	<?php
+
+
+include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes3.php';
 
 // End of page
 llxFooter();

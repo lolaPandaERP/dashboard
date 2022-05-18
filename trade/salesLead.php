@@ -57,6 +57,26 @@ require_once DOL_DOCUMENT_ROOT . '/custom/tab/class/commercial.class.php';
 $langs->loadLangs(array("tab@tab"));
 $action = GETPOST('action', 'aZ09');
 
+
+/**
+ * PROSPECTS
+ */
+$titleItem1 = "Prospects";
+$dataItem1 = 50;
+
+
+/**
+ * CUSTOMERS
+ */
+$titleItem2 = "Clients";
+
+
+/**
+ * PROSPECTS TO RELAUNCH
+ */
+$titleItem3 = "Prospects à relancer";
+
+
 /*
  * Actions
  */
@@ -73,9 +93,6 @@ $formfile = new FormFile($db);
 $general = new General($db);
 $object = new Commercial($db);
 
-$head = '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">';
-print '<link rel="stylesheet" href="' . DOL_DOCUMENT_ROOT . '/custom/tab/css/tab.css' . '">';
-
 // Outstandings customer and
 llxHeader($head, $langs->trans("Prospects"));
 
@@ -84,6 +101,7 @@ print load_fiche_titre($langs->trans("Prospects"));
 print $object->load_navbar();
 
 include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes3.php';
+
 
 // End of page
 llxFooter();

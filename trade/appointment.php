@@ -55,8 +55,13 @@ require_once DOL_DOCUMENT_ROOT . '/custom/tab/class/commercial.class.php';
 
 // Load translation files required by the page
 $langs->loadLangs(array("tab@tab"));
-
 $action = GETPOST('action', 'aZ09');
+
+$titleItem1 = "RDV à venir";
+$titleItem2 = "Rendez-vous ALBERT";
+$titleItem3 = "Rendez-vous ANTHONY";
+$titleItem4 = "Rendez-vous REALISES";
+
 
 /*
  * Actions
@@ -72,16 +77,15 @@ $action = GETPOST('action', 'aZ09');
 $form = new Form($db);
 $formfile = new FormFile($db);
 $general = new General($db);
-$object = new Commercial($db);
-$head = '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">';
+$commercial = new Commercial($db);
 
 llxHeader($head, $langs->trans("Rendez-vous"));
 
 print load_fiche_titre($langs->trans("Rendez-vous"));
 
-print $object->load_navbar();
+print $commercial->load_navbar();
 
-include DOL_DOCUMENT_ROOT.'/custom/tab/global/template/template_boxes4.php';
+include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes4.php';
 
 // End of page
 llxFooter();

@@ -1,6 +1,6 @@
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 	<link rel="stylesheet" type="text/css" href="tab.css">
 	<link rel="stylesheet" type="text/css" href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/css/bootstrap-extended.min.css">
 	<link rel="stylesheet" type="text/css" href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/fonts/simple-line-icons/style.min.css">
@@ -16,13 +16,16 @@
 				<div class="card bg-c-blue order-card">
 					<!-- Corps de la carte -->
 					<div class="card-body">
+					<div class="pull-right"><span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
 						<!-- <div class="card-block"> -->
 						<h4 class="text-center">
 							<?php print $titleItem1 ?>
 						</h4>
 						<h1 class="text-center">
 							<?php print $dataItem1 ?>
+
 						</h1>
+
 						<hr>
 						<div class="col-lg-14">
   							<div class="center-block">
@@ -39,12 +42,14 @@
 				<div class="card bg-c-blue order-card">
 					<!-- Corps de la carte -->
 					<div class="card-body">
+					<div class="pull-right"><span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
 						<!-- <div class="card-block"> -->
 						<h4 class="text-center">
 							<?php print $titleItem2 ?>
 						</h4>
 						<h1 class="text-center">
 							<?php print $dataItem2 ?>
+
 						</h1>
 						<hr>
 						<div class="col-lg-14">

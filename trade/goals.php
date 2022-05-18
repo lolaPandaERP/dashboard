@@ -68,8 +68,6 @@ $formfile = new FormFile($db);
 $general = new General($db);
 $object = new Commercial($db);
 
-// Template NavBar
-$head = '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">';
 llxHeader($head, $langs->trans("Objectifs"));
 
 print load_fiche_titre($langs->trans("Objectifs"));
@@ -77,7 +75,7 @@ print load_fiche_titre($langs->trans("Objectifs"));
 // Chargement du template de navigation pour l'activité "Global"
 print $object->load_navbar();
 
-include DOL_DOCUMENT_ROOT.'/custom/tab/global/template/template_boxes4.php';
+include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes4.php';
 
 // End of page
 llxFooter();
