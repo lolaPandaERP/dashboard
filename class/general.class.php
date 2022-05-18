@@ -1065,21 +1065,13 @@ class General extends FactureStats
 
 			$html .= "\n";
 
-			/**
-			 * Dashboard header for Global activity
-			 */
-
-			$html .= '<div class="container-fluid">';
-			$html .= '<nav class="navbar-brand">';
-			$html .= '<ul class="nav justify-content-end">';
-			$html .=' <img src="../img/icon/global.png" alt="" class="d-inline-block align-text-top" width=50px>';
-
-			$html .= '<li class="nav"><a class="nav-link" href="'.$tab1.'" >Général</a></li>';
-			$html .= '<li class="nav"><a class="nav-link" href="'.$tab2.'">Encours C/F</a></li>';
-			$html .= '<li class="nav"><a class="nav-link" href="'.$tab3.'">Trésorerie et prévisionnel</a></li>';
-			$html .= '<li class="nav"><a class="nav-link" href="'.$tab4.'">Net à produire</a></li>';
-
-			$html .= '</ul>	</nav> </div>';
+			$html .= '
+			<div class="navbar">
+				<a class="active" href="'.$tab1.'"><i class="fa fa-fw fa-home"></i> Général</a>
+				<a href="'.$tab2.'"><i class="fa fa-pie-chart"></i> Encours C/F</a>
+				<a href="'.$tab3.'"><i class="fa fa-bank"></i> Trésorerie et prévisionnel</a>
+				<a href="'.$tab4.'"><i class="fa fa-briefcase"></i> Net à produire</a>
+			</div>';
 
 			return $html;
 	}
@@ -1107,16 +1099,14 @@ class General extends FactureStats
 	}
 
 	/**
-	 * Retourne le solde du compte dsur le mois dernier
+	 * Retourne le solde du compte sur le mois dernier (tresoreire m-1) (debit)
 	 */
 	public function fetchSoldeOnLastMonth($firstDayLastMonth, $lastDayLastMonth){
 
-		$ret = $this->getIdBankAccount();
-
-		$sql = "SELECT SUM(amount) as amount";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "bank";
-		$sql .= " WHERE fk_account = " . $ret->rowid;
-		$sql .= "AND dateo BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "' ";
+		// $sql = "SELECT SUM(amount) as amount";
+		// $sql .= " FROM " . MAIN_DB_PREFIX . "bank";
+		// $sql .= "WHERE dateo BETWEEN \"2022-04-01\" AND \"2022-04-30\";";
+		$sql = "SELECT SUM(amount) FROM `llx_bank` WHERE dateo BETWEEN \"2022-04-01\" AND \"2022-04-30\";";
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
@@ -1125,6 +1115,8 @@ class General extends FactureStats
 				$result = $obj->amount;
 			}
 			$this->db->free($resql);
+		} else {
+			setEventMessage("Erreur dans la recherche des données pour le calcul de la trésorerie du mois dernier...", 'errors') ;
 		}
 		return $result;
 	}
@@ -1358,6 +1350,48 @@ class General extends FactureStats
 	 * INVOICES
 	 */
 
+	 public function fetchTurnoverOnYear($firstDayYear, $lastDayYear){
+
+
+			$sql = "SELECT SUM(total_ht) as total_ht";
+			$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+			$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+			$sql .= " AND fk_statut != 0";
+
+			$resql = $this->db->query($sql);
+
+			if ($resql) {
+				if ($this->db->num_rows($resql)) {
+					$obj = $this->db->fetch_object($resql);
+					$result = $obj->total_ht;
+				}
+				$this->db->free($resql);
+			}
+
+			return $result;
+	 }
+
+	 public function fetchTurnoverOnLastYear($firstDayLastYear, $lastDayLastYear){
+
+			$sql = "SELECT SUM(total_ht) as total_ht";
+			$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+			$sql .= " WHERE datef BETWEEN '" . $firstDayLastYear . "' AND '" . $lastDayLastYear . "' ";
+			$sql .= " AND fk_statut !=0 ";
+			$resql = $this->db->query($sql);
+
+			if ($resql) {
+				if ($this->db->num_rows($resql)) {
+					$obj = $this->db->fetch_object($resql);
+					$result = $obj->total_ht;
+				}
+				$this->db->free($resql);
+			}
+
+			return $result;
+	 }
+
+
+
 	 public function outstandingBillOnYear($firstDayYear, $lastDayYear){
 
 			global $db;
@@ -1486,7 +1520,7 @@ class General extends FactureStats
 	   $sql = "SELECT SUM(total_ht) as total_ht";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
 	   $sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
-	   $sql .= " AND paye=0 ";
+	   $sql .= " AND paye = 0 ";
 	   $sql .= " AND fk_statut != 0 ";
 
 	   $resql = $this->db->query($sql);
@@ -1546,7 +1580,192 @@ class General extends FactureStats
 		}
 		return $result;
 	}
+
+
+
+
+	/**
+	 * ---------------- TRESURY ---------------------
+	 */
+
+	 /**
+	  * Retourne le montant total des charges variables
+	  	- Montant total des factures fournisseurs et de la tva réglée sur l'année courante
+	  */
+	 public function fetchVariablesExpenses($firstDayYear, $lastDayYear){
+
+		// TOTAL AMOUNT OFF ALL SUPPLIERS INVOICES TO THE CURRENT YEAR
+		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+		$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->total_ht;
+			}
+			$this->db->free($resql);
+		}
+
+
+		// VAT ADJUSTED TO THE CURRENT YEAR
+		$sql = "SELECT SUM(amount) as amount";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "tva";
+		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result2 = $obj->amount;
+			}
+			$this->db->free($resql);
+		}
+
+		// CALCUL BETWWEN SUPPLIER INVOICE AND VAT ADJUSTED
+		$resultat = ($result + $result2);
+
+		return $resultat;
+	 }
+
+
+
+	 /**
+	  * Retourne le montant total des charges fixes :
+	  */
+	  public function fetchStaticExpenses($firstDayYear, $lastDayYear){
+
+		$ret = $this->getIdBankAccount();
+
+		// SALARY
+		$sql = "SELECT SUM(amount) as amount";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "salary";
+		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
+		$sql .= "AND fk_account = ".$ret->rowid;
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$salarys = $obj->amount;
+			}
+			$this->db->free($resql);
+		}
+
+		// SOCIAL CHARGES AND TAX CHARGES
+		$sql = "SELECT SUM(amount) as amount";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "chargesociales";
+		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
+		$sql .= "AND fk_account = ".$ret->rowid;
+
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$socialesTaxes_charges = $obj->amount;
+			}
+			$this->db->free($resql);
+		}
+
+
+		// EMPRUNTS
+		$sql = "SELECT SUM(amount) as amount";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "loan";
+		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
+		$sql .= "AND fk_bank = ".$ret->rowid;
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$emprunts = $obj->amount;
+			}
+			$this->db->free($resql);
+		}
+
+		// VARIOUS PAYMENTS
+		$sql = "SELECT SUM(amount) as amount";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "payment_various";
+		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$variousPaiements = $obj->amount;
+			}
+			$this->db->free($resql);
+		}
+
+		$resultat = ($salarys + $socialesTaxes_charges + $emprunts + $variousPaiements);
+
+		return $resultat;
+	}
+
+
+	/**
+	 * MARGIN REQUEST
+	 */
+
+	public function grossMarginOnYear($firstDayYear, $lastDayYear){
+
+			$sql = "SELECT SUM(total_ht) as total_ht";
+			$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
+			$sql .= " WHERE date_commande BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+			$sql .= " AND fk_statut =1";
+			$resql = $this->db->query($sql);
+
+			if ($resql) {
+				if ($this->db->num_rows($resql)) {
+					$obj = $this->db->fetch_object($resql);
+					$result = $obj->total_ht;
+				}
+				$this->db->free($resql);
+			}
+			return $result;
+	}
+
+	public function grossMarginOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth){
+
+		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
+		$sql .= " WHERE date_commande BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
+		$sql .= " AND fk_statut =1";
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->total_ht;
+			}
+			$this->db->free($resql);
+		}
+		return $result;
+ 	}
+
+	 public function monthlyCharges($firstDayCurrentMonth, $lastDayCurrentMonth){
+
+
+			$sql = "SELECT SUM(total_ht) as total_ht";
+			$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+			$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
+			$resql = $this->db->query($sql);
+
+			if ($resql) {
+				if ($this->db->num_rows($resql)) {
+					$obj = $this->db->fetch_object($resql);
+					$result = $obj->total_ht;
+				}
+				$this->db->free($resql);
+			}
+			return $result;
+	 }
 }
+
+
+
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobjectline.class.php';
 

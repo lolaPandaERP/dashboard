@@ -343,19 +343,15 @@ class Commercial extends CommonObject
 			$tab5 = DOL_URL_ROOT.'/custom/tab/trade/goals.php';
 
 			$html .= "\n";
-			$html .= '<div class="container-fluid">';
-			$html .= '<nav class="navbar-brand">';
-			$html .= '<ul class="nav justify-content-end">';
-			$html .=' <img src="../img/icon/commercial.png" alt="" class="d-inline-block align-text-top" width=50px>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab1.'">Général</a></li>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab2.'">Prospects</a></li>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab3.'">Rendez-vous</a></li>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab4.'">Devis en cours</a></li>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab5.'">Objectifs</a></li>';
+			$html .= '
+			<div class="navbar">
+				<a class="active" href="'.$tab1.'"><i class="fa fa-fw fa-home"></i> Général</a>
+				<a href="'.$tab2.'"><i class="fa fa-pie-chart"></i> Prospects</a>
+				<a href="'.$tab3.'"><i class="fa fa-bank"></i> Rendez-vous</a>
+				<a href="'.$tab4.'"><i class="fa fa-briefcase"></i> Devis en cours</a>
+				<a href="'.$tab5.'"><i class="fa fa-briefcase"></i> Objectifs</a>
+			</div>';
 
-			$html .= '</ul></nav></div>';
-
-			$html .= '</tr>'."\n";
 			return $html;
 
 	}
