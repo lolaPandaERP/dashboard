@@ -49,7 +49,6 @@ $month = date('m');
 $year = date('Y');
 $day = date('Y-m-d');
 $object = new General($db);
-$ret = $object->getIdBankAccount();
 
 
 // First day and last day of month on n years
@@ -68,15 +67,34 @@ $lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
 $firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
 $lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
 
+/**
+ * TRESURY
+ */
 $titleItem1 = "Trésorerie";
+$result = $object->fetchSoldeOnYear();
+$dataItem1 = price($result) ."\n€";
+
 $info1 = "Trésorerie M-1";
+$soldeOnLastMonth = $object->fetchSoldeOnLastMonth($firstDayLastMonth, $lastDayLastMonth);
+$dataInfo1 = $soldeOnLastMonth."\n€";
+
 $info2 = "Progression";
 
 
-$titleItem2 = "Charge totale du mois";
-$info3 = "Charges fixes";
-$info4 = "Charges variables";
 
+$info3 = "Charges fixes";
+$staticExpenses = $object->fetchStaticExpenses($firstDayYear, $lastDayYear);
+$dataInfo3 = price($staticExpenses) . "\n€";
+
+
+$info4 = "Charges variables";
+$variablesExpenses = $object->fetchVariablesExpenses($firstDayYear, $lastDayYear);
+$dataInfo4 = price($variablesExpenses) . "\n€";
+
+
+$titleItem2 = "Charge totale du mois";
+$result3 = ($variablesExpenses + $staticExpenses);
+$dataItem2 = price($result3). "\n€";
 
 $titleItem3 = "Encours clients à 30 jours";
 $info5 = "Clients à encaisser";
@@ -99,20 +117,6 @@ $info8 = "Solde des comptes";
 $form = new Form($db);
 $formfile = new FormFile($db);
 
-$sql = "SELECT SUM(amount) as amount";
-$sql .= " FROM " . MAIN_DB_PREFIX . "bank";
-$sql .= " WHERE fk_account = " . $ret->rowid;
-$resql = $db->query($sql);
-
-if ($resql) {
-	if ($db->num_rows($resql)) {
-		$obj = $db->fetch_object($resql);
-		$solde = $obj->amount;
-	}
-	$db->free($resql);
-}
-
-$dataItem1 = price($solde);
 
 llxHeader('', $langs->trans("Trésorerie et Prévisionnel"));
 
@@ -122,7 +126,49 @@ print load_fiche_titre($langs->trans("Trésorerie et Prévisionnel"));
 print $object->load_navbar();
 
 include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
+
+$dataItem3 = 100;
+$info7 = "reste en banque";
+$info8 = "solde des comptes";
+
+$dataInfo7 = 100;
+$dataInfo8 = 100;
 ?>
+<!--
+<div class=".table-responsive">
+<div class="container-fluid-2">
+	<div class="card bg-c-blue order-card">
+		<div class="card-body">
+			<h4 class="text-center">
+				<?php print $titleItem3 ?>
+			</h4>
+
+			<div class="row text-center pb-md-4 justify-content-sm-center ">
+            <div class="col-12  col-md-4 m-auto">
+			<i class="bi bi-bank">tpoto</i>
+              <h5 class="h5 mt-2 mb-3">Fully Responsive</h5>
+            </div>
+            <div class="col-12  col-md-4 m-auto">
+			<i class="bi bi-bank"></i>
+              <h5 class="h5 mt-2 mb-3">Bootstrap 4 Ready</h5>
+
+            </div>
+            <div class="col-12  col-md-4 m-auto">
+              <h5 class="h5 mt-2 mb-3">Easy to Use</h5>
+			  <i class="bi bi-bank"></i>
+            </div>
+          </div>
+
+			<div class="col-lg-15">
+				<div class="center-block">
+					<div class="pull-left"><?php print $info7 ?> : <h4 class="center"><?php print $dataInfo7 ?></h4></div>
+					<div class="pull-right"><?php print $info8 ?> : <h4 class="center"><?php print $dataInfo8 ?></h4></div>
+				</div>
+			</div>
+		</div>
+		<a href="#" class="btn btn-primary">GRAPHIQUE</a>
+	</div>
+</div> -->
 
 
 <?php

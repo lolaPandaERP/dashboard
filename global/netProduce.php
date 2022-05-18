@@ -182,16 +182,15 @@ $titleItem5 = "Clients à produire";
 
 											print '<ul class="list-group">';
 											print '<li class="list-group-item d-flex justify-content-between align-items-center">';
-											print  '<i class="fas fa-address-card fa-2x"></i>'.$societe->name;
+											print  '<i class="fas fa-address-card"></i>'.$societe->name;
 
 											if($commande->date_livraison != null) {
-												print '<span class="badge-* badge-pill badge-primary">Date de livraison prévue : '.date('j-m-Y', $commande->date_livraison).'</span></li>';
+												print '<p><span class="badge-* badge-pill badge-primary">Date de livraison prévue : '.date('j-m-Y', $commande->date_livraison).'</span></p></li>';
 											} else {
-												print '<span class="badge-* badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
+												print '<p><span class="badge-* badge-pill badge-warning">Aucune date de livraison spécifiée</span></p></li>';
 											}
 											print '</ul>';
 										}
-
 									}
 
 									?>

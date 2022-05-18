@@ -176,6 +176,13 @@ print $object->load_navbar();
 
 // template for boxes
 include DOL_DOCUMENT_ROOT . '/custom/tab/template/template_boxes2.php';
+
+
+// Customer outstandings exceeded
+$titleItem4 = "Encours clients dépassés";
+$outCustomerExceeded = $general->fetchCustomerBillExceed();
+$dataItem4 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustomerExceeded) . "\n€";
+
 ?>
 
 <!-- CUSTOMER OUTSTANDING -->
@@ -208,11 +215,6 @@ include DOL_DOCUMENT_ROOT . '/custom/tab/template/template_boxes2.php';
 
 <?php
 
-// Customer outstandings exceeded
-$titleItem4 = "Encours clients dépassés";
-$outCustomerExceeded = $general->fetchCustomerBillExceed();
-$dataItem4 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustomerExceeded) . "\n€";
-
 // Supplier outstandings exceeded
 $titleItem5 = "Encours fournisseurs dépassés";
 $outSupplierExceeded = $general->fetchSupplierBillExceed();
@@ -224,13 +226,13 @@ $dataItem5 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outSuppli
 <div class="card-deck">
   <div class="card">
     <div class="card-body">
-		<h4 class="text-center">
+		<h3 class="text-center">
 			<?php print $titleItem4 ?>
-		</h4><hr>
+		</h3><hr>
 		</br>
-		<h1 class="text-center">
+		<h2 class="text-center">
 			<?php print $dataItem4 ?>
-		</h1>
+		</h2>
     </div>
 
   </div>
@@ -240,9 +242,9 @@ $dataItem5 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outSuppli
 			<?php print $titleItem5 ?>
 		</h4><hr>
 		</br>
-		<h1 class="text-center">
+		<h2 class="text-center">
 			<?php print $dataItem5 ?>
-		</h1>
+		</h2>
     </div>
   </div>
 
