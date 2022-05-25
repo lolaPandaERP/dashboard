@@ -1050,9 +1050,42 @@ class General extends FactureStats
 		return $result;
 	}
 
+	public function fetchAllBankAccount(){
+		$sql = "SELECT * ";
+		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
+		$resql = $this->db->query($sql);
+
+		$result = [];
+		if($resql){
+			while($obj = $this->db->fetch_object(($resql))){
+				$result[] = $obj;
+			}
+		}
+		return $result;
+	}
+
+	public function fetchSolde($account){
+
+		$account = $account->id;
+
+		$sql = "SELECT * ";
+		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
+		$sql .= "WHERE fk_account = ".$account;
+		$resql = $this->db->query($sql);
+
+		$result = [];
+
+		if($resql){
+			while($obj = $this->db->fetch_object(($resql))){
+				$result[] = $obj;
+			}
+		}
+		return $result;
+	}
+
 	/**
 	 * Loading NavBar Template :
-	 * /TODO/ : on peux passer en parametre l'onglet actif
+	 // TODO : on peux passer en parametre l'onglet actif
 	 */
 	public function load_navbar()
 	{
@@ -1074,51 +1107,7 @@ class General extends FactureStats
 			</div>';
 
 			return $html;
-	}
 
-	/**
-	 * Return le cumul des montants du compte courant sur l'année
-	 */
-	public function fetchSoldeOnYear(){
-
-		$ret = $this->getIdBankAccount();
-
-		$sql = "SELECT SUM(amount) as amount";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "bank";
-		$sql .= " WHERE fk_account = " . $ret->rowid;
-		$resql = $this->db->query($sql);
-
-		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$result = $obj->amount;
-			}
-			$this->db->free($resql);
-		}
-		return $result;
-	}
-
-	/**
-	 * Retourne le solde du compte sur le mois dernier (tresoreire m-1) (debit)
-	 */
-	public function fetchSoldeOnLastMonth($firstDayLastMonth, $lastDayLastMonth){
-
-		// $sql = "SELECT SUM(amount) as amount";
-		// $sql .= " FROM " . MAIN_DB_PREFIX . "bank";
-		// $sql .= "WHERE dateo BETWEEN \"2022-04-01\" AND \"2022-04-30\";";
-		$sql = "SELECT SUM(amount) FROM `llx_bank` WHERE dateo BETWEEN \"2022-04-01\" AND \"2022-04-30\";";
-		$resql = $this->db->query($sql);
-
-		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$result = $obj->amount;
-			}
-			$this->db->free($resql);
-		} else {
-			setEventMessage("Erreur dans la recherche des données pour le calcul de la trésorerie du mois dernier...", 'errors') ;
-		}
-		return $result;
 	}
 
 
@@ -1145,6 +1134,69 @@ class General extends FactureStats
 		else return 'Mois inconnu';
 	}
 
+	/**
+	 * Return le cumul des montants du compte courant sur l'année
+	 */
+	public function fetchSoldeOnYear(){
+
+		$ret = $this->getIdBankAccount();
+
+		$sql = "SELECT SUM(amount) as amount";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "bank";
+		$sql .= " WHERE fk_account = " . $ret->rowid;
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->amount;
+			}
+			$this->db->free($resql);
+		}
+		return $result;
+	}
+
+
+
+	/**
+	 * Retourne le solde du compte sur le mois dernier (tresoreire m-1) (débit)
+	 */
+	public function fetchSoldeOnLastMonth($firstDayLastMonth, $lastDayLastMonth){
+
+		// $sql = "SELECT SUM(amount) as amount";
+		// $sql .= " FROM " . MAIN_DB_PREFIX . "bank";
+		// $sql .= "WHERE datec BETWEEN '".$firstDayLastMonth."' AND '".$lastDayLastMonth."' ";
+		// $sql .= "WHERE dateo BETWEEN \"2022-04-01\" AND \"2022-04-31\";";
+
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->amount;
+			}
+			$this->db->free($resql);
+		}
+		return $result;
+	}
+
+
+	public function totalSoldes(){
+
+		$sql = "SELECT SUM(amount) as amount";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "bank";
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->amount;
+			}
+			$this->db->free($resql);
+		}
+		return $result;
+	}
+
 
 	/**
 	 * Return the progress between 2 values.
@@ -1155,8 +1207,8 @@ class General extends FactureStats
 		// ( (VA - VD) / VA) * 100
 		$VA;
 		$VD;
-		$res = $VA - $VD;
-		$res = $res / $VD;
+		$res = ($VA - $VD);
+		$res = ($res / $VD);
 		$resultat = $res * 100;
 		$resultat = round($resultat, 2);
 
@@ -1189,7 +1241,6 @@ class General extends FactureStats
 		$today = date('Y-m-d');
 
 		// request
-		// $sql = "SELECT * FROM `llx_commande` WHERE date_commande = \"2022-05-12\" AND fk_statut = 3;";
 		$sql = "SELECT * FROM " . MAIN_DB_PREFIX . "commande";
 		$sql .= " WHERE date_commande = \"$today\" ";
 		$sql .= "AND fk_statut = 3";
@@ -1320,7 +1371,6 @@ class General extends FactureStats
 				$result[] = $obj;
 			}
 		}
-
 		return $result;
 	}
 
@@ -1339,9 +1389,10 @@ class General extends FactureStats
 				$result[] = $obj;
 			}
 		}
-
 		return $result;
 	}
+
+
 
 
 
@@ -1350,8 +1401,29 @@ class General extends FactureStats
 	 * INVOICES
 	 */
 
-	 public function fetchTurnoverOnYear($firstDayYear, $lastDayYear){
+	 // fetch customer outstanding
+	 function fetchNbCustomerOutstanding($firstDayYear, $lastDayYear){
 
+		global $db;
+		// request
+		$sql = "SELECT * ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+		$sql .= "AND fk_statut != 0";
+		$sql .= "AND paye = 0";
+		$resql = $db->query($sql);
+
+		$result = [];
+		if($resql){
+			while($obj = $db->fetch_object(($resql))){
+				$result[] = $obj;
+			}
+		}
+
+		return $result;
+	}
+
+	 public function fetchTurnover($firstDayYear, $lastDayYear){
 
 			$sql = "SELECT SUM(total_ht) as total_ht";
 			$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
@@ -1389,7 +1461,6 @@ class General extends FactureStats
 
 			return $result;
 	 }
-
 
 
 	 public function outstandingBillOnYear($firstDayYear, $lastDayYear){
@@ -1492,7 +1563,7 @@ class General extends FactureStats
 	  * Return all unpaid supplier invoices on current year
 	  */
 	 public function outstandingSupplierOnYear($firstDayYear, $lastDayYear){
-			// Encours fournisseur sur l'année courante
+
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
 		$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
@@ -1629,8 +1700,6 @@ class General extends FactureStats
 		return $resultat;
 	 }
 
-
-
 	 /**
 	  * Retourne le montant total des charges fixes :
 	  */
@@ -1762,6 +1831,26 @@ class General extends FactureStats
 			}
 			return $result;
 	 }
+
+	 public function supplier_ordered_orders($firstDayYear, $lastDayYear){
+
+		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "commande_fournisseur";
+		$sql .= " WHERE date_creation BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+		$sql .= " AND fk_statut = 3 ";
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->total_ht;
+			}
+			$this->db->free($resql);
+		}
+		return $result;
+	 }
+
+
 }
 
 
