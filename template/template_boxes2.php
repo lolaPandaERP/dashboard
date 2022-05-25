@@ -11,7 +11,6 @@
 <body>
 		<!-- grid-based layout -->
 		<div class="grid-container-4">
-
 			<!-- bloc 1 -->
 				<div class="card bg-c-blue order-card">
 					<!-- Corps de la carte -->
@@ -25,7 +24,6 @@
 							<?php print $dataItem1 ?>
 
 						</h1>
-
 						<hr>
 						<div class="col-lg-14">
   							<div class="center-block">
@@ -61,6 +59,7 @@
 						</div>
 					<a href="#" class="btn btn-primary">GRAPHIQUE</a>
 				</div>
+			</div>
 			<!-- end bloc 1 -->
 
 

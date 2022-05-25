@@ -2,9 +2,9 @@
 	<meta charset="UTF-4">
 	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=no">
 	 <link rel="stylesheet" type="text/css" href="tab.css">
-	<link rel="stylesheet" type="text/css" href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/css/bootstrap-extended.min.css">
-	<link rel="stylesheet" type="text/css" href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/fonts/simple-line-icons/style.min.css">
-	<link rel="stylesheet" type="text/css" href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css"  href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/css/bootstrap-extended.min.css">
+	<link rel="stylesheet" type="text/css"  href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/fonts/simple-line-icons/style.min.css">
+	<link rel="stylesheet" type="text/css"  href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/css/bootstrap.min.css">
 	<link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
 </head>
 
@@ -14,14 +14,29 @@
 	<!-- page content -->
 	<section class="page-content">
 		<div class="grid-container-4">
-
-			<!-- bloc 1 -->
 			<div class="grid-1">
 				<div class="card bg-c-blue order-card">
-					<!-- Corps de la carte -->
 					<div class="card-body">
-					<div class="pull-right"><span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
-						<!-- <div class="card-block"> -->
+					<div class="pull-right">
+						<div class="popup" onclick="myFunction()">
+						<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span>
+							<span class="popuptext" id="myPopup">
+								<h4> Détails des informations / calculs </h4>
+							<ul>
+								<li>Le calcul du CA : <strong>Somme du "total_ht" de toutes les factures clients sur l'année courante (hors brouillon) </strong> </li><hr>
+								<li>Le calcul du CA N-1 : <strong>Somme du "total_ht" de toutes les factures clients sur l'année précédente (hors brouillon)</strong></li><hr>
+								<li>La progression : <strong> ( (VA - VD) / VD ) x 100 </strong></li>
+							</ul>
+							</span>
+						</div>
+						</div>
+						<script>
+							// When the user clicks on div, open the popup
+							function myFunction() {
+								var popup = document.getElementById("myPopup");
+								popup.classList.toggle("show");
+							}
+						</script>
 						<h4 class="text-center">
 							<?php print $titleItem1 ?>
 						</h4>
@@ -37,11 +52,9 @@
 							</div>
 							</div>
 						</div>
-						<div>
-							<?php print $graphique1 ?>
-						</div>
+							<?php print $graphiqueA ?>
+					</div>
 				</div>
-			</div>
 			<!-- end bloc 1 -->
 
 			<!-- bloc 1 -->
@@ -66,15 +79,16 @@
 							</div>
 							</div>
 						</div>
-						<div>
-							<?php print $graphique2 ?>
+   		 					<div><?php print $graphiqueB . "\n"?></div>
+							<div><?php print $graphiqueB1 ?></div>
+							<!-- <div><?php print $graphiqueB2 . "\n"?></div>
+							<div><?php print $graphiqueB3 ?></div> -->
 						</div>
-				</div>
-			</div>
+					</div>
 			<!-- end bloc 1 -->
 
-				<!-- bloc 1 -->
-				<div class="grid-1">
+			<!-- bloc 1 -->
+			<div class="grid-1">
 				<div class="card bg-c-blue order-card">
 					<!-- Corps de la carte -->
 					<div class="card-body">
@@ -85,7 +99,6 @@
 						</h4>
 						<h1 class="text-center">
 							<?php print $dataItem3 ?>
-
 						</h1>
 						<hr>
 						<div class="col-lg-14">
@@ -96,44 +109,47 @@
 							</div>
 						</div>
 						<div>
-							<?php print $graphique3 ?>
+							<?php print $graphiqueC ?>
 						</div>
 				</div>
 			</div>
+			<!-- end bloc 1 -->
+
+
+
 			<!-- end bloc 1 -->
 
 
 				<!-- bloc 1 -->
 				<div class="grid-1">
-				<div class="card bg-c-blue order-card">
-					<!-- Corps de la carte -->
-					<div class="card-body">
-					<div class="pull-right"><span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
-						<!-- <div class="card-block"> -->
-						<h4 class="text-center">
-							<?php print $titleItem4 ?>
-						</h4>
-						<h1 class="text-center">
-							<?php print $dataItem4 ?>
-						</h1>
-						<hr>
-						<div class="col-lg-14">
-  							<div class="center-block">
-   		 						<div class="pull-left"><?php print $info7 ?> : <h4 class="center"><?php print $dataInfo7 ?></h4></div>
-								<div class="pull-right"><?php print $info8 ?> : <h4 class="center"><?php print $dataInfo8 ?></h4></div>
+					<div class="card bg-c-blue order-card">
+						<!-- Corps de la carte -->
+						<div class="card-body">
+						<div class="pull-right"><span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
+							<!-- <div class="card-block"> -->
+							<h4 class="text-center">
+								<?php print $titleItem4 ?>
+							</h4>
+							<h1 class="text-center">
+								<?php print $dataItem4 ?>
+							</h1>
+							<hr>
+							<div class="col-lg-14">
+								<div class="center-block">
+									<div class="pull-left"><?php print $info7 ?> : <h4 class="center"><?php print $dataInfo7 ?></h4></div>
+									<div class="pull-right"><?php print $info8 ?> : <h4 class="center"><?php print $dataInfo8 ?></h4></div>
+								</div>
+								</div>
 							</div>
+							<div>
+								<?php print $graphiqueD ?>
 							</div>
 						</div>
-						<div>
-							<?php print $graphique4 ?>
-						</div>
+					</div>
 				</div>
-			</div>
 			<!-- end bloc 1 -->
 
-			<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.js"></script>
-	</body>
-</html>
+
 
 
 

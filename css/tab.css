@@ -1,20 +1,18 @@
 
-/* Uses vh and vm with calc */
-@media screen and (min-width: 25em){
-	html { font-size: calc( 16px + (24 - 16) * (100vw - 400px) / (800 - 400) ); }
-  }
+
+   @media screen and (max-width : 400px) {
+	html {
+		font-size: 12px;
+	  }
+	h1 {
+		font-size: 80px;
+	}
+}
+
+.wrapper {
+	height: 200px !important;
+}
   
-  /* Safari <8 and IE <11 */
-  @media screen and (min-width: 25em){
-	html { font-size: calc( 16px + (24 - 16) * (100vw - 400px) / (800 - 400) ); }
-  }
-  
-  @media screen and (min-width: 50em){
-  html { font-size: calc( 16px + (24 - 16) * (100vw - 400px) / (800 - 400) ); }
-  }
-
-
-
 
 /* NAVBAR */
 .navbar {
@@ -51,10 +49,6 @@
 	display: flex;
 	height: 25px;
 	border-right: grey;
-}
-
-div{
-	padding-bottom: 2px;
 }
 
 hr.vertical {
@@ -94,4 +88,57 @@ div.container-fluid-2{
 	width: auto;
 }
 
+
+/* POPUP INFO */ 
+
+/* Popup container */
+.popup {
+	position: relative;
+	display: inline-block;
+	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+  }
+  
+  /* The actual popup */
+  .popup .popuptext {
+	visibility: hidden;
+	width: 500px;
+	padding: 20px 0;
+	padding-left: 20px;
+	padding-right: 25px;
+	z-index: 1;
+	left: 500;
+	padding-left: 5%;
+	margin-left: -80px;
+	position: absolute;
+	text-align: justify;
+	border-radius: 6px;
+	background-color: #555;
+	color: #fff;
+  }
+  
+  h4 {
+	  text-align:center;
+  }
+  
+  /* Toggle this class - hide and show the popup */
+  .popup .show {
+	visibility: visible; 
+	-webkit-animation: fadeIn 1s;
+	animation: fadeIn 1s;
+  }
+  
+  /* Add animation (fade in the popup) */
+   @-webkit-keyframes fadeIn {
+	from {opacity: 0;} 
+	to {opacity: 1;}
+  } 
+  
+  @keyframes fadeIn {
+	from {opacity: 0;}
+	to {opacity:1 ;}
+  } 
 
