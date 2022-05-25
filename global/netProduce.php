@@ -81,6 +81,7 @@ $object = new General($db);
 $result = $object->fetchValidatedOrderOnCurrentYears($firstDayYear, $lastDayYear);
 $dataItem1 = price($result). "\n€";
 
+
 // commande m- 1
 $info1 = "Montant des commandes livrées du mois dernier";
 $deliveryOrderOnLastMonth = $object->fetchDeliveredOrderOnLastMonth($firstDayLastMonth, $lastDayLastMonth);
@@ -102,6 +103,7 @@ $dataInfo2 = $result  ."\n%";
 $titleItem2 = "Nb de productions en cours";
 $result1 = $object->fetchNbDeliveryOrderByYear($firstDayYear, $lastDayYear);
 $nbDeliveryOrderByYear = count($result1);
+
 $dataItem2 = $nbDeliveryOrderByYear;
 
 // nb de commande livrées le mois dernier
@@ -145,149 +147,124 @@ include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
 
 
 // PRODUCTION LES + PROCHES
-$titleItem3 = "Productions les + proches";
+$titleItem1 = "Productions les + proches";
+$result3 = $object->fetchOrderSortedByDeliveryDate($firstDayYear, $lastDayYear);
 
 // Date et client la + proche
-$titleItem4 = "Date et client la + proche";
+$titleItem2 = "Date et client la + proche";
 
-// Client à produire
-$titleItem5 = "Clients à produire";
+// CLIENTS A PRODUIRE
+$titleItem3 = "Clients à produire";
 
 ?>
 
-		<!-- DATE ET CLIENT LA + PROCHE  -->
-				<div class="grid-list">
-					<div class="card bg-c-blue order-card">
-						<!-- Corps de la carte -->
-						<div class="card-body">
-							<div class="card-block">
-								<h4 class="text-center">
-									<?php print $titleItem4 ?>
-								</h4>
-								<hr>
-								<p class="text-center">
-									<?php
+<div class="card-deck">
+   <div class="card">
+      <div class="card-body">
+		  <div class="text-center">
+	  		<?php print $titleItem1  ."\n" ?><span class="classfortooltip" title="Commandes clients validées triées par date prévue de livraison. Les plus anciennes commandes validées sont remontées directement en premier."><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span>
 
-									$result3 = $object->fetchOrderSortedByDeliveryDate($firstDayYear, $lastDayYear);
+				<p class="card-text">
+						<?php
+							if(is_array($result3) && $result3 != null){
 
-									if(is_array($result3) && $result3 != null){
+								foreach ($result3 as $res)
+								{
+									$societe = new Societe($db);
+									$societe->fetch($res->fk_soc);
 
-										foreach ($result3 as $res)
-										{
-											$societe = new Societe($db);
-											$societe->fetch($res->fk_soc);
+									$commande = new Commande($db);
+									$commande->fetch($res->rowid);
+									$customer = $societe->name;
 
-											$commande = new Commande($db);
-											$commande->fetch($res->rowid);
+									print '<ul class="list-group">';
+									print '<li class="list-group-item d-flex justify-content-between align-items-center">';
+									print  '<i class="fas fa-address-card"></i>'.$societe->name;
 
-											print '<ul class="list-group">';
-											print '<li class="list-group-item d-flex justify-content-between align-items-center">';
-											print  '<i class="fas fa-address-card"></i>'.$societe->name;
-
-											if($commande->date_livraison != null) {
-												print '<p><span class="badge-* badge-pill badge-primary">Date de livraison prévue : '.date('j-m-Y', $commande->date_livraison).'</span></p></li>';
-											} else {
-												print '<p><span class="badge-* badge-pill badge-warning">Aucune date de livraison spécifiée</span></p></li>';
-											}
-											print '</ul>';
-										}
-									}
-
-									?>
-									</p>
-								 </div>
-							</div>
-						</div>
-					</div>
-					<!-- BOXE WITHOUT STATS -->
-
-					<!-- PRODUCTION LES + PROCHES -->
-				<div class="grid-list">
-					<div class="card bg-c-blue order-card">
-						<!-- Corps de la carte -->
-						<div class="card-body">
-							<div class="card-block">
-								<h4 class="text-center">
-									<?php print $titleItem3 ?>
-								</h4>
-								<hr>
-								<p class="text-center">
-									<?php
-
-									 $result = $object->fetchDeliveredOrderToday();
-
-									if($result != null){
-
-										foreach ($result as $res)
-										{
-											$societe = new Societe($db);
-											$societe->fetch($res->fk_soc);
-
-											$commande = new Commande($db);
-											$commande->fetch($res->rowid);
-
-											print '<ul class="list-group">';
-											print '<li class="list-group-item d-flex justify-content-between align-items-center">';
-											print  '<i class="fas fa-address-card fa-2x"></i>'.$societe->name;
-
-											if($commande->date_livraison != null) {
-												print '<span class="badge-* badge-pill badge-primary">Date de création : '.date('j-m-Y', $commande->date_commande).'</span></li>';
-											} else {
-												print '<span class="badge-* badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
-											}
-											print '</ul>';
-										}
+									if($commande->date_livraison != null) {
+										print '<p><span class="badge badge-pill badge-primary">Date de livraison prévue : '.date('j-m-Y', $commande->date_livraison).'</span></p></li>'."\n";
 									} else {
-										print '<p class="center"><pan class="badge-* badge-pill badge-danger">Aucune commande validées pour ce jour </spa</p>';
+										print '<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
 									}
-
-									?>
-									</p>
-								 </div>
-							</div>
+									print '</ul>';
+								}
+							}
+						?>
 						</div>
 					</div>
+				</div>
 
 
-			<!-- CUSTOMER TO BE PRODUCED  -->
-				<div class="grid-list">
-					<div class="card bg-c-blue order-card">
-						<!-- Corps de la carte -->
-						<div class="card-body">
-							<div class="card-block">
-								<h4 class="text-center">
-									<?php print $titleItem5 ?>
-								</h4>
-								<hr>
-								<p class="text-center">
-									<?php
+   <div class="card">
+	<div class="card-body">
+	<div class="text-center">
+		<?php print $titleItem2 ."\n" ?> <span class="classfortooltip" title="Liste des commandes validées du jour avec date de livraison prévue"><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
+			</br>
+			<?php
+				$result = $object->fetchDeliveredOrderToday();
 
-									$rets = $object->fetchOrder(1);
+				if($result != null){
 
-									if(is_array($rets) && $rets != null){
+					foreach ($result as $res)
+					{
+						$societe = new Societe($db);
+						$societe->fetch($res->fk_soc);
 
-										foreach ($rets as $ret)
-										{
-											$societe = new Societe($db);
-											$societe->fetch($ret->fk_soc);
+						$commande = new Commande($db);
+						$commande->fetch($res->rowid);
 
-											$commande = new Commande($db);
-											$commande->fetch($ret->rowid);
+						print '<ul class="list-group">';
+						print '<li class="list-group-item d-flex justify-content-between align-items-center">';
+						print  '<i class="fas fa-address-card"></i>'.$societe->name;
 
-											print '<ul class="list-group">';
-											print '<li class="list-group-item d-flex justify-content-between align-items-center">';
-											print  '<i class="fas fa-address-card fa-2x"></i>'.$societe->name; // redirection vers module tiers - onglet client
-											print '<span class="badge-* badge-pill badge-primary">Réf. commande :  '.$commande->ref.'</span></li>';
-											print '</ul>';
-										}
-									}
+						if($commande->date_livraison != null) {
+							print '<span class="badge badge-pill badge-primary">Date de création : '.date('j-m-Y', $commande->date_commande).'</span></li>';
+						} else {
+							print '<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
+						}
+						print '</ul>';
+					}
+				} else {
+					print '<p class="center"><pan class="badge badge-pill badge-danger">Aucune commande validées pour ce jour </span></p>';
+				}
+			?>
+			</div>
+		</div>
+	</div>
 
-									?>
-									</p>
-								 </div>
-							</div>
-						</div>
+
+	<div class="card">
+		<div class="card-body">
+			<div class="text-center">
+				<?php print $titleItem3  ."\n" ?><span class="classfortooltip" title="Liste croissante des tiers pour chaque commande clients validées."><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
+			</br>
+					<?php
+
+						$rets = $object->fetchOrder(1);
+
+						if(is_array($rets) && $rets != null){
+
+							foreach ($rets as $ret)
+							{
+								$societe = new Societe($db);
+								$societe->fetch($ret->fk_soc);
+
+								$commande = new Commande($db);
+								$commande->fetch($ret->rowid);
+
+								print '<ul class="list-group">';
+								print '<li class="list-group-item d-flex justify-content-between align-items-center">';
+								print  '<i class="fas fa-address-card"></i>'.$societe->name; // redirection vers module tiers - onglet client
+								print '<span class="badge badge-pill badge-primary">Réf. commande :  '.$commande->ref.'</span></li>';
+								print '</ul>';
+							}
+						}
+					?>
 					</div>
+				</div>
+			</div>
+
+
 <?php
 
 // End of page

@@ -24,6 +24,9 @@
  *	\brief      Home page of tab top menu
  */
 
+use Stripe\Balance;
+use Stripe\BankAccount;
+
 // Load Dolibarr environment
 $res = 0;
 // Try main.inc.php into web root known defined into CONTEXT_DOCUMENT_ROOT (not always defined)
@@ -41,6 +44,7 @@ if (!$res) die("Include of main fails");
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/tab/class/general.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
 // Load translation files required by the page
 $langs->loadLangs(array("tab@tab"));
@@ -49,7 +53,6 @@ $month = date('m');
 $year = date('Y');
 $day = date('Y-m-d');
 $object = new General($db);
-
 
 // First day and last day of month on n years
 $firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
@@ -75,13 +78,26 @@ $result = $object->fetchSoldeOnYear();
 $dataItem1 = price($result) ."\n€";
 
 $info1 = "Trésorerie M-1";
+
+$sql = "SELECT SUM(amount) as amount";
+$sql .= " FROM ".MAIN_DB_PREFIX."bank";
+$sql .= " WHERE dateo BETWEEN '".$firstDayLastMonth."' AND '".$lastDayLastMonth.'" ';
+$resql = $db->query($sql);
+
+if ($resql) {
+	if ($this->db->num_rows($resql)) {
+		$obj = $this->db->fetch_object($resql);
+		$result = $obj->amount;
+	}
+	$this->db->free($resql);
+}
 $soldeOnLastMonth = $object->fetchSoldeOnLastMonth($firstDayLastMonth, $lastDayLastMonth);
-$dataInfo1 = $soldeOnLastMonth."\n€";
+$dataInfo1 = price($result) ."\n€";
 
 $info2 = "Progression";
 
 
-
+// Total chharge of current month
 $info3 = "Charges fixes";
 $staticExpenses = $object->fetchStaticExpenses($firstDayYear, $lastDayYear);
 $dataInfo3 = price($staticExpenses) . "\n€";
@@ -92,15 +108,11 @@ $variablesExpenses = $object->fetchVariablesExpenses($firstDayYear, $lastDayYear
 $dataInfo4 = price($variablesExpenses) . "\n€";
 
 
-$titleItem2 = "Charge totale du mois";
+$titleItem2 = "Charge totale";
 $result3 = ($variablesExpenses + $staticExpenses);
 $dataItem2 = price($result3). "\n€";
 
 $titleItem3 = "Encours clients à 30 jours";
-$info5 = "Clients à encaisser";
-$info6 = "Fournisseurs à payer";
-$info7 = "Reste en banque";
-$info8 = "Solde des comptes";
 
 
 /*
@@ -117,58 +129,117 @@ $info8 = "Solde des comptes";
 $form = new Form($db);
 $formfile = new FormFile($db);
 
-
 llxHeader('', $langs->trans("Trésorerie et Prévisionnel"));
 
 print load_fiche_titre($langs->trans("Trésorerie et Prévisionnel"));
 
-// Chargement du template de navigation pour l'activité "Global"
+// Include template
 print $object->load_navbar();
-
 include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
 
-$dataItem3 = 100;
-$info7 = "reste en banque";
-$info8 = "solde des comptes";
 
-$dataInfo7 = 100;
-$dataInfo8 = 100;
+/**
+ *  CUSTOMER OUTSTANDING AT 30 DAYS
+ */
+
+$dataItem3 = 100;
+
+$accounts = $object->fetchAllBankAccount();
+$nbAccount = count($accounts);
+
+/**
+ * CUSTOMER TO CASH
+ */
+
+// total factures impayées et commandes clients validées sur l'année
+$info7 = "Clients à encaisser";
+$customer_validated_orders = $object->fetchValidatedOrderOnCurrentYears($firstDayYear, $lastDayYear); // unpaid invoices
+$customer_validated_invoices = $object->outstandingBillOnYear($firstDayYear, $lastDayYear); // validted orders
+$customerToCash = ($customer_validated_invoices + $customer_validated_orders);
+
+$dataInfo7 = price($customerToCash) . "\n€";
+
+
+/**
+ * STAY IN BANK
+ */
+
+$info8 = "Reste en banque";
+$totalSoldesAccount = $object->totalSoldes();
+$stayBank = ($totalSoldesAccount + $customerToCash); // addition du solde des 3 comptes bq + "client a encaisser"
+$dataInfo8 = price($stayBank) . "\n€";
+
+
+/**
+ * SUPPLIER TO PAID
+ */
+$info10 = "Fournisseurs à payer"; // total factures F impayées et commandes fournisseurs validées
+$supplier_unpaid_invoices = $object->outstandingSupplierOnYear($firstDayYear, $lastDayYear);
+$supplier_ordered_order = $object->supplier_ordered_orders($firstDayYear, $lastDayYear);
+
+$supplierToPaid = $supplier_unpaid_invoices + $supplier_ordered_order;
+
+$dataInfo10 = price($supplierToPaid) . "\n€";
+
+/**
+ * SOLDES ACCOUNTS
+ */
+$info9 = "Solde des comptes"; //  addition du solde des 3 comptes bq - le montant "fournisseur a payer"
+$soldesAccount = ($totalSoldesAccount - $supplierToPaid);
+$dataInfo9 =  price($soldesAccount) . "\n€";
+
+
+
+
 ?>
-<!--
+
+<!-- BOX FOR OUTSTANDING -->
 <div class=".table-responsive">
 <div class="container-fluid-2">
-	<div class="card bg-c-blue order-card">
+	<div class="card bg-c-white order-card">
 		<div class="card-body">
-			<h4 class="text-center">
+			<h3 class="text-center">
 				<?php print $titleItem3 ?>
-			</h4>
-
+			</h3>
+			<hr>
 			<div class="row text-center pb-md-4 justify-content-sm-center ">
-            <div class="col-12  col-md-4 m-auto">
-			<i class="bi bi-bank">tpoto</i>
-              <h5 class="h5 mt-2 mb-3">Fully Responsive</h5>
-            </div>
-            <div class="col-12  col-md-4 m-auto">
-			<i class="bi bi-bank"></i>
-              <h5 class="h5 mt-2 mb-3">Bootstrap 4 Ready</h5>
+				<?php
 
-            </div>
-            <div class="col-12  col-md-4 m-auto">
-              <h5 class="h5 mt-2 mb-3">Easy to Use</h5>
-			  <i class="bi bi-bank"></i>
-            </div>
-          </div>
+					foreach($accounts as $account){
 
-			<div class="col-lg-15">
+						$acc = new Account($db);
+						$acc->fetch($account->rowid);
+
+						$solde = $acc->solde(1);
+
+						print '<i class="bi bi-bank"></i>';
+						print '<button type="button" class="btn btn-success">
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-bank">
+									<path d="m8 0 6.61 3h.89a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H15v7a.5.5 0 0 1 .485.38l.5 2a.498.498 0 0 1-.485.62H.5a.498.498 0 0 1-.485-.62l.5-2A.501.501 0 0 1 1 13V6H.5a.5.5 0 0 1-.5-.5v-2A.5.5 0 0 1 .5 3h.89L8 0ZM3.777 3h8.447L8 1 3.777 3ZM2 6v7h1V6H2Zm2 0v7h2.5V6H4Zm3.5 0v7h1V6h-1Zm2 0v7H12V6H9.5ZM13 6v7h1V6h-1Zm2-1V4H1v1h14Zm-.39 9H1.39l-.25 1h13.72l-.25-1Z"/>
+								</svg>
+								</button>';
+
+						print '<p class="center"><a href="'.DOL_URL_ROOT.'/compta/bank/card.php?id='.$account->rowid.'">' . $account->label . '</a>';
+						print '</br>'.price($solde) . "\n€" .'</p>';
+
+					}
+
+					?>
+          		</div>
+
 				<div class="center-block">
-					<div class="pull-left"><?php print $info7 ?> : <h4 class="center"><?php print $dataInfo7 ?></h4></div>
-					<div class="pull-right"><?php print $info8 ?> : <h4 class="center"><?php print $dataInfo8 ?></h4></div>
+					<div class="pull-left">
+						<?php print $info7 ?> : <h4 class="center"><?php print $dataInfo7 ?></h4><hr>
+						<?php print $info8 ?> : <h4 class="center"><?php print $dataInfo8 ?></h4>
+					</div>
+
+					<div class="pull-right">
+						<?php print $info9 ?> : <h4 class="center"><?php print $dataInfo9 ?></h4><hr>
+						<?php print $info10 ?> : <h4 class="center"><?php print $dataInfo10 ?></h4>
+					</div>
 				</div>
-			</div>
-		</div>
-		<a href="#" class="btn btn-primary">GRAPHIQUE</a>
-	</div>
-</div> -->
+
+</div>
 
 
 <?php

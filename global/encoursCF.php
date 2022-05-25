@@ -148,7 +148,7 @@ if ($dataInfo3 <= 0) {
 $titleItem3 = "Encours C/F";
 $dataItem3 = price($outstandingBillOnYear - $outstandingSupplierOnYear)."\n€"; // soustraction des encours client et encours fournisseur
 
-$info5 = "Total des encours C/F du mois dernier";
+$info5 = "Encours total le mois dernier" ;
 $dataInfo5 = floatval($accOfPastYears - $outstandingSupplierOnLastMonth) . "\n€"; // encours client m-1 - encours fourn m-1
 
 $info6 = "Progression";
@@ -177,7 +177,6 @@ print $object->load_navbar();
 // template for boxes
 include DOL_DOCUMENT_ROOT . '/custom/tab/template/template_boxes2.php';
 
-
 // Customer outstandings exceeded
 $titleItem4 = "Encours clients dépassés";
 $outCustomerExceeded = $general->fetchCustomerBillExceed();
@@ -186,22 +185,18 @@ $dataItem4 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustom
 ?>
 
 <!-- CUSTOMER OUTSTANDING -->
-			<!-- bloc 1 -->
 			<div class="grid-1">
 				<div class="card bg-c-blue order-card">
-					<!-- Corps de la carte -->
 					<div class="card-body">
-						<!-- <div class="card-block"> -->
-						<h4 class="text-center">
+						<h3 class="text-center">
 							<?php print $titleItem3 ?>
-						</h4>
-						<h1 class="text-center">
+						</h3>
+						<h2 class="text-center">
 							<?php print $dataItem3 ?>
-						</h1>
-						<hr>
+						</h2>
 						<div class="col-lg-12">
   							<div class="center-block">
-   		 						<div class="pull-left"><?php print $info5 ?> : <h4><?php print $dataInfo5?></h4></div>
+   		 						<div class="pull-left"><?php print $info5 ?> : <h4><?php print $dataInfo5?></h4></div><hr>
 								<div class="pull-right"><?php print $info6 ?> : <h4><?php print $dataInfo6 ?></h4></div>
 							</div>
 							</div>
@@ -209,9 +204,6 @@ $dataItem4 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustom
 					<a href="#" class="btn btn-primary">GRAPHIQUE</a>
 				</div>
 			</div>
-			<!-- end bloc 1 -->
-
-<!-- end outstanding suppliers -->
 
 <?php
 
@@ -230,23 +222,23 @@ $dataItem5 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outSuppli
 			<?php print $titleItem4 ?>
 		</h3><hr>
 		</br>
-		<h2 class="text-center">
+		<h4 class="text-center">
 			<?php print $dataItem4 ?>
-		</h2>
+		</h4>
     </div>
 
   </div>
   <div class="card">
     <div class="card-body">
-		<h4 class="text-center">
+		<h3 class="text-center">
 			<?php print $titleItem5 ?>
-		</h4><hr>
+		</h3><hr>
 		</br>
-		<h2 class="text-center">
+		<h4 class="text-center">
 			<?php print $dataItem5 ?>
-		</h2>
+		</h4>
     </div>
-  </div>
+</div>
 
 
 <?php
