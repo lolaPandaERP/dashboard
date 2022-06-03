@@ -58,8 +58,12 @@ require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
 
 global $db, $conf;
 
-$WIDTH = DolGraph::getDefaultGraphSizeForStats('width');
-$HEIGHT = DolGraph::getDefaultGraphSizeForStats('height');
+// Security check
+if (empty($conf->tab->enabled)) accessforbidden('Module not enabled');
+$socid = 0;
+if ($user->socid > 0) { // Protection if external user
+	accessforbidden();
+}
 
 // fetch current bank account
 $object = new General($db);
@@ -69,7 +73,6 @@ $datetime = dol_now();
 $year = dol_print_date($datetime, "%Y");
 $month = dol_print_date($datetime, "%m");
 $day = dol_print_date($datetime, "%d");
-
 
 // First day and last day of current mounth
 $firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
@@ -382,7 +385,12 @@ $titleItem4 = "Trésorerie nette";
 $solde = $object->fetchSoldeOnYear();
 $dataItem4 = price($solde) . "\n€";
 
-$info7 = "Charges mensuelles";
+$info7 = "Charges mensuelles"; // CV + CF
+$staticExpenses = $object->fetchStaticExpenses($firstDay, $lastDayYear); // static charge
+$variablesExpenses = $object->fetchVariablesExpenses($firstDayYear, $lastDayYear); // variable charge
+
+$result3 = ( ($variablesExpenses + $staticExpenses) / 12);
+$dataInfo7 = price($result3) . "\n€";
 
 $info8 = "Recurrent mensuel";
 
@@ -392,34 +400,34 @@ $info8 = "Recurrent mensuel";
  */
 
 
-// $file = "tresuryChart"; // id javascript
-// $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
+$file = "tresuryChart"; // id javascript
+$fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 
-// for($i = 1; $i <= $month; $i++){
+for($i = 1; $i <= $month; $i++){
 
 
-// }
+}
 
-// $px5= new DolGraph();
-// $mesg = $px5->isGraphKo();
+$px5= new DolGraph();
+$mesg = $px5->isGraphKo();
 
-// if (!$mesg){
+if (!$mesg){
 
-// 	$px5->SetData($data);
-// 	$i = $startyear;
-// 	$legend = ["2022"];
+	$px5->SetData($data);
+	$i = $startyear;
+	$legend = ["2022"];
 
-// 	$px5->datacolor = array(array(240,128,128), array(128, 187, 240));
-// 	$px5->SetTitle("Evolution de la tresorerie sur $year");
-// 	$px5->SetLegend($legend);
-// 	$px5->SetType(array('lines')); // Array with type for each serie. Example: array('type1', 'type2', ...) where type can be: 'pie', 'piesemicircle', 'polar', 'lines', 'linesnopoint', 'bars', 'horizontalbars'...
-// 	$px5->setHeight('200');
-// 	$px5->SetWidth('300');
-// 	$tresuryChart = $px5->draw($file, $fileurl);
-// } else {
-// 	setEventMessage("erreur", 'error');
-// }
-// $graphiqueD =  $px5->show($tresuryChart);
+	$px5->datacolor = array(array(240,128,128), array(128, 187, 240));
+	$px5->SetTitle("Evolution de la tresorerie sur $year");
+	$px5->SetLegend($legend);
+	$px5->SetType(array('lines')); // Array with type for each serie. Example: array('type1', 'type2', ...) where type can be: 'pie', 'piesemicircle', 'polar', 'lines', 'linesnopoint', 'bars', 'horizontalbars'...
+	$px5->setHeight('200');
+	$px5->SetWidth('300');
+	$tresuryChart = $px5->draw($file, $fileurl);
+} else {
+	setEventMessage("erreur", 'error');
+}
+$graphiqueD =  $px5->show($tresuryChart);
 
 
 
