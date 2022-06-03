@@ -114,9 +114,7 @@ class modTab extends DolibarrModules
 			),
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => array(
-				'/tab/js/boostrap.bundle.min.js',
-				'/tab/js/jquery.dataTables.min.js',
-				'/tab/js/script.js',
+				'/tab/js/tab.js',
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(
@@ -155,7 +153,7 @@ class modTab extends DolibarrModules
 		// Messages at activation
 		$this->warnings_activation = array(); // Warning to show when we activate module. array('always'='text') or array('FR'='textfr','ES'='textes'...)
 		$this->warnings_activation_ext = array(); // Warning to show when we activate an external module. array('always'='text') or array('FR'='textfr','ES'='textes'...)
-		//$this->automatic_activation = array('FR'=>'TabWasAutomaticallyActivatedBecauseOfYourCountryChoice');
+		$this->automatic_activation = array('FR'=>'TabWasAutomaticallyActivatedBecauseOfYourCountryChoice');
 		//$this->always_enabled = true;								// If true, can't be disabled
 
 		// Constants
