@@ -116,8 +116,10 @@ div.container-fluid-2{
 	position: absolute;
 	text-align: justify;
 	border-radius: 6px;
-	background-color: #555;
-	color: #fff;
+	background-color: rgb(255, 255, 255);
+	border: 0.5px solid rgb(23, 23, 23);
+	box-shadow: grey;
+	color: rgb(39, 39, 39);
   }
   
   h4 {
