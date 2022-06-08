@@ -24,10 +24,6 @@
  *	\brief      Home page of tab top menu
  */
 
-
-ob_start();
-ob_get_clean();
-
 // Load Dolibarr environment
 $res = 0;
 // Try main.inc.php into web root known defined into CONTEXT_DOCUMENT_ROOT (not always defined)
@@ -91,6 +87,7 @@ $lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
 /**
  * CUSTOMER OUTSTANDING
  */
+
 $titleItem1 = "Encours clients";
 $outstandingBillOnYear = $general->outstandingBillOnYear($firstDayYear, $lastDayYear);
 $dataItem1 = price($outstandingBillOnYear)."\n€";
@@ -185,39 +182,82 @@ $dataItem4 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustom
 ?>
 
 <!-- CUSTOMER OUTSTANDING -->
+<div class="grid-container-4">
 			<div class="grid-1">
 				<div class="card bg-c-blue order-card">
 					<div class="card-body">
-						<h3 class="text-center">
+					<div class="pull-left">
+						<div class="popup" onclick="showGraph()">
+						<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
+							<span class="popuptext" id="firstPop">
+								<h4> Détails des informations / calculs </h4>
+							<ul>
+								<li><strong><?php print $firstPop_info1 ?></strong><br><?php print $firstPop_data1 ?></li><hr>
+								<li><strong><?php print $firstPop_info2 ?></strong><br><?php print $firstPop_data2 ?> </li><hr>
+								<li><strong><?php print $firstPop_info3 ?></strong><br><?php print $firstPop_data3 ?> </li>
+							</ul>
+							</span>
+						</div>
+						</div>
+						<script>
+							// When the user clicks on div, open the popup
+							function showGraph() {
+								var firstPopup = document.getElementById("firstPop");
+								firstPopup.classList.toggle("show");
+							}
+						</script>
+						<h4 class="text-center">
 							<?php print $titleItem3 ?>
-						</h3>
-						<h2 class="text-center">
+						</h4>
+						<h1 class="text-center">
 							<?php print $dataItem3 ?>
-						</h2>
-						<div class="col-lg-12">
+						</h1>
+						<hr>
+						<div class="col-lg-14">
   							<div class="center-block">
-   		 						<div class="pull-left"><?php print $info5 ?> : <h4><?php print $dataInfo5?></h4></div><hr>
-								<div class="pull-right"><?php print $info6 ?> : <h4><?php print $dataInfo6 ?></h4></div>
+   		 						<div class="pull-left"><?php print $info5 ?> : <h4 class="center"><?php print $dataInfo5 ?></h4></div>
+								<div class="pull-right"><?php print $info6 ?> : <h4 class="center"><?php print $dataInfo6 ?></h4></div>
 							</div>
 							</div>
 						</div>
-					<a href="#" class="btn btn-primary">GRAPHIQUE</a>
+							<?php print $graphiqueA ?>
+					</div>
 				</div>
-			</div>
 
-<?php
 
-// Supplier outstandings exceeded
-$titleItem5 = "Encours fournisseurs dépassés";
-$outSupplierExceeded = $general->fetchSupplierBillExceed();
-$dataItem5 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outSupplierExceeded) . "\n€";
+	<?php
 
-?>
+	// Supplier outstandings exceeded
+	$titleItem5 = "Encours fournisseurs dépassés";
+	$outSupplierExceeded = $general->fetchSupplierBillExceed();
+	$dataItem5 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outSupplierExceeded) . "\n€";
+
+	?>
 
 <!-- end Outstanding suppliers exceed -->
 <div class="card-deck">
   <div class="card">
     <div class="card-body">
+	<div class="pull-left">
+		<div class="popup" onclick="showGraph()">
+			<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
+				<span class="popuptext" id="firstPop">
+					<h4> Détails des informations / calculs </h4>
+					<ul>
+						<li><strong><?php print $firstPop_info1 ?></strong><br><?php print $firstPop_data1 ?></li><hr>
+						<li><strong><?php print $firstPop_info2 ?></strong><br><?php print $firstPop_data2 ?> </li><hr>
+						<li><strong><?php print $firstPop_info3 ?></strong><br><?php print $firstPop_data3 ?> </li>
+					</ul>
+				</span>
+			</div>
+		</div>
+		<script>
+			// When the user clicks on div, open the popup
+			function showGraph() {
+				var firstPopup = document.getElementById("firstPop");
+				firstPopup.classList.toggle("show");
+			}
+		</script>
 		<h3 class="text-center">
 			<?php print $titleItem4 ?>
 		</h3><hr>
@@ -230,6 +270,26 @@ $dataItem5 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outSuppli
   </div>
   <div class="card">
     <div class="card-body">
+	<div class="pull-left">
+		<div class="popup" onclick="showGraph()">
+			<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
+				<span class="popuptext" id="firstPop">
+					<h4> Détails des informations / calculs </h4>
+					<ul>
+						<li><strong><?php print $firstPop_info1 ?></strong><br><?php print $firstPop_data1 ?></li><hr>
+						<li><strong><?php print $firstPop_info2 ?></strong><br><?php print $firstPop_data2 ?> </li><hr>
+						<li><strong><?php print $firstPop_info3 ?></strong><br><?php print $firstPop_data3 ?> </li>
+					</ul>
+				</span>
+			</div>
+		</div>
+		<script>
+			// When the user clicks on div, open the popup
+			function showGraph() {
+				var firstPopup = document.getElementById("firstPop");
+				firstPopup.classList.toggle("show");
+			}
+		</script>
 		<h3 class="text-center">
 			<?php print $titleItem5 ?>
 		</h3><hr>
