@@ -440,28 +440,27 @@ class Financier extends CommonObject
 	 */
 	public function load_navbar()
 	{
-			$html = '';
+
+		$html = '';
 			$tab1 = DOL_URL_ROOT.'/custom/tab/financial/overview.php';
 			$tab2 = DOL_URL_ROOT.'/custom/tab/financial/billingStatus.php';
 			$tab3 = DOL_URL_ROOT.'/custom/tab/financial/personalCost.php';
 			$tab4 = DOL_URL_ROOT.'/custom/tab/financial/profi_margins.php';
 
 			$html .= "\n";
-			$html .= '<div class="container-fluid">';
-			$html .= '<nav class="navbar-brand">';
-			$html .= '<ul class="nav justify-content-end">';
-			$html .=' <img src="../img/icon/financial.png" alt="" class="d-inline-block align-text-top" width=50px>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab1.'">Général</a></li>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab2.'">Etat facturation</a></li>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab3.'">Coût personnel</a></li>';
-			$html .= '<li class="nav"><a class="nav-link " href="'.$tab4.'">Rentabilité / Marges opérationnelles</a></li>';
 
-			$html .= '</ul></nav><br></div>';
+			$html .= '
+			<div class="navbar">
+				<a< href="'.$tab1.'"><i class="fa fa-fw fa-home"></i> Général</a>
+				<a href="'.$tab2.'"><i class="fa fa-pie-chart"></i> Etat de facturation C/F</a>
+				<a href="'.$tab3.'"><i class="fa fa-bank"></i> Coût personnel</a>
+				<a href="'.$tab4.'"><i class="fa fa-briefcase"></i> Rentabilité / Marges</a>
+			</div>';
 
-			$html .= '</tr>'."\n";
 			return $html;
 
 	}
+
 	/**
 	 * Update object into database
 	 *
