@@ -5,36 +5,35 @@
 	<link rel="stylesheet" type="text/css"  href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/css/bootstrap-extended.min.css">
 	<link rel="stylesheet" type="text/css"  href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/fonts/simple-line-icons/style.min.css">
 	<link rel="stylesheet" type="text/css"  href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/css/bootstrap.min.css">
-	<link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
+
 </head>
 
 <body>
 
-
-	<!-- page content -->
+<!-- GRILLE STRUCTURE HTML -->
 	<section class="page-content">
 		<div class="grid-container-4">
 			<div class="grid-1">
 				<div class="card bg-c-blue order-card">
 					<div class="card-body">
-					<div class="pull-right">
-						<div class="popup" onclick="myFunction()">
-						<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span>
-							<span class="popuptext" id="myPopup">
+					<div class="pull-left">
+						<div class="popup" onclick="showGraph()">
+						<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
+							<span class="popuptext" id="firstPop">
 								<h4> Détails des informations / calculs </h4>
 							<ul>
-								<li>Le calcul du CA : <strong>Somme du "total_ht" de toutes les factures clients sur l'année courante (hors brouillon) </strong> </li><hr>
-								<li>Le calcul du CA N-1 : <strong>Somme du "total_ht" de toutes les factures clients sur l'année précédente (hors brouillon)</strong></li><hr>
-								<li>La progression : <strong> ( (VA - VD) / VD ) x 100 </strong></li>
+								<li><strong><?php print $firstPop_info1 ?></strong><br><?php print $firstPop_data1 ?></li><hr>
+								<li><strong><?php print $firstPop_info2 ?></strong><br><?php print $firstPop_data2 ?> </li><hr>
+								<li><strong><?php print $firstPop_info3 ?></strong><br><?php print $firstPop_data3 ?> </li>
 							</ul>
 							</span>
 						</div>
 						</div>
 						<script>
 							// When the user clicks on div, open the popup
-							function myFunction() {
-								var popup = document.getElementById("myPopup");
-								popup.classList.toggle("show");
+							function showGraph() {
+								var firstPopup = document.getElementById("firstPop");
+								firstPopup.classList.toggle("show");
 							}
 						</script>
 						<h4 class="text-center">
@@ -42,7 +41,6 @@
 						</h4>
 						<h1 class="text-center">
 							<?php print $dataItem1 ?>
-
 						</h1>
 						<hr>
 						<div class="col-lg-14">
@@ -55,21 +53,36 @@
 							<?php print $graphiqueA ?>
 					</div>
 				</div>
-			<!-- end bloc 1 -->
 
-			<!-- bloc 1 -->
 			<div class="grid-1">
 				<div class="card bg-c-blue order-card">
 					<!-- Corps de la carte -->
 					<div class="card-body">
-					<div class="pull-right"><span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
-						<!-- <div class="card-block"> -->
+					<div class="pull-left">
+					<div class="popup" onclick="showGraph2()">
+						<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
+							<span class="popuptext" id="secondPop">
+								<h4> Détails des informations / calculs </h4>
+							<ul>
+								<li><strong><?php print $secondPop_info1 ?></strong><br><?php print $secondPop_data1 ?></li><hr>
+								<li><strong><?php print $secondPop_info2 ?></strong><br><?php print $secondPop_data2 ?> </li><hr>
+								<li><strong><?php print $secondPop_info3 ?></strong><br><?php print $secondPop_data3 ?> </li>
+							</ul>
+							</span>
+						</div>
+						</div>
+						<script>
+							// When the user clicks on div, open the popup
+							function showGraph2() {
+								var secondPopup = document.getElementById("secondPop");
+								secondPopup.classList.toggle("show");
+							}
+						</script>
 						<h4 class="text-center">
 							<?php print $titleItem2 ?>
 						</h4>
 						<h1 class="text-center">
 							<?php print $dataItem2 ?>
-
 						</h1>
 						<hr>
 						<div class="col-lg-14">
@@ -79,12 +92,14 @@
 							</div>
 							</div>
 						</div>
+						<div>
    		 					<div><?php print $graphiqueB . "\n"?></div>
 							<div><?php print $graphiqueB1 ?></div>
 							<!-- <div><?php print $graphiqueB2 . "\n"?></div>
 							<div><?php print $graphiqueB3 ?></div> -->
 						</div>
 					</div>
+				</div>
 			<!-- end bloc 1 -->
 
 			<!-- bloc 1 -->
@@ -92,8 +107,26 @@
 				<div class="card bg-c-blue order-card">
 					<!-- Corps de la carte -->
 					<div class="card-body">
-					<div class="pull-right"><span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
-						<!-- <div class="card-block"> -->
+					<div class="pull-left">
+					<div class="popup" onclick="showGraph3()">
+						<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
+							<span class="popuptext" id="myPopup">
+								<h4> Détails des informations / calculs </h4>
+							<ul>
+								<li><strong><?php print $thirdPop_info1 ?></strong><br><?php print $thirdPop_data1 ?></li><hr>
+								<li><strong><?php print $thirdPop_info2 ?></strong><br><?php print $thirdPop_data2 ?> </li><hr>
+								<li><strong><?php print $thirdPop_info3 ?></strong><br><?php print $thirdPop_data3 ?> </li>
+							</ul>
+							</span>
+						</div>
+						</div>
+						<script>
+							// When the user clicks on div, open the popup
+							function showGraph3() {
+								var popup = document.getElementById("myPopup");
+								popup.classList.toggle("show");
+							}
+						</script>
 						<h4 class="text-center">
 							<?php print $titleItem3 ?>
 						</h4>
@@ -113,20 +146,32 @@
 						</div>
 				</div>
 			</div>
-			<!-- end bloc 1 -->
-
-
-
-			<!-- end bloc 1 -->
-
 
 				<!-- bloc 1 -->
 				<div class="grid-1">
 					<div class="card bg-c-blue order-card">
 						<!-- Corps de la carte -->
 						<div class="card-body">
-						<div class="pull-right"><span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
-							<!-- <div class="card-block"> -->
+						<div class="pull-left">
+						<div class="popup" onclick="showGraph4()">
+							<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
+								<span class="popuptext" id="fourPop">
+									<h4> Détails des informations / calculs </h4>
+								<ul>
+									<li><strong><?php print $fourPop_info1 ?></strong><br><?php print $fourPop_data1 ?></li><hr>
+									<li><strong><?php print $fourPop_info2 ?></strong><br><?php print $fourPop_data2 ?> </li><hr>
+									<li><strong><?php print $fourPop_info3 ?></strong><br><?php print $fourPop_data3 ?> </li>
+								</ul>
+								</span>
+							</div>
+							</div>
+							<script>
+								// When the user clicks on div, open the popup
+								function showGraph4() {
+									var fourPopup = document.getElementById("fourPop");
+									fourPopup.classList.toggle("show");
+								}
+							</script>
 							<h4 class="text-center">
 								<?php print $titleItem4 ?>
 							</h4>
