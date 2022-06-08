@@ -27,10 +27,6 @@
 // Put here all includes required by your class file
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facturestats.class.php';
-//require_once DOL_DOCUMENT_ROOT . '/societe/class/societe.class.php';
-//require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
-
-
 
 /**
  * Class for General
@@ -142,6 +138,8 @@ class General extends FactureStats
 	public $import_key;
 	public $model_pdf;
 	public $status;
+
+
 	// END MODULEBUILDER PROPERTIES
 
 
@@ -1039,7 +1037,7 @@ class General extends FactureStats
 	}
 
 	/**
-	 * Functions for dashboard
+	 * ---- FUNCTIONS FOR DASHBOARD ----
 	*/
 
 	public function getIdBankAccount(){
@@ -1155,8 +1153,6 @@ class General extends FactureStats
 		}
 		return $result;
 	}
-
-
 
 	/**
 	 * Retourne le solde du compte sur le mois dernier (tresoreire m-1) (débit)
@@ -1490,7 +1486,7 @@ class General extends FactureStats
 	 public function total_outstandingBillPastYear($firstDayLastMonth, $lastDayLastMonth){
 
 		// Encours total sur l'année n - 1 (cumul des montants)
-		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql = "SELECT SUM(total_ttc) as total_ttc";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "' ";
 		$sql .= " AND paye= 0";
@@ -1501,7 +1497,7 @@ class General extends FactureStats
 			if ($resql) {
 				if ($this->db->num_rows($resql)) {
 					$obj = $this->db->fetch_object($resql);
-					$result = $obj->total_ht;
+					$result = $obj->total_ttc;
 				}
 				$this->db->free($resql);
 			}
@@ -1514,7 +1510,7 @@ class General extends FactureStats
 	 public function outstandingCustomerOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth){
 
 		// Encours client sur le mois courant
-		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql = "SELECT SUM(total_ttc) as total_ttc";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
 		$sql .= " AND paye = 0 ";
@@ -1525,7 +1521,7 @@ class General extends FactureStats
 		if ($resql) {
 			if ($this->db->num_rows($resql)) {
 				$obj = $this->db->fetch_object($resql);
-				$result = $obj->total_ht;
+				$result = $obj->total_ttc;
 			}
 			$this->db->free($resql);
 		}
