@@ -58,6 +58,8 @@ require_once DOL_DOCUMENT_ROOT . '/custom/tab/class/financier.class.php';
 $langs->loadLangs(array("tab@tab"));
 $action = GETPOST('action', 'aZ09');
 
+
+
 /*
  * Actions
  */
@@ -71,21 +73,14 @@ $action = GETPOST('action', 'aZ09');
 
 $form = new Form($db);
 $formfile = new FormFile($db);
-$general = new General($db);
 $object = new Financier($db);
-
-$head = '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">';
-print '<link rel="stylesheet" href="' . DOL_DOCUMENT_ROOT . '/custom/tab/css/tab.css' . '">';
 
 // Outstandings customer and
 llxHeader($head, $langs->trans("Financier - Général"));
 
 print load_fiche_titre($langs->trans("Général"));
-print $object->load_navbar();
 
-// Chargement du template de page en lui passant la page courante en parametre.
-$page = $_SERVER["PHP_SELF"];
-print $general->template($page);
+print $object->load_navbar();
 
 // End of page
 llxFooter();
