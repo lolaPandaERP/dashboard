@@ -44,9 +44,19 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/tab/class/general.class.php';
 require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+
+// Security check
+if (empty($conf->tab->enabled)) accessforbidden('Module not enabled');
+$socid = 0;
+if ($user->socid > 0) { // Protection if external user
+	accessforbidden();
+}
+
 // Load translation files required by the page
 $langs->loadLangs(array("tab@tab"));
 $action = GETPOST('action', 'aZ09');
+
+
 
 /**
  * DEFINE TIME FOR REQUEST
@@ -96,7 +106,6 @@ $dataInfo2 = $result  ."\n%";
 
 
 
-
 /**
  * NOMBRE DE PRODUCTION EN COURS
  */
@@ -108,12 +117,12 @@ $dataItem2 = $nbDeliveryOrderByYear;
 
 // nb de commande livrées le mois dernier
 $info3 = "Nb des productions du mois dernier";
-$result2 = $object->fetchNbDeliveryOrderByLastMonth($firstDayLastMonth, $lastDayLastMonth);
+$result2 = $object->fetchNbDeliveryOrder($firstDayLastMonth, $lastDayLastMonth);
 $nbDeliveryOrderByLastMonth = count($result2);
 $dataInfo3 = $nbDeliveryOrderByLastMonth;
 
-// sur le mois dernier
-$result3 = $object->fetchNbDeliveryOrderByCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
+// sur le mois courant
+$result3 = $object->fetchNbDeliveryOrder($firstDayCurrentMonth, $lastDayCurrentMonth);
 $nbDeliveryOrderByCurrentMonth = count($result3);
 $dataInfo4 = $nbDeliveryOrderByCurrentMonth;
 
@@ -126,6 +135,31 @@ $dataInfo4 = $result . "\n%";
 /*
  * Actions
  */
+
+
+/**
+ * PAGINATION
+ * */
+
+// Le numéro de la page sur laquelle on se trouve
+// if(isset($_GET['page']) && !empty($_GET['page'])){
+//     $currentPage = (int) strip_tags($_GET['page']);
+// }else{
+//     $currentPage = 1; // page courante (index)
+// }
+
+// // Le nombre d'articles souhaités par page
+// $bypages = 5;
+
+// // Calcul du 1er element de la page
+// $firstElement = ($currentPage * $bypages) - $bypages;
+
+// // Nb de cmd validées au total
+$result3 = $object->fetchOrderSortedByDeliveryDate($firstDayYear, $lastDayYear, $firstElement, $bypages);
+$nbValidatedOrder = count($result3);
+
+// // Le nombre de pages au total
+// $totalPages = ceil($nbValidatedOrder / $bypages);
 
 
 /*
@@ -147,26 +181,30 @@ include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
 
 
 // PRODUCTION LES + PROCHES
-$titleItem1 = "Productions les + proches";
-$result3 = $object->fetchOrderSortedByDeliveryDate($firstDayYear, $lastDayYear);
+$titleItem1 = "<h4>Productions les + proches</h4>";
 
 // Date et client la + proche
-$titleItem2 = "Date et client la + proche";
+$titleItem2 = "<h4>Commandes validées du jour</h4>";
 
 // CLIENTS A PRODUIRE
-$titleItem3 = "Clients à produire";
+$titleItem3 = "<h4>Clients à produire</h4>";
+
 
 ?>
+
+<!-- PRODUCTION LES PLUS PROCHES -->
 
 <div class="card-deck">
    <div class="card">
       <div class="card-body">
 		  <div class="text-center">
-	  		<?php print $titleItem1  ."\n" ?><span class="classfortooltip" title="Commandes clients validées triées par date prévue de livraison. Les plus anciennes commandes validées sont remontées directement en premier."><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span>
+	  		<?php print $titleItem1  ."\n".	"(".count($result3).")" ?>
 
 				<p class="card-text">
+
 						<?php
 							if(is_array($result3) && $result3 != null){
+
 
 								foreach ($result3 as $res)
 								{
@@ -179,86 +217,115 @@ $titleItem3 = "Clients à produire";
 
 									print '<ul class="list-group">';
 									print '<li class="list-group-item d-flex justify-content-between align-items-center">';
-									print  '<i class="fas fa-address-card"></i>'.$societe->name;
+									print  '<i class="fas fa-address-card"></i><a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'">'.$societe->name.'</hr></a>';
 
 									if($commande->date_livraison != null) {
 										print '<p><span class="badge badge-pill badge-primary">Date de livraison prévue : '.date('j-m-Y', $commande->date_livraison).'</span></p></li>'."\n";
 									} else {
-										print '<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
+										 print '<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
 									}
 									print '</ul>';
 								}
 							}
 						?>
+
 						</div>
 					</div>
 				</div>
 
 
-   <div class="card">
-	<div class="card-body">
-	<div class="text-center">
-		<?php print $titleItem2 ."\n" ?> <span class="classfortooltip" title="Liste des commandes validées du jour avec date de livraison prévue"><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
-			</br>
-			<?php
-				$result = $object->fetchDeliveredOrderToday();
-
-				if($result != null){
-
-					foreach ($result as $res)
-					{
-						$societe = new Societe($db);
-						$societe->fetch($res->fk_soc);
-
-						$commande = new Commande($db);
-						$commande->fetch($res->rowid);
-
-						print '<ul class="list-group">';
-						print '<li class="list-group-item d-flex justify-content-between align-items-center">';
-						print  '<i class="fas fa-address-card"></i>'.$societe->name;
-
-						if($commande->date_livraison != null) {
-							print '<span class="badge badge-pill badge-primary">Date de création : '.date('j-m-Y', $commande->date_commande).'</span></li>';
-						} else {
-							print '<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
-						}
-						print '</ul>';
-					}
-				} else {
-					print '<p class="center"><pan class="badge badge-pill badge-danger">Aucune commande validées pour ce jour </span></p>';
-				}
-			?>
-			</div>
-		</div>
-	</div>
-
 
 	<div class="card">
 		<div class="card-body">
+		<div class="text-center">
+			<?php print $titleItem3 ."\n" ?> <span class="classfortooltip" title="Liste des commandes validées du jour avec date de livraison prévue"><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
+			</br>
+			 <ul class="pagination">
+					<!-- Lien vers la page précédente (désactivé si on se trouve sur la 1ère page) -->
+						<li class="page-item <?= ($currentPage == 1) ? "disabled" : "" ?>">
+							<a href="./netProduce.php?page=<?= $currentPage - 1 ?>" class="page-link">Précédente</a>
+						</li>
+
+						<?php for($page = 1; $page <= $totalPages; $page++): ?>
+							<!-- Lien vers chacune des pages (activé si on se trouve sur la page correspondante) -->
+							<li class="page-item <?= ($currentPage == $page) ? "active" : "" ?>">
+								<a href="./netProduce.php?page=<?= $page ?>" class="page-link"><?= $page ?></a>
+							</li>
+							<?php endfor ?>
+							<!-- Lien vers la page suivante (désactivé si on se trouve sur la dernière page) -->
+							<li class="page-item <?= ($currentPage == $totalPages) ? "disabled" : "" ?>">
+								<a href="./netProduce.php?page=<?= $currentPage + 1 ?>" class="page-link">Suivante</a>
+							</li>
+						</ul>
+					</nav>
+				<?php
+
+					$rets = $object->fetchOrder(1, $firstElement, $bypages);
+
+					if(is_array($rets) && $rets != null){
+
+						foreach ($rets as $ret)
+						{
+							$societe = new Societe($db);
+							$societe->fetch($ret->fk_soc);
+
+							$commande = new Commande($db);
+							$commande->fetch($ret->rowid);
+
+							print '<ul class="list-group">';
+							print '<li class="list-group-item d-flex justify-content-between align-items-center">';
+							print  '<i class="fas fa-address-card"></i><a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'">'.$societe->name.'</a>';
+							print '<span class="badge badge-pill badge-primary">';
+							print '<a href="'.DOL_URL_ROOT.'/commande/card.php?id='.$commande->id.'">Réf. commande :  '.$commande->ref.'</span></li>';
+							print '</ul>';
+						}
+					}
+				?>
+				</div>
+			</div>
+		</div>
+
+
+	<!-- CUSTOMER TO PRODUCE -->
+	<div class="card">
+		<div class="card-body">
 			<div class="text-center">
-				<?php print $titleItem3  ."\n" ?><span class="classfortooltip" title="Liste croissante des tiers pour chaque commande clients validées."><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
+				<?php print $titleItem2 ."\n" ?><span class="classfortooltip" title="Date de livraison prévue d'une commande client validé du jour"><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
 			</br>
 					<?php
 
-						$rets = $object->fetchOrder(1);
+					$result = $object->fetchDeliveredOrderToday();
 
-						if(is_array($rets) && $rets != null){
+					if($result != null){
 
-							foreach ($rets as $ret)
-							{
-								$societe = new Societe($db);
-								$societe->fetch($ret->fk_soc);
+						foreach ($result as $res)
+						{
+							$societe = new Societe($db);
+							$societe->fetch($res->fk_soc);
 
-								$commande = new Commande($db);
-								$commande->fetch($ret->rowid);
+							$commande = new Commande($db);
+							$commande->fetch($res->rowid);
 
-								print '<ul class="list-group">';
-								print '<li class="list-group-item d-flex justify-content-between align-items-center">';
-								print  '<i class="fas fa-address-card"></i>'.$societe->name; // redirection vers module tiers - onglet client
-								print '<span class="badge badge-pill badge-primary">Réf. commande :  '.$commande->ref.'</span></li>';
-								print '</ul>';
+							print '<ul class="list-group">';
+							print '<li class="list-group-item d-flex justify-content-between align-items-center">';
+							print  '<i class="fas fa-address-card"></i>';
+							print '<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'">'.$societe->name.'</hr>';
+							print '<span class="badge badge-pill badge-primary"><a href="'.DOL_URL_ROOT.'/commande/card.php?id='.$commande->id.'">';
+							print '<span class="badge badge-pill badge-primary">Réf. commande :  '.$commande->ref.'</a></span>';
+
+							if($commande->date_livraison != null) {
+								print '<p><strong>Date de création : </strong>'.date('j-m-Y', $commande->date_commande).'';
+							} else {
+								print '<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span>';
 							}
+							print '</li>';
+							print '</ul>';
 						}
+
+					} else {
+						print '<p class="center"><pan class="badge badge-pill badge-danger">Aucune commande validées pour ce jour </span></p>';
+					}
+
 					?>
 					</div>
 				</div>

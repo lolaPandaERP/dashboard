@@ -28,6 +28,9 @@
 	h3 {
 		font-size: 30px;
 	}
+	.card-block {
+		width: 60%;
+	  }
 }
 
 .wrapper {

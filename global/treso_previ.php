@@ -46,6 +46,13 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/tab/class/general.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
+// Security check
+if (empty($conf->tab->enabled)) accessforbidden('Module not enabled');
+$socid = 0;
+if ($user->socid > 0) { // Protection if external user
+	accessforbidden();
+}
+
 // Load translation files required by the page
 $langs->loadLangs(array("tab@tab"));
 $action = GETPOST('action', 'aZ09');
@@ -69,6 +76,7 @@ $lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
 // M - 1
 $firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
 $lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
+
 
 /**
  * TRESURY
@@ -96,23 +104,40 @@ $dataInfo1 = price($result) ."\n€";
 
 $info2 = "Progression";
 
+// For tresury (popupinfo)
+$firstPop_info1 = $titleItem1;
+$firstPop_info2 = $info1;
+$firstPop_info3 = $info2;
 
-// Total chharge of current month
+$firstPop_data1 = "Cumul des montants du compte courant sur l'année en cours";
+$firstPop_data2 = "Cumul des montants du compte courant sur l'année précédente";
+$firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100) ";
+
+
+
+// Total charge of current month
 $info3 = "Charges fixes";
 $staticExpenses = $object->fetchStaticExpenses($firstDayYear, $lastDayYear);
 $dataInfo3 = price($staticExpenses) . "\n€";
-
 
 $info4 = "Charges variables";
 $variablesExpenses = $object->fetchVariablesExpenses($firstDayYear, $lastDayYear);
 $dataInfo4 = price($variablesExpenses) . "\n€";
 
-
 $titleItem2 = "Charge totale";
 $result3 = ($variablesExpenses + $staticExpenses);
 $dataItem2 = price($result3). "\n€";
 
-$titleItem3 = "Encours clients à 30 jours";
+
+// For tresury (popupinfo)
+$secondPop_info1 = $titleItem2;
+$secondPop_info2 = $info3;
+$secondPop_info3 = $info4;
+
+$secondPop_data1 = "Charges fixes + charges variables";
+$secondPop_data2 = "Additions des dépenses fixes : salaire + charges sociales et fiscales + emprunts (crédits) + paiements divers";
+$secondPop_data3 = "Additions des dépenses variables : total (ht) des factures fournisseurs (hors brouillon) + le montant total de TVA sur l'année courante ";
+
 
 
 /*
@@ -142,6 +167,9 @@ include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
  *  CUSTOMER OUTSTANDING AT 30 DAYS
  */
 
+
+$titleItem3 = "Encours clients à 30 jours";
+
 $dataItem3 = 100;
 
 $accounts = $object->fetchAllBankAccount();
@@ -154,7 +182,7 @@ $nbAccount = count($accounts);
 // total factures impayées et commandes clients validées sur l'année
 $info7 = "Clients à encaisser";
 $customer_validated_orders = $object->fetchValidatedOrderOnCurrentYears($firstDayYear, $lastDayYear); // unpaid invoices
-$customer_validated_invoices = $object->outstandingBillOnYear($firstDayYear, $lastDayYear); // validted orders
+$customer_validated_invoices = $object->outstandingBill($firstDayYear, $lastDayYear); // validted orders
 $customerToCash = ($customer_validated_invoices + $customer_validated_orders);
 
 $dataInfo7 = price($customerToCash) . "\n€";
@@ -188,8 +216,18 @@ $info9 = "Solde des comptes"; //  addition du solde des 3 comptes bq - le montan
 $soldesAccount = ($totalSoldesAccount - $supplierToPaid);
 $dataInfo9 =  price($soldesAccount) . "\n€";
 
+// For outstanding customer 30 days (popupinfo)
+$thirdPop_info1 = "Solde des banques";
+$thirdPop_info2 = $info7;
+$thirdPop_info3 = $info8;
+$thirdPop_info4 = $info9;
+$thirdPop_info5 = $info10;
 
-
+$thirdPop_data1 = "Banques | Caisses - Comptes bancaires : solde du compte ";
+$thirdPop_data2 = "Total des factures clients impayées + commandes client validées sur l'année courante";
+$thirdPop_data3 = "Addition du solde des 3 comptes bancaires et du 'reste à payer' sur les factures fournisseurs";
+$thirdPop_data4 = "Addition du solde des 3 comptes bancaires - le montant 'fournisseurs à payer' ";
+$thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes fournisseurs validées";
 
 ?>
 
@@ -198,6 +236,28 @@ $dataInfo9 =  price($soldesAccount) . "\n€";
 <div class="container-fluid-2">
 	<div class="card bg-c-white order-card">
 		<div class="card-body">
+			<div class="pull-left">
+				<div class="popup" onclick="showGraph3()">
+					<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
+						<span class="popuptext" id="popup30days">
+							<h4> Détails des informations / calculs </h4>
+						<ul>
+							<li><strong><?php print $thirdPop_info1 ?></strong><br><?php print $thirdPop_data1 ?></li><hr>
+							<li><strong><?php print $thirdPop_info2 ?></strong><br><?php print $thirdPop_data2 ?> </li><hr>
+							<li><strong><?php print $thirdPop_info3 ?></strong><br><?php print $thirdPop_data3 ?> </li><hr>
+							<li><strong><?php print $thirdPop_info4 ?></strong><br><?php print $thirdPop_data4 ?> </li><hr>
+							<li><strong><?php print $thirdPop_info5 ?></strong><br><?php print $thirdPop_data5 ?> </li>
+						</ul>
+						</span>
+					</div>
+					</div>
+					<script>
+						// When the user clicks on div, open the popup
+						function showGraph3() {
+							var popup = document.getElementById("popup30days");
+							popup.classList.toggle("show");
+						}
+					</script>
 			<h3 class="text-center">
 				<?php print $titleItem3 ?>
 			</h3>

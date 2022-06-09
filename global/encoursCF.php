@@ -50,10 +50,24 @@ require_once DOL_DOCUMENT_ROOT . '/custom/tab/class/general.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/dolgraph.class.php';
 require_once DOL_DOCUMENT_ROOT . '/compta/bank/class/account.class.php';
 
-
 global $db, $conf, $user;
 
-$general = new General($db);
+// Security check
+if (empty($conf->tab->enabled)) accessforbidden('Module not enabled');
+$socid = 0;
+if ($user->socid > 0) { // Protection if external user
+	accessforbidden();
+}
+
+// Le numéro de la page sur laquelle on se trouve
+if(isset($_GET['page']) && !empty($_GET['page'])){
+    $currentPage = (int) strip_tags($_GET['page']);
+}else{
+    $currentPage = 1; // page courante (index)
+}
+
+
+$object = new General($db);
 
 // Load translation files required by the page
 $langs->loadLangs(array("tab@tab"));
@@ -62,6 +76,8 @@ $action = GETPOST('action', 'aZ09');
 $month = date('m');
 $year = date('Y');
 $day = date('Y-m-d');
+$monthsArr = monthArray($langs, 1); // months
+
 
 /**
  * DEFINE TIME FOR REQUEST
@@ -89,22 +105,23 @@ $lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
  */
 
 $titleItem1 = "Encours clients";
-$outstandingBillOnYear = $general->outstandingBillOnYear($firstDayYear, $lastDayYear);
+$outstandingBillOnYear = $object->outstandingBill($firstDayYear, $lastDayYear);
 $dataItem1 = price($outstandingBillOnYear)."\n€";
 
 // Encours C sur le mois dernier
 $info1 = "Encours du mois dernier";
-$accOfPastYears = $general->total_outstandingBillPastYear($firstDayLastMonth, $lastDayLastMonth);
+$accOfPastYears = $object->outstandingBill($firstDayLastMonth, $lastDayLastMonth);
 $dataInfo1 = price($accOfPastYears)."\n€";
 
-// sur le mois courant (pour calcul progression)
-$outstandingCurrentMonth = $general->outstandingCustomerOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
+// nombre d'encours sur le mois courant et sur M-1 (pour calcul progression)
+// $outstandingCurrentMonth = $object->nbCustomerOutstanding($firstDayCurrentMonth, $lastDayCurrentMonth);
+// $nbUnpaidInvoices = count($outstandingCurrentMonth);
 
-// progression de l'encours client par rapport au mois dernier
+// TODO : progression du NOMBRE (et non du montant) d'encours client par rapport au mois dernier
 $info2 = "Progression ";
 
-$resultat = $general->progress($outstandingCurrentMonth, $accOfPastYears);
-$dataInfo2 = $resultat."\n%";
+// $resultat = $object->progress($nbInvoices, $nbInvoices2);
+// $dataInfo2 = intval($resultat)."\n%";
 
 // Condition d'affichage pour la progression
 if($dataInfo2 > 0){
@@ -113,6 +130,60 @@ if($dataInfo2 > 0){
 	$dataInfo2 = '<p style=color:green>'.$dataInfo2;
 }
 
+// Load info for otstanding customer popupinfo
+$firstPop_info1 = $titleItem1;
+$firstPop_info2 = $info1;
+$firstPop_info3 = $info2;
+
+$firstPop_data1 = "Total des factures clients impayées sur l'année en cours (HT)";
+$firstPop_data2 = "Total des factures clients impayées sur le mois en cours";
+$firstPop_data3 = "Progression du nombre total d'encours clients pa rapport au mois dernier";
+
+// GRAPH
+
+$file = "marginChart"; // id javascript
+$fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
+
+$data = [];
+
+$customerUnpaidInvoiceArray = $object->fetchOrder(1, $firstElement, $bypages);
+
+for($i = 1; $i <= 12; $i++){
+
+	// We get the total of validated order for each month
+	foreach($customerUnpaidInvoiceArray as $res){
+		$cmd = new Commande($db);
+		$rest = $cmd->fetch($res->rowid);
+
+		// We get the total of customers invoices for each month
+		if(date('n', $cmd->date_creation) == $i){
+			$totalHTorder += $cmd->total_ht;
+		 }
+	}
+
+	// We add datas in the graph
+	$data[] = [
+		html_entity_decode($monthsArr[$i]),
+		$totalHTorder
+	];
+}
+
+$px3 = new DolGraph();
+$mesg = $px3->isGraphKo();
+$legend = ["2022"];
+if (!$mesg){
+	$px3->SetTitle("Evolution du nombre d'encours (cumul des années passées");
+	$px3->datacolor = array(array(240,128,128), array(128, 187, 240));
+	$px3->SetData($data);
+	$px3->SetLegend($legend);
+	$px3->SetType(array('lines')); // Array with type for each serie. Example: array('type1', 'type2', ...) where type can be: 'pie', 'piesemicircle', 'polar', 'lines', 'linesnopoint', 'bars', 'horizontalbars'...
+	$px3->setHeight('400');
+	$px3->SetWidth('600');
+	$outstandingChart = $px3->draw($file, $fileurl);
+}
+
+$graphiqueA = $px3->show($outstandingChart);
+
 
 
 /**
@@ -120,17 +191,17 @@ if($dataInfo2 > 0){
  */
 
 $titleItem2 = "Encours fournisseurs";
-$outstandingSupplierOnYear = $general->outstandingSupplierOnYear($firstDayYear, $lastDayYear);
+$outstandingSupplierOnYear = $object->outstandingSupplierOnYear($firstDayYear, $lastDayYear);
 $dataItem2 = price($outstandingSupplierOnYear) . "\n€";
 
 $info3 = "Encours fournisseur du mois dernier";
-$outstandingSupplierOnLastMonth = $general->outstandingSupplierOnLastMonth($firstDayLastMonth, $lastDayLastMonth);
+$outstandingSupplierOnLastMonth = $object->outstandingSupplierOnLastMonth($firstDayLastMonth, $lastDayLastMonth);
 $dataInfo3 = price($outstandingSupplierOnLastMonth)."\n€";
 
 $info4 = "Progression";
-$outSupplierCurrentMonth = $general->outstandingSupplierOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
+// $outSupplierCurrentMonth = $object->outstandingSupplierOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
 
-$resultat = $general->progress($outSupplierCurrentMonth, $outstandingSupplierOnLastMonth);
+$resultat = $object->progress($outSupplierCurrentMonth, $outstandingSupplierOnLastMonth);
 $dataInfo4 = $resultat."\n%";
 
 // Condition d'affichage pour l'augmentation/diminution des encours fournisseurs
@@ -138,6 +209,14 @@ if ($dataInfo3 <= 0) {
 	$dataInfo3 = "<p style='color : #90C274'>Aucun encours fournisseur </p>";
 }
 
+// Load info for otstanding customer popupinfo
+$secondPop_info1 = $titleItem2;
+$secondPop_info2 = $info3;
+$secondPop_info3 = $info4;
+
+$secondPop_data1 = "";
+$secondPop_data2 = "";
+$secondPop_data3 = "";
 
 /**
  * CUSTOMER AND SUPPLIERS OUTSATNDING
@@ -149,11 +228,19 @@ $info5 = "Encours total le mois dernier" ;
 $dataInfo5 = floatval($accOfPastYears - $outstandingSupplierOnLastMonth) . "\n€"; // encours client m-1 - encours fourn m-1
 
 $info6 = "Progression";
-$outCFCurrentMonth = ($outstandingCurrentMonth - $outstandingSupplierOnLastMonth); //
+// $outCFCurrentMonth = ($outstandingCurrentMonth - $outstandingSupplierOnLastMonth);
 
-$resultat = $general->progress($outCFCurrentMonth, $dataInfo5);
+$resultat = $object->progress($outCFCurrentMonth, $dataInfo5);
 $dataInfo6= $resultat."\n%";
 
+// Load info for outstanding C/F popupinfo
+$thirdPop_info1 = $titleItem3;
+$thirdPop_info2 = $info5;
+$thirdPop_info3 = $info6;
+
+$thirdPop_data1 = "";
+$thirdPop_data2 = "";
+$thirdPop_data3 = "";
 
 /*
  * View
@@ -174,10 +261,6 @@ print $object->load_navbar();
 // template for boxes
 include DOL_DOCUMENT_ROOT . '/custom/tab/template/template_boxes2.php';
 
-// Customer outstandings exceeded
-$titleItem4 = "Encours clients dépassés";
-$outCustomerExceeded = $general->fetchCustomerBillExceed();
-$dataItem4 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustomerExceeded) . "\n€";
 
 ?>
 
@@ -187,22 +270,22 @@ $dataItem4 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustom
 				<div class="card bg-c-blue order-card">
 					<div class="card-body">
 					<div class="pull-left">
-						<div class="popup" onclick="showGraph()">
+						<div class="popup" onclick="showGraph3()">
 						<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
-							<span class="popuptext" id="firstPop">
+							<span class="popuptext" id="thirdPop">
 								<h4> Détails des informations / calculs </h4>
 							<ul>
-								<li><strong><?php print $firstPop_info1 ?></strong><br><?php print $firstPop_data1 ?></li><hr>
-								<li><strong><?php print $firstPop_info2 ?></strong><br><?php print $firstPop_data2 ?> </li><hr>
-								<li><strong><?php print $firstPop_info3 ?></strong><br><?php print $firstPop_data3 ?> </li>
+								<li><strong><?php print $thirdPop_info1 ?></strong><br><?php print $thirdPop_data1 ?></li><hr>
+								<li><strong><?php print $thirdPop_info2 ?></strong><br><?php print $thirdPop_data2 ?> </li><hr>
+								<li><strong><?php print $thirdPop_info3 ?></strong><br><?php print $thirdPop_data3 ?> </li>
 							</ul>
 							</span>
 						</div>
 						</div>
 						<script>
 							// When the user clicks on div, open the popup
-							function showGraph() {
-								var firstPopup = document.getElementById("firstPop");
+							function showGraph3() {
+								var firstPopup = document.getElementById("thirdPop");
 								firstPopup.classList.toggle("show");
 							}
 						</script>
@@ -223,14 +306,29 @@ $dataItem4 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustom
 							<?php print $graphiqueA ?>
 					</div>
 				</div>
+<?php
+
+// Supplier outstandings exceeded
+$titleItem5 = "Encours fournisseurs dépassés";
+$outSupplierExceeded = $object->fetchSupplierBillExceed();
+$dataItem5 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outSupplierExceeded) . "\n€";
+
+// Load info for supplier exceed popupinfo
+$fivePop_info1 = $titleItem5;
+$fivePop_data1 = "Somme des factures fournisseurs impayées (TTC) dont la date d'échéance a été dépassée";
+
+// Customer outstandings exceeded
+$titleItem4 = "Encours clients dépassés";
+$outCustomerExceeded = $object->fetchCustomerBillExceed();
+$dataItem4 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustomerExceeded) . "\n€";
+
+// Load info for customer exceed popupinfo
+$fourPop_info1 = $titleItem4;
+$fourPop_data1 = "Somme des factures clients impayées (TTC) dont la date d'échéance a été dépassée";
 
 
-	<?php
 
-	// Supplier outstandings exceeded
-	$titleItem5 = "Encours fournisseurs dépassés";
-	$outSupplierExceeded = $general->fetchSupplierBillExceed();
-	$dataItem5 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outSupplierExceeded) . "\n€";
+
 
 	?>
 
@@ -239,22 +337,20 @@ $dataItem4 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustom
   <div class="card">
     <div class="card-body">
 	<div class="pull-left">
-		<div class="popup" onclick="showGraph()">
+		<div class="popup" onclick="showGraph4()">
 			<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
-				<span class="popuptext" id="firstPop">
+				<span class="popuptext" id="fourPop">
 					<h4> Détails des informations / calculs </h4>
 					<ul>
-						<li><strong><?php print $firstPop_info1 ?></strong><br><?php print $firstPop_data1 ?></li><hr>
-						<li><strong><?php print $firstPop_info2 ?></strong><br><?php print $firstPop_data2 ?> </li><hr>
-						<li><strong><?php print $firstPop_info3 ?></strong><br><?php print $firstPop_data3 ?> </li>
+						<li><strong><?php print $fourPop_info1 ?></strong><br><?php print $fourPop_data1 ?></li>
 					</ul>
 				</span>
 			</div>
 		</div>
 		<script>
 			// When the user clicks on div, open the popup
-			function showGraph() {
-				var firstPopup = document.getElementById("firstPop");
+			function showGraph4() {
+				var firstPopup = document.getElementById("fourPop");
 				firstPopup.classList.toggle("show");
 			}
 		</script>
@@ -271,22 +367,20 @@ $dataItem4 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustom
   <div class="card">
     <div class="card-body">
 	<div class="pull-left">
-		<div class="popup" onclick="showGraph()">
+		<div class="popup" onclick="showGraph5()">
 			<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
-				<span class="popuptext" id="firstPop">
+				<span class="popuptext" id="fivePop">
 					<h4> Détails des informations / calculs </h4>
 					<ul>
-						<li><strong><?php print $firstPop_info1 ?></strong><br><?php print $firstPop_data1 ?></li><hr>
-						<li><strong><?php print $firstPop_info2 ?></strong><br><?php print $firstPop_data2 ?> </li><hr>
-						<li><strong><?php print $firstPop_info3 ?></strong><br><?php print $firstPop_data3 ?> </li>
+						<li><strong><?php print $fivePop_info1 ?></strong><br><?php print $fivePop_data1 ?></li>
 					</ul>
 				</span>
 			</div>
 		</div>
 		<script>
 			// When the user clicks on div, open the popup
-			function showGraph() {
-				var firstPopup = document.getElementById("firstPop");
+			function showGraph5() {
+				var firstPopup = document.getElementById("fivePop");
 				firstPopup.classList.toggle("show");
 			}
 		</script>

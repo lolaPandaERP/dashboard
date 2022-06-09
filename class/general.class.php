@@ -1067,7 +1067,7 @@ class General extends FactureStats
 		$account = $account->id;
 
 		$sql = "SELECT * ";
-		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
+		$sql .= " FROM ".MAIN_DB_PREFIX."bank";
 		$sql .= "WHERE fk_account = ".$account;
 		$resql = $this->db->query($sql);
 
@@ -1088,6 +1088,22 @@ class General extends FactureStats
 	public function load_navbar()
 	{
 
+		?>
+			<script>
+				document.addEventListener("DOMContentLoaded", function(){
+					var tabList = [].slice.call(document.querySelectorAll("#myTab a"));
+					tabList.forEach(function(tab){
+						var tabTrigger = new bootstrap.Tab(tab);
+
+						tab.addEventListener("click", function(event){
+							event.preventDefault();
+							tabTrigger.show();
+						});
+					});
+				});
+			</script>
+			<?php
+
 			$html = '';
 			$tab1 = DOL_URL_ROOT.'/custom/tab/global/overview.php';
 			$tab2 = DOL_URL_ROOT.'/custom/tab/global/encoursCF.php';
@@ -1098,7 +1114,7 @@ class General extends FactureStats
 
 			$html .= '
 			<div class="navbar">
-				<a class="active" href="'.$tab1.'"><i class="fa fa-fw fa-home"></i> Général</a>
+				<a href="'.$tab1.'" class="active"><i class="fa fa-fw fa-home"></i> Général</a>
 				<a href="'.$tab2.'"><i class="fa fa-pie-chart"></i> Encours C/F</a>
 				<a href="'.$tab3.'"><i class="fa fa-bank"></i> Trésorerie et prévisionnel</a>
 				<a href="'.$tab4.'"><i class="fa fa-briefcase"></i> Net à produire</a>
@@ -1214,14 +1230,15 @@ class General extends FactureStats
 	/**
 	 * Return all order by passing the status as a parameter to filter the search
 	 */
-	function fetchOrder($fk_statut=''){
+	function fetchOrder($fk_statut, $firstElement, $bypages){
 
 		global $db;
 
 		$sql = "SELECT * FROM ".MAIN_DB_PREFIX."commande";
-		$sql .= " WHERE fk_statut = ".$fk_statut;
+		$sql .= " WHERE fk_statut = ".$fk_statut." ORDER BY date_livraison ASC ";
 		$resql = $db->query($sql);
 		$result = [];
+
 		if($resql){
 			while($obj = $db->fetch_object(($resql))){
 				$result[] = $obj;
@@ -1239,7 +1256,7 @@ class General extends FactureStats
 		// request
 		$sql = "SELECT * FROM " . MAIN_DB_PREFIX . "commande";
 		$sql .= " WHERE date_commande = \"$today\" ";
-		$sql .= "AND fk_statut = 3";
+		$sql .= "AND fk_statut = 1";
 		$resql = $db->query($sql);
 		$result = [];
 
@@ -1273,13 +1290,13 @@ class General extends FactureStats
 		return $result;
 	}
 
-	function fetchOrderSortedByDeliveryDate($firstDayYear, $lastDayYear){
+	function fetchOrderSortedByDeliveryDate($firstDayYear, $lastDayYear, $firstElement, $bypages){
 
 		global $db;
 		// request
 		$sql = "SELECT * FROM " . MAIN_DB_PREFIX . "commande";
 		$sql .= " WHERE date_commande BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-		$sql .= "AND fk_statut = 1 ORDER BY date_livraison ASC";
+		$sql .= "AND fk_statut = 1 ORDER BY date_livraison ASC ";
 		$resql = $db->query($sql);
 		$result = [];
 
@@ -1352,7 +1369,7 @@ class General extends FactureStats
 		return $result;
 	}
 
-	function fetchNbDeliveryOrderByLastMonth($firstDayLastMonth, $lastDayLastMonth){
+	function fetchNbDeliveryOrder($firstDayLastMonth, $lastDayLastMonth){
 
 		global $db;
 		// request
@@ -1370,43 +1387,18 @@ class General extends FactureStats
 		return $result;
 	}
 
-	function fetchNbDeliveryOrderByCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth){
-
-		global $db;
-		// request
-		$sql = "SELECT * ";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
-		$sql .= " WHERE date_commande BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
-		$sql .= "AND fk_statut = 3";
-		$resql = $db->query($sql);
-		$result = [];
-		if($resql){
-			while($obj = $db->fetch_object(($resql))){
-				$result[] = $obj;
-			}
-		}
-		return $result;
-	}
-
-
-
-
 
 
 	/**
 	 * INVOICES
 	 */
 
-	 // fetch customer outstanding
-	 function fetchNbCustomerOutstanding($firstDayYear, $lastDayYear){
-
+	 function fetchInvoice($paye = ''){
 		global $db;
-		// request
+
 		$sql = "SELECT * ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-		$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-		$sql .= "AND fk_statut != 0";
-		$sql .= "AND paye = 0";
+		$sql .= "WHERE paye = ".$paye;
 		$resql = $db->query($sql);
 
 		$result = [];
@@ -1417,49 +1409,70 @@ class General extends FactureStats
 		}
 
 		return $result;
+	 }
+
+	public function turnover($firstDayYear, $lastDayYear){
+		global $db;
+
+		$sql = "SELECT SUM(total_ht) as total_ht ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+		$sql .= "AND fk_statut != 0";
+		$resql = $db->query($sql);
+
+		if ($resql) {
+			if ($db->num_rows($resql)) {
+				$obj = $db->fetch_object($resql);
+				$result = $obj->total_ht;
+			}
+			$db->free($resql);
+		}
+		return $result;
+	 }
+
+
+	 // return all unpaid invoice customer
+	 public function nbCustomerOutstanding($firstDayCurrentMonth, $lastDayCurrentMonth){
+		global $db;
+
+		$sql = "SELECT * FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= "WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
+		$sql .= "AND fk_statut != 0";
+		$sql .= "AND paye = 0";
+		$resql = $db->query($sql);
+
+		if ($resql) {
+			if ($db->num_rows($resql)) {
+				$obj = $db->fetch_object($resql);
+				$result = $obj;
+			}
+			$db->free($resql);
+		}
+		return $result;
 	}
 
-	 public function fetchTurnover($firstDayYear, $lastDayYear){
 
-			$sql = "SELECT SUM(total_ht) as total_ht";
-			$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-			$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-			$sql .= " AND fk_statut != 0";
+	// return all invoices on n years (without draft statut)
+	public function fetchCA($firstDayYear, $lastDayYear){
 
-			$resql = $this->db->query($sql);
+		$sql = "SELECT * ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE fk_statut != 0 ";
+		$sql .= " AND datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
 
-			if ($resql) {
-				if ($this->db->num_rows($resql)) {
-					$obj = $this->db->fetch_object($resql);
-					$result = $obj->total_ht;
-				}
-				$this->db->free($resql);
+		$resql = $this->db->query($sql);
+
+		$result = [];
+		if($resql){
+			while($obj = $this->db->fetch_object(($resql))){
+				$result[] = $obj;
 			}
-
-			return $result;
-	 }
-
-	 public function fetchTurnoverOnLastYear($firstDayLastYear, $lastDayLastYear){
-
-			$sql = "SELECT SUM(total_ht) as total_ht";
-			$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-			$sql .= " WHERE datef BETWEEN '" . $firstDayLastYear . "' AND '" . $lastDayLastYear . "' ";
-			$sql .= " AND fk_statut !=0 ";
-			$resql = $this->db->query($sql);
-
-			if ($resql) {
-				if ($this->db->num_rows($resql)) {
-					$obj = $this->db->fetch_object($resql);
-					$result = $obj->total_ht;
-				}
-				$this->db->free($resql);
-			}
-
-			return $result;
-	 }
+		}
+		return $result;
+ 	}
 
 
-	 public function outstandingBillOnYear($firstDayYear, $lastDayYear){
+	 public function outstandingBill($firstDayYear, $lastDayYear){
 
 			global $db;
 
@@ -1482,51 +1495,6 @@ class General extends FactureStats
 			return $result;
 	 }
 
-	 // total des encours cumulés sur les années passées
-	 public function total_outstandingBillPastYear($firstDayLastMonth, $lastDayLastMonth){
-
-		// Encours total sur l'année n - 1 (cumul des montants)
-		$sql = "SELECT SUM(total_ttc) as total_ttc";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-		$sql .= " WHERE datef BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "' ";
-		$sql .= " AND paye= 0";
-		$sql .= " AND fk_statut != 0 ";
-
-		$resql = $this->db->query($sql);
-
-			if ($resql) {
-				if ($this->db->num_rows($resql)) {
-					$obj = $this->db->fetch_object($resql);
-					$result = $obj->total_ttc;
-				}
-				$this->db->free($resql);
-			}
-			return $result;
-	 }
-
-	 /**
-	  * Return all unpaid customer invoice on current month
-	  */
-	 public function outstandingCustomerOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth){
-
-		// Encours client sur le mois courant
-		$sql = "SELECT SUM(total_ttc) as total_ttc";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-		$sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
-		$sql .= " AND paye = 0 ";
-		$sql .= " AND fk_statut != 0 ";
-
-		$resql = $this->db->query($sql);
-
-		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$result = $obj->total_ttc;
-			}
-			$this->db->free($resql);
-		}
-		return $result;
-	 }
 
 	 // Fetch all unpaid customer invoices whose due date has passed
 	public function fetchCustomerBillExceed(){
@@ -1773,6 +1741,25 @@ class General extends FactureStats
 	/**
 	 * MARGIN REQUEST
 	 */
+
+	public function grossMargin($firstDayYear, $lastDayYear){
+
+		$sql = "SELECT * ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
+		$sql .= " WHERE date_commande BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+		$sql .= " AND fk_statut =1";
+		$resql = $this->db->query($sql);
+
+		$result = [];
+		if($resql){
+			while($obj = $this->db->fetch_object(($resql))){
+				$result[] = $obj;
+			}
+		}
+		return $result;
+	}
+
+
 
 	public function grossMarginOnYear($firstDayYear, $lastDayYear){
 
