@@ -105,6 +105,15 @@ $result = $object->progress($deliveryOrderOnCurrentMonth, $deliveryOrderOnLastMo
 $dataInfo2 = $result  ."\n%";
 
 
+// Infos popup for production in progress
+$firstPop_info1 = $titleItem1;
+$firstPop_info2 = $info1;
+$firstPop_info3 = $info2;
+
+$firstPop_data1 = "Somme du montant (HT) des commandes clients validées sur l'année en cours";
+$firstPop_data2 = "Somme du montant (HT) des commandes clients validées du mois précédent";
+$firstPop_data3 = "Progression du montant des commandes clients validées du mois par rapport au mois dernier";
+
 
 /**
  * NOMBRE DE PRODUCTION EN COURS
@@ -130,7 +139,17 @@ $info4 = "Progression";
 $result = $object->progress($nbDeliveryOrderByCurrentMonth, $nbDeliveryOrderByLastMonth);
 $dataInfo4 = $result . "\n%";
 
-// todo : creation d'une fonction javascript pour coloriser la diminution ou l'augmentation
+// Info popup for number of production in progress
+
+$secondPop_info1 = $titleItem2;
+$secondPop_info2 = $info3;
+$secondPop_info3 = $info4;
+
+$secondPop_data1 = "Somme du nombre (HT) des commandes clients validées sur l'année en cours";
+$secondPop_data2 = "Somme du nombre (HT) des commandes clients validées du mois précédent";
+$secondPop_data3 = "Progression du nombre de commandes clients validées du mois par rapport au mois dernier";
+
+// todo : creation d'une fonction javascript pour coloriser l'evolution (%)
 
 /*
  * Actions
@@ -142,24 +161,24 @@ $dataInfo4 = $result . "\n%";
  * */
 
 // Le numéro de la page sur laquelle on se trouve
-// if(isset($_GET['page']) && !empty($_GET['page'])){
-//     $currentPage = (int) strip_tags($_GET['page']);
-// }else{
-//     $currentPage = 1; // page courante (index)
-// }
+if(isset($_GET['page']) && !empty($_GET['page'])){
+    $currentPage = (int) strip_tags($_GET['page']);
+}else{
+    $currentPage = 1; // page courante (index)
+}
 
-// // Le nombre d'articles souhaités par page
-// $bypages = 5;
+// Le nombre d'articles souhaités par page
+$bypages = 5;
 
-// // Calcul du 1er element de la page
-// $firstElement = ($currentPage * $bypages) - $bypages;
+// Calcul du 1er element de la page
+$firstElement = ($currentPage * $bypages) - $bypages;
 
-// // Nb de cmd validées au total
+// Nb de cmd validées au total
 $result3 = $object->fetchOrderSortedByDeliveryDate($firstDayYear, $lastDayYear, $firstElement, $bypages);
 $nbValidatedOrder = count($result3);
 
-// // Le nombre de pages au total
-// $totalPages = ceil($nbValidatedOrder / $bypages);
+// Le nombre de pages au total
+$totalPages = ceil($nbValidatedOrder / $bypages);
 
 
 /*
@@ -175,7 +194,8 @@ llxHeader($head, $langs->trans("Net à produire"));
 print load_fiche_titre($langs->trans("Net à produire"));
 
 // Chargement du template de navigation pour l'activité "Global"
-print $object->load_navbar();
+$currentPage = $_SERVER['PHP_SELF'];
+print $object->load_navbar($currentPage);
 
 include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
 
@@ -183,12 +203,22 @@ include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
 // PRODUCTION LES + PROCHES
 $titleItem1 = "<h4>Productions les + proches</h4>";
 
+// Info for nearest production (popinfo)
+$thirdPop_info1 = $titleItem1;
+$thirdPop_data1 = "Trie par date prévu de livraison, toutes les commandes clients validées sur le mois courant";
+
 // Date et client la + proche
 $titleItem2 = "<h4>Commandes validées du jour</h4>";
 
+$thirdPop_info1 = $titleItem2;
+$thirdPop_data1 = "Date de livraison prévues d'une commande client validée du jour";
+
 // CLIENTS A PRODUIRE
+// todo : afficher un filtre pour la date de creation et date prevu de livraison + lien vers listes des commandes dynamiquement
 $titleItem3 = "<h4>Clients à produire</h4>";
 
+$thirdPop_info1 = $titleItem3;
+$thirdPop_data1 = "Liste des tiers pour chaques commandes validées";
 
 ?>
 
@@ -198,6 +228,25 @@ $titleItem3 = "<h4>Clients à produire</h4>";
    <div class="card">
       <div class="card-body">
 		  <div class="text-center">
+		  <div class="pull-left">
+					<div class="popup" onclick="showPop3()">
+						<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
+							<span class="popuptext" id="prodPop">
+								<h4> Détails des informations / calculs </h4>
+							<ul>
+								<li><strong><?php print $thirdPop_info1 ?></strong><br><?php print $thirdPop_data1 ?></li><hr>
+
+							</ul>
+							</span>
+						</div>
+						</div>
+						<script>
+							// When the user clicks on div, open the popup
+							function showPop3() {
+								var popup = document.getElementById("prodPop");
+								popup.classList.toggle("show");
+							}
+						</script>
 	  		<?php print $titleItem1  ."\n".	"(".count($result3).")" ?>
 
 				<p class="card-text">
@@ -237,28 +286,29 @@ $titleItem3 = "<h4>Clients à produire</h4>";
 
 	<div class="card">
 		<div class="card-body">
-		<div class="text-center">
-			<?php print $titleItem3 ."\n" ?> <span class="classfortooltip" title="Liste des commandes validées du jour avec date de livraison prévue"><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
-			</br>
-			 <ul class="pagination">
+				<h4 class="text-center">
+				<?php print $titleItem3 ."\n" ?>
+				</h4>
+				</br>
+				 <ul class="pagination">
 					<!-- Lien vers la page précédente (désactivé si on se trouve sur la 1ère page) -->
 						<li class="page-item <?= ($currentPage == 1) ? "disabled" : "" ?>">
 							<a href="./netProduce.php?page=<?= $currentPage - 1 ?>" class="page-link">Précédente</a>
 						</li>
 
-						<?php for($page = 1; $page <= $totalPages; $page++): ?>
-							<!-- Lien vers chacune des pages (activé si on se trouve sur la page correspondante) -->
-							<li class="page-item <?= ($currentPage == $page) ? "active" : "" ?>">
-								<a href="./netProduce.php?page=<?= $page ?>" class="page-link"><?= $page ?></a>
+							<?php for($page = 1; $page <= $totalPages; $page++): ?>
+								<!-- Lien vers chacune des pages (activé si on se trouve sur la page correspondante) -->
+								<li class="page-item <?= ($currentPage == $page) ? "active" : "" ?>">
+									<a href="./netProduce.php?page=<?= $page ?>" class="page-link"><?= $page ?></a>
 							</li>
-							<?php endfor ?>
-							<!-- Lien vers la page suivante (désactivé si on se trouve sur la dernière page) -->
-							<li class="page-item <?= ($currentPage == $totalPages) ? "disabled" : "" ?>">
-								<a href="./netProduce.php?page=<?= $currentPage + 1 ?>" class="page-link">Suivante</a>
-							</li>
-						</ul>
-					</nav>
-				<?php
+								<?php endfor ?>
+								<!-- Lien vers la page suivante (désactivé si on se trouve sur la dernière page) -->
+								<li class="page-item <?= ($currentPage == $totalPages) ? "disabled" : "" ?>">
+									<a href="./netProduce.php?page=<?= $currentPage + 1 ?>" class="page-link">Suivante</a>
+								</li>
+							</ul>
+						</nav>
+					<?php
 
 					$rets = $object->fetchOrder(1, $firstElement, $bypages);
 
@@ -289,8 +339,27 @@ $titleItem3 = "<h4>Clients à produire</h4>";
 	<!-- CUSTOMER TO PRODUCE -->
 	<div class="card">
 		<div class="card-body">
-			<div class="text-center">
-				<?php print $titleItem2 ."\n" ?><span class="classfortooltip" title="Date de livraison prévue d'une commande client validé du jour"><span class="fas fa-info-circle  em088 opacityhigh" style=" vertical-align: middle; cursor: help"></span></div>
+			<div class="pull-left">
+			<div class="popup" onclick="showPop5()">
+				<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
+					<span class="popuptext" id="fourPop">
+						<h4> Détails des informations / calculs </h4>
+						<ul>
+							<li><strong><?php print $fivePop_info1 ?></strong><br><?php print $fivePop_data1 ?></li><hr>
+						</ul>
+					</span>
+				</span>
+			</div>
+		</div>
+		<script>
+		// When the user clicks on div, open the popup
+		function showPop5() {
+			var fourPopup = document.getElementById("fourPop");
+			fourPopup.classList.toggle("show");
+		}
+		</script>
+				<?php print $titleItem2 ."\n" ?>
+			</div>
 			</br>
 					<?php
 

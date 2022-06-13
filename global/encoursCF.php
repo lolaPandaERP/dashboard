@@ -49,6 +49,7 @@ require_once DOL_DOCUMENT_ROOT . '/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT . '/custom/tab/class/general.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/dolgraph.class.php';
 require_once DOL_DOCUMENT_ROOT . '/compta/bank/class/account.class.php';
+require_once DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
 
 global $db, $conf, $user;
 
@@ -59,25 +60,24 @@ if ($user->socid > 0) { // Protection if external user
 	accessforbidden();
 }
 
-// Le numéro de la page sur laquelle on se trouve
+// number page for pagination
 if(isset($_GET['page']) && !empty($_GET['page'])){
     $currentPage = (int) strip_tags($_GET['page']);
 }else{
-    $currentPage = 1; // page courante (index)
+    $currentPage = 1;
 }
-
-
-$object = new General($db);
 
 // Load translation files required by the page
 $langs->loadLangs(array("tab@tab"));
 $action = GETPOST('action', 'aZ09');
-
 $month = date('m');
 $year = date('Y');
 $day = date('Y-m-d');
 $monthsArr = monthArray($langs, 1); // months
 
+
+
+$object = new General($db);
 
 /**
  * DEFINE TIME FOR REQUEST
@@ -99,6 +99,8 @@ $lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
 $firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
 $lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
 
+$startyear = $year - (empty($conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS) ? 2 : max(1, min(10, $conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS)));
+$endyear = $year;
 
 /**
  * CUSTOMER OUTSTANDING
@@ -114,14 +116,14 @@ $accOfPastYears = $object->outstandingBill($firstDayLastMonth, $lastDayLastMonth
 $dataInfo1 = price($accOfPastYears)."\n€";
 
 // nombre d'encours sur le mois courant et sur M-1 (pour calcul progression)
-// $outstandingCurrentMonth = $object->nbCustomerOutstanding($firstDayCurrentMonth, $lastDayCurrentMonth);
-// $nbUnpaidInvoices = count($outstandingCurrentMonth);
+$outstandingCurrentMonth = $object->nbCustomerOutstanding($firstDayCurrentMonth, $lastDayCurrentMonth);
+$nbUnpaidInvoices = count($outstandingCurrentMonth);
 
 // TODO : progression du NOMBRE (et non du montant) d'encours client par rapport au mois dernier
 $info2 = "Progression ";
 
-// $resultat = $object->progress($nbInvoices, $nbInvoices2);
-// $dataInfo2 = intval($resultat)."\n%";
+$resultat = $object->progress($nbInvoices, $nbInvoices2);
+$dataInfo2 = intval($resultat)."\n%";
 
 // Condition d'affichage pour la progression
 if($dataInfo2 > 0){
@@ -141,49 +143,40 @@ $firstPop_data3 = "Progression du nombre total d'encours clients pa rapport au m
 
 // GRAPH
 
-$file = "marginChart"; // id javascript
-$fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
+// Drawing the first graph for nb of customer invoices by month
+$stats = new FactureStats($db, $socid, $mode = 'customer', ($userid > 0 ? $userid : 0), ($typent_id > 0 ? $typent_id : 0), ($categ_id > 0 ? $categ_id : 0));
 
-$data = [];
+if($mode == 'customer') {
+	$dataGraph = $stats->getNbByMonthWithPrevYear($endyear, $startyear, 0, 0, 1);
 
-$customerUnpaidInvoiceArray = $object->fetchOrder(1, $firstElement, $bypages);
+	$filenamenb = $dir."/invoicesnbinyear-".$year.".png";
+	$fileurlnb = DOL_URL_ROOT.'/viewimage.php?modulepart=billstats&amp;file=invoicesnbinyear-'.$year.'.png';
 
-for($i = 1; $i <= 12; $i++){
+	$px2 = new DolGraph();
+	$mesg = $px2->isGraphKo();
 
-	// We get the total of validated order for each month
-	foreach($customerUnpaidInvoiceArray as $res){
-		$cmd = new Commande($db);
-		$rest = $cmd->fetch($res->rowid);
-
-		// We get the total of customers invoices for each month
-		if(date('n', $cmd->date_creation) == $i){
-			$totalHTorder += $cmd->total_ht;
-		 }
+	// NB
+	if (!$mesg) {
+		$px2->SetData($dataGraph);
+		$i = $startyear;
+		$legend = array();
+		while ($i <= $endyear) {
+			$legend[] = $i;
+			$i++;
+		}
+		$px2->SetLegend($legend);
+		$px2->SetType(array('bar'));
+		$px2->datacolor = array(array(208,255,126), array(255,206,126), array(138,233,232));
+		$px2->SetMaxValue($px2->GetCeilMaxValue());
+		$px2->SetWidth('500');
+		$px2->SetHeight('250');
+		$px2->SetTitle("Evolution du nb d'encours client");
+		$px2->SetShading(3);
+		$nbInvoiceByMonth = $px2->draw($filenamenb, $fileurlnb);
 	}
+	$graphiqueA = $px2->show($nbInvoiceByMonth);
 
-	// We add datas in the graph
-	$data[] = [
-		html_entity_decode($monthsArr[$i]),
-		$totalHTorder
-	];
 }
-
-$px3 = new DolGraph();
-$mesg = $px3->isGraphKo();
-$legend = ["2022"];
-if (!$mesg){
-	$px3->SetTitle("Evolution du nombre d'encours (cumul des années passées");
-	$px3->datacolor = array(array(240,128,128), array(128, 187, 240));
-	$px3->SetData($data);
-	$px3->SetLegend($legend);
-	$px3->SetType(array('lines')); // Array with type for each serie. Example: array('type1', 'type2', ...) where type can be: 'pie', 'piesemicircle', 'polar', 'lines', 'linesnopoint', 'bars', 'horizontalbars'...
-	$px3->setHeight('400');
-	$px3->SetWidth('600');
-	$outstandingChart = $px3->draw($file, $fileurl);
-}
-
-$graphiqueA = $px3->show($outstandingChart);
-
 
 
 /**
@@ -214,9 +207,9 @@ $secondPop_info1 = $titleItem2;
 $secondPop_info2 = $info3;
 $secondPop_info3 = $info4;
 
-$secondPop_data1 = "";
-$secondPop_data2 = "";
-$secondPop_data3 = "";
+$secondPop_data1 = "Total des factures fournisseurs impayées sur l'année en cours (HT)";
+$secondPop_data2 = "Total des factures fournisseurs impayées sur le mois en cours";
+$secondPop_data3 = "Progression du nombre total d'encours fournisseurs pa rapport au mois dernier";
 
 /**
  * CUSTOMER AND SUPPLIERS OUTSATNDING
@@ -238,9 +231,9 @@ $thirdPop_info1 = $titleItem3;
 $thirdPop_info2 = $info5;
 $thirdPop_info3 = $info6;
 
-$thirdPop_data1 = "";
-$thirdPop_data2 = "";
-$thirdPop_data3 = "";
+$thirdPop_data1 = "Total des factures clients impayées (TTC) - total des factures fournisseurs impayées (TTC) sur l'année en cours ";
+$thirdPop_data2 = "Total des factures clients impayées (TTC) - total des factures fournisseurs impayées (TTC) sur le mois précédent";
+$thirdPop_data3 = "Evolution du montant total (TTC) des encours C/F du mois par rapport au mois précédent ";
 
 /*
  * View
@@ -256,7 +249,8 @@ llxHeader('', $langs->trans("Encours Client/Fournisseur"));
 print load_fiche_titre($langs->trans("Encours Client/Fournisseur"));
 
 // Template for nav
-print $object->load_navbar();
+$currentPage = $_SERVER['PHP_SELF'];
+print $object->load_navbar($currentPage);
 
 // template for boxes
 include DOL_DOCUMENT_ROOT . '/custom/tab/template/template_boxes2.php';
@@ -327,10 +321,7 @@ $fourPop_info1 = $titleItem4;
 $fourPop_data1 = "Somme des factures clients impayées (TTC) dont la date d'échéance a été dépassée";
 
 
-
-
-
-	?>
+?>
 
 <!-- end Outstanding suppliers exceed -->
 <div class="card-deck">
@@ -367,7 +358,7 @@ $fourPop_data1 = "Somme des factures clients impayées (TTC) dont la date d'éch
   <div class="card">
     <div class="card-body">
 	<div class="pull-left">
-		<div class="popup" onclick="showGraph5()">
+		<div class="popup" onclick="showPop5()">
 			<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
 				<span class="popuptext" id="fivePop">
 					<h4> Détails des informations / calculs </h4>
@@ -379,7 +370,7 @@ $fourPop_data1 = "Somme des factures clients impayées (TTC) dont la date d'éch
 		</div>
 		<script>
 			// When the user clicks on div, open the popup
-			function showGraph5() {
+			function showPop5() {
 				var firstPopup = document.getElementById("fivePop");
 				firstPopup.classList.toggle("show");
 			}

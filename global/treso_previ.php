@@ -159,7 +159,10 @@ llxHeader('', $langs->trans("Trésorerie et Prévisionnel"));
 print load_fiche_titre($langs->trans("Trésorerie et Prévisionnel"));
 
 // Include template
-print $object->load_navbar();
+$currentPage = $_SERVER['PHP_SELF'];
+
+print $object->load_navbar($currentPage);
+
 include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
 
 
@@ -270,6 +273,9 @@ $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes
 						$acc = new Account($db);
 						$acc->fetch($account->rowid);
 
+						if($conf->multicurrency->enabled){
+
+						}
 						$solde = $acc->solde(1);
 
 						print '<i class="bi bi-bank"></i>';
