@@ -93,10 +93,8 @@
 							</div>
 						</div>
 						<div>
-   		 					<div><?php print $graphiqueB . "\n"?></div>
-							<div><?php print $graphiqueB1 ?></div>
-							<!-- <div><?php print $graphiqueB2 . "\n"?></div>
-							<div><?php print $graphiqueB3 ?></div> -->
+						<div class="pull-left"><?php print $graphiqueB . "\n"?></div>
+						<div class="pull-right"><?php print $graphiqueB1 ?></div>
 						</div>
 					</div>
 				</div>
@@ -191,7 +189,7 @@
 							</div>
 						</div>
 					</div>
-				</div>
+
 			<!-- end bloc 1 -->
 
 

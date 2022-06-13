@@ -52,6 +52,7 @@
 				</div>
 
 				<!-- bloc 1 -->
+				<div class="grid-1">
 				<div class="card bg-c-blue order-card">
 					<!-- Corps de la carte -->
 					<div class="card-body">

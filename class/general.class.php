@@ -1085,24 +1085,9 @@ class General extends FactureStats
 	 * Loading NavBar Template :
 	 // TODO : on peux passer en parametre l'onglet actif
 	 */
+
 	public function load_navbar()
 	{
-
-		?>
-			<script>
-				document.addEventListener("DOMContentLoaded", function(){
-					var tabList = [].slice.call(document.querySelectorAll("#myTab a"));
-					tabList.forEach(function(tab){
-						var tabTrigger = new bootstrap.Tab(tab);
-
-						tab.addEventListener("click", function(event){
-							event.preventDefault();
-							tabTrigger.show();
-						});
-					});
-				});
-			</script>
-			<?php
 
 			$html = '';
 			$tab1 = DOL_URL_ROOT.'/custom/tab/global/overview.php';
@@ -1112,16 +1097,15 @@ class General extends FactureStats
 
 			$html .= "\n";
 
-			$html .= '
+			$html ='
 			<div class="navbar">
 				<a href="'.$tab1.'" class="active"><i class="fa fa-fw fa-home"></i> Général</a>
-				<a href="'.$tab2.'"><i class="fa fa-pie-chart"></i> Encours C/F</a>
-				<a href="'.$tab3.'"><i class="fa fa-bank"></i> Trésorerie et prévisionnel</a>
-				<a href="'.$tab4.'"><i class="fa fa-briefcase"></i> Net à produire</a>
-			</div>';
+			 	<a href="'.$tab2.'"><i class="fa fa-pie-chart"></i> Encours C/F</a>
+			 	<a href="'.$tab3.'"><i class="fa fa-bank"></i> Trésorerie </a>
+			 	<a href="'.$tab4.'"><i class="fa fa-briefcase"></i> Net à produire</a>
+			 </div>';
 
-			return $html;
-
+			 return $html;
 	}
 
 

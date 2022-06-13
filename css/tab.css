@@ -53,6 +53,10 @@
 	text-decoration: none;
 	font-size: 17px;
   }
+
+	.navbar a.active{ 
+		border-bottom:1px solid rgb(255, 255, 255); 
+	}
   
   @media screen and (max-width: 500px) {
 	.navbar a {
