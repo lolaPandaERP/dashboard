@@ -1088,24 +1088,32 @@ class General extends FactureStats
 
 	public function load_navbar()
 	{
-
 			$html = '';
-			$tab1 = DOL_URL_ROOT.'/custom/tab/global/overview.php';
+			$tab1 = DOL_URL_ROOT.'/custom/tab/global/overview.php?mode=customer';
 			$tab2 = DOL_URL_ROOT.'/custom/tab/global/encoursCF.php';
 			$tab3 = DOL_URL_ROOT.'/custom/tab/global/treso_previ.php';
 			$tab4 = DOL_URL_ROOT.'/custom/tab/global/netProduce.php';
 
 			$html .= "\n";
 
-			$html ='
+			$path = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+			$current = basename($path);
+		?>
 			<div class="navbar">
-				<a href="'.$tab1.'" class="active"><i class="fa fa-fw fa-home"></i> Général</a>
-			 	<a href="'.$tab2.'"><i class="fa fa-pie-chart"></i> Encours C/F</a>
-			 	<a href="'.$tab3.'"><i class="fa fa-bank"></i> Trésorerie </a>
-			 	<a href="'.$tab4.'"><i class="fa fa-briefcase"></i> Net à produire</a>
-			 </div>';
-
-			 return $html;
+				<li class="<?php if ($current == 'overview.php?mode=customer' || $current == 'overview.php?mode=supplier' ){ print 'current';} else{ echo'no_current';}?>">
+				<a href="overview.php?mode=customer"><i class="fa fa-fw fa-home"></i> Général</a>
+				</li>
+				<li class="<?php if ($current == 'encoursCF.php'){ echo 'current';} else{ echo'no_current';}?>">
+				<a href="encoursCF.php"><i class="fa fa-pie-chart"></i> Encours C/F</a>
+				</li>
+				<li class="<?php if ($current == 'treso_previ.php'){ echo 'current';} else{ echo'no_current';}?>">
+				<a href="treso_previ.php"><i class="fa fa-bank"></i> Trésorerie</a>
+				</li>
+				<li class="<?php if ($current == 'netProduce.php'){ echo 'current';} else{ echo'no_current';}?>">
+				<a href="netProduce.php"><i class="fa fa-briefcase"></i> Net à produire</a>
+				</li>
+			</div>
+			<?php
 	}
 
 
@@ -1395,13 +1403,14 @@ class General extends FactureStats
 		return $result;
 	 }
 
-	public function turnover($firstDayYear, $lastDayYear){
-		global $db;
+	 //retourne toutes les factures (hors brouillon) sur l'exercice fiscal
+	public function turnover($startfiscalyear, $lastDayYear){
+		global $db, $conf;
 
 		$sql = "SELECT SUM(total_ht) as total_ht ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-		$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-		$sql .= "AND fk_statut != 0";
+		$sql .= " WHERE datef BETWEEN '" . $startfiscalyear . "' AND '" . $lastDayYear . "' ";
+		$sql .= "AND fk_statut != 0 AND type = 0 OR type = 2";
 		$resql = $db->query($sql);
 
 		if ($resql) {
