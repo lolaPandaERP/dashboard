@@ -24,9 +24,6 @@
  *	\brief      Home page of tab top menu
  */
 
-use Stripe\Balance;
-use Stripe\BankAccount;
-
 // Load Dolibarr environment
 $res = 0;
 // Try main.inc.php into web root known defined into CONTEXT_DOCUMENT_ROOT (not always defined)
@@ -77,6 +74,8 @@ $lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
 $firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
 $lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
 
+$startFiscalyear = $conf->global->START_FISCAL_YEAR;
+$startFiscalLastyear = $conf->global->START_FISCAL_LAST_YEAR;
 
 /**
  * TRESURY
@@ -109,19 +108,19 @@ $firstPop_info1 = $titleItem1;
 $firstPop_info2 = $info1;
 $firstPop_info3 = $info2;
 
-$firstPop_data1 = "Cumul des montants du compte courant sur l'année en cours";
-$firstPop_data2 = "Cumul des montants du compte courant sur l'année précédente";
+$firstPop_data1 = "Cumul des montants du compte courant sur l'exercice en cours";
+$firstPop_data2 = "Cumul des montants du compte courant sur l'exercice précédent (N-1)";
 $firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100) ";
 
 
 
 // Total charge of current month
 $info3 = "Charges fixes";
-$staticExpenses = $object->fetchStaticExpenses($firstDayYear, $lastDayYear);
+$staticExpenses = $object->fetchStaticExpenses($startFiscalyear, $lastDayYear);
 $dataInfo3 = price($staticExpenses) . "\n€";
 
 $info4 = "Charges variables";
-$variablesExpenses = $object->fetchVariablesExpenses($firstDayYear, $lastDayYear);
+$variablesExpenses = $object->fetchVariablesExpenses($startFiscalyear, $lastDayYear);
 $dataInfo4 = price($variablesExpenses) . "\n€";
 
 $titleItem2 = "Charge totale";
@@ -136,7 +135,7 @@ $secondPop_info3 = $info4;
 
 $secondPop_data1 = "Charges fixes + charges variables";
 $secondPop_data2 = "Additions des dépenses fixes : salaire + charges sociales et fiscales + emprunts (crédits) + paiements divers";
-$secondPop_data3 = "Additions des dépenses variables : total (ht) des factures fournisseurs (hors brouillon) + le montant total de TVA sur l'année courante ";
+$secondPop_data3 = "Additions des dépenses variables : total (ht) des factures fournisseurs (hors brouillon) + le montant total de TVA sur l'exercice en cours ";
 
 
 
@@ -184,8 +183,8 @@ $nbAccount = count($accounts);
 
 // total factures impayées et commandes clients validées sur l'année
 $info7 = "Clients à encaisser";
-$customer_validated_orders = $object->fetchValidatedOrderOnCurrentYears($firstDayYear, $lastDayYear); // unpaid invoices
-$customer_validated_invoices = $object->outstandingBill($firstDayYear, $lastDayYear); // validted orders
+$customer_validated_orders = $object->fetchValidatedOrderOnCurrentYears($startFiscalyear, $lastDayYear); // unpaid invoices
+$customer_validated_invoices = $object->outstandingBill($startFiscalyear, $lastDayYear); // validted orders
 $customerToCash = ($customer_validated_invoices + $customer_validated_orders);
 
 $dataInfo7 = price($customerToCash) . "\n€";
@@ -205,8 +204,8 @@ $dataInfo8 = price($stayBank) . "\n€";
  * SUPPLIER TO PAID
  */
 $info10 = "Fournisseurs à payer"; // total factures F impayées et commandes fournisseurs validées
-$supplier_unpaid_invoices = $object->outstandingSupplierOnYear($firstDayYear, $lastDayYear);
-$supplier_ordered_order = $object->supplier_ordered_orders($firstDayYear, $lastDayYear);
+$supplier_unpaid_invoices = $object->outstandingSupplierOnYear($startFiscalyear, $lastDayYear);
+$supplier_ordered_order = $object->supplier_ordered_orders($startFiscalyear, $lastDayYear);
 
 $supplierToPaid = $supplier_unpaid_invoices + $supplier_ordered_order;
 
@@ -227,7 +226,7 @@ $thirdPop_info4 = $info9;
 $thirdPop_info5 = $info10;
 
 $thirdPop_data1 = "Banques | Caisses - Comptes bancaires : solde du compte ";
-$thirdPop_data2 = "Total des factures clients impayées + commandes client validées sur l'année courante";
+$thirdPop_data2 = "Total des factures clients impayées + commandes client validées sur l'exercice en cours";
 $thirdPop_data3 = "Addition du solde des 3 comptes bancaires et du 'reste à payer' sur les factures fournisseurs";
 $thirdPop_data4 = "Addition du solde des 3 comptes bancaires - le montant 'fournisseurs à payer' ";
 $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes fournisseurs validées";

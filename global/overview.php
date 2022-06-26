@@ -24,6 +24,11 @@
  *	\brief      Home page of tab top menu
  */
 
+use Stripe\Terminal\Location;
+
+ob_start();
+ob_clean();
+
 // Load Dolibarr environment
 $res = 0;
 // Try main.inc.php into web root known defined into CONTEXT_DOCUMENT_ROOT (not always defined)
@@ -89,6 +94,7 @@ $lastDayYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year));
 // N - 1
 $firstDayLastYear = date('Y-m-d', mktime(0, 0, 1, 1, 1, $year - 1));
 $lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
+
 $nowyear = strftime("%Y", dol_now());
 $year = GETPOST('year') > 0 ? GETPOST('year', 'int') : $nowyear;
 $startyear = $year - (empty($conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS) ? 2 : max(1, min(10, $conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS)));
@@ -100,20 +106,22 @@ $action = GETPOST('action', 'aZ09');
 $socid = GETPOST('socid', 'int');
 $action = GETPOST('action', 'aZ09');
 $userid = GETPOST('userid', 'int');
-
+$currentPage = $_SERVER['PHP_SELF'];
+$startFiscalyear = $conf->global->START_FISCAL_YEAR;
+$startFiscalLastyear = $conf->global->START_FISCAL_LAST_YEAR;
 
 /**
- * Description Data
+ * Description Data for first box
 */
 
 $titleItem1 = "Chiffre d'affaires";
 $info1 = "Chiffre d'affaire n-1";
 $info2 = "Progression ";
 
-$turnover = $object->turnover($firstDayYear, $lastDayYear); // fetch datas
+$turnover = $object->turnover($startFiscalyear, $lastDayYear); // fetch datas
 $dataItem1 = price($turnover)."\n€"; // display datas
 
-$turnoverLastYear = $object->turnover($firstDayLastYear, $lastDayLastYear);
+$turnoverLastYear = $object->turnover($startFiscalLastyear, $lastDayLastYear);
 $dataInfo1 = price($turnoverLastYear)."\n€";
 
 $result = $object->progress($turnover, $turnoverLastYear);
@@ -137,46 +145,46 @@ $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 
 for($i = 0; $i <= 12; $i++){
 
-	// on recupere toutes les factures de l'année 2022
- 	$customerUnpaidInvoiceArrayOnYear = $object->fetchCA($firstDayYear, $lastDayYear);
+	$customerUnpaidInvoiceArrayOnYear = $object->fetchCA($startFiscalyear, $lastDayYear);
+	$customerUnpaidInvoiceArrayOnLastYear = $object->fetchCA($startFiscalLastyear, $lastDayLastYear);
 
-	// fetch all invoices for current year
-	foreach($customerUnpaidInvoiceArrayOnYear as $res){
+	if($customerUnpaidInvoiceArrayOnYear){
+		// fetch all invoices for current year
+		foreach($customerUnpaidInvoiceArrayOnYear as $res){
 
-		$invoice = new Facture($db);
-	 	$invoice->fetch($res->rowid);
+			$invoice = new Facture($db);
+			$invoice->fetch($res->rowid);
 
-		// We get the total of customers invoices for each month
-		if(date('n', $invoice->date_creation) == $i){
-			$amountLastyear += $invoice->total_ht;
-		 }
-	}
+			// for each months,
+			if(date('n', $invoice->date_creation) == $i){
+				$amount += $invoice->total_ht;
+			}
+		}
+	} elseif($customerUnpaidInvoiceArrayOnLastYear) {
 
-	// fetch all invoices on last years
-	$customerUnpaidInvoiceArrayOnLastYear = $object->fetchCA($firstDayLastYear, $lastDayLastYear);
+		foreach($customerUnpaidInvoiceArrayOnLastYear as $rest){
 
-	foreach($customerUnpaidInvoiceArrayOnLastYear as $rest){
+			$invoice = new Facture($db);
+			$invoice->fetch($rest->rowid);
 
-		$invoice = new Facture($db);
-	 	$invoice->fetch($rest->rowid);
-
-		// We get the total of customers invoices for each month
-		if(date('n', $invoice->date_creation) == $i){
-			$amount += $invoice->total_ht;
-		 }
+				if(date('n', $invoice->date_creation) == $i){
+					$amountLastYear += $invoice->total_ht;
+				 }
+			}
 	}
 
 	$data[] = [
 		html_entity_decode($monthsArr[$i]), // month
-		$amount, // CA/months sur l'année courante
-		$amountLastyear // CA/months l'année précédente
-
+		$amountLastYear,
+		$amount,
 	];
+
 }
 
 $px = new DolGraph();
 $mesg = $px->isGraphKo();
-$legend = ["2021", "2022"];
+$legend = ['2021', '2022'];
+
 if (!$mesg){
 	$px->SetTitle("Evolution du chiffre d'affaires");
 	$px->datacolor = array(array(255,206,126), array(138,233,232));
@@ -186,10 +194,7 @@ if (!$mesg){
 	$px->setHeight('250');
 	$px->SetWidth('500');
 	$turnoverChart = $px->draw($file, $fileurl);
-} else {
-	print "Pas assez de données...";
 }
-
 $graphiqueA = $px->show($turnoverChart);
 
 // For first info popup
@@ -197,8 +202,8 @@ $firstPop_info1 = $titleItem1;
 $firstPop_info2 = $info1;
 $firstPop_info3 = $info2;
 
-$firstPop_data1 = "Somme des factures clients sur l'année en cours (HORS BORUILLON)";
-$firstPop_data2 = "Somme des factures clients sur l'année précédente (HORS BROUILLON)";
+$firstPop_data1 = "Somme des factures clients sur l'exercice fiscal en cours (HORS BORUILLON)";
+$firstPop_data2 = "Somme des factures clients sur l'exercice fiscal précédente (HORS BROUILLON)";
 $firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100 ) ";
 
 ?>
@@ -211,14 +216,14 @@ $firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100 ) ";
  */
 
 $titleItem2 = "Encours C/F";
-$customerOutstandingYear = $object->outstandingBill($firstDayYear, $lastDayYear);
-$supplierOutstandingYear = $object->outstandingSupplierOnYear($firstDayYear, $lastDayYear);
+$customerOutstandingYear = $object->outstandingBill($startFiscalyear, $lastDayYear);
+$supplierOutstandingYear = $object->outstandingSupplierOnYear($startFiscalyear, $lastDayYear);
 
 $totalOutstangdingCF = ($customerOutstandingYear - $supplierOutstandingYear);
 
 $dataItem2 = price($totalOutstangdingCF)  ."\n€";
 
-$info3 = "Encours C / mois ";
+$info3 = '<a href="'.DOL_URL_ROOT.'/custom/tab/global/overview.php?mode=customer" id="customer">Encours C / mois </a>';
 $customerOutstandingMonth = $object->outstandingBill($firstDayCurrentMonth, $lastDayCurrentMonth);
 $dataInfo3 = price($customerOutstandingMonth) . "\n€";
 
@@ -228,7 +233,7 @@ if($dataInfo3 > 0){
 	$dataInfo3 = '<p>Aucun encours client pour le mois de '.$object->returnMonth($month).'</p>';
 }
 
-$info4 = "Encours F / mois";
+$info4 = '<a href="'.DOL_URL_ROOT.'/custom/tab/global/overview.php?mode=supplier" id="supplier">Encours F/ mois </a>';
 $supplierOutstandingMonth = $object->outstandingSupplierOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
 $dataInfo4 = price($supplierOutstandingMonth) . "\n€";
 
@@ -239,122 +244,172 @@ if($dataInfo4 > 0){
 }
 
 /**
- * CHARTS FOR OUTSTANDING CUSTOMER
+ * Customer chart
  */
 
- // Pagination for switch mode customer to supplier
-if(isset($_GET['page']) && !empty($_GET['page'])){
-    $currentPage = (int) strip_tags($_GET['page']);
-}else{
-    $currentPage = 1;
+// Drawing the first graph for nb of customer invoices by month
+$stats = new FactureStats($db, $socid, $mode = 'customer', ($userid > 0 ? $userid : 0), ($typent_id > 0 ? $typent_id : 0), ($categ_id > 0 ? $categ_id : 0));
+
+$dataGraph = $stats->getNbByMonthWithPrevYear($endyear, $startyear, 0, 0, 1);
+
+$filenamenb = $dir."/invoicesnbinyear-".$year.".png";
+$fileurlnb = DOL_URL_ROOT.'/viewimage.php?modulepart=billstats&amp;file=invoicesnbinyear-'.$year.'.png';
+
+$px2 = new DolGraph();
+$mesg = $px2->isGraphKo();
+
+// (graphiqueB) : NB
+if (!$mesg) {
+	$px2->SetData($dataGraph);
+	$i = $startyear;
+	$legend = array();
+	while ($i <= $endyear) {
+		$legend[] = $i;
+		$i++;
+	}
+	$px2->SetLegend($legend);
+	$px2->SetType(array('bar'));
+	$px2->datacolor = array(array(208,255,126), array(255,206,126), array(138,233,232));
+	$px2->SetMaxValue($px2->GetCeilMaxValue());
+	$px2->SetWidth('500');
+	$px2->SetHeight('250');
+	$px2->SetTitle("Nb de factures client par mois");
+	$nbInvoiceByMonth = $px2->draw($filenamenb, $fileurlnb);
 }
 
-	// Drawing the first graph for nb of customer invoices by month
-	$stats = new FactureStats($db, $socid, $mode = 'customer', ($userid > 0 ? $userid : 0), ($typent_id > 0 ? $typent_id : 0), ($categ_id > 0 ? $categ_id : 0));
+	// Drawing the second graph for amount of customer invoices by month
 
-	if($mode == 'customer') {
-		$dataGraph = $stats->getNbByMonthWithPrevYear($endyear, $startyear, 0, 0, 1);
+	// graphique B1
+	$dataGraph = $stats->getAmountByMonthWithPrevYear($endyear, $startyear);
+
+	$filenameamount = $dir."/invoicesamountinyear-".$year.".png";
+	$fileurlamount = DOL_URL_ROOT.'/viewimage.php?modulepart=billstats&amp;file=invoicesamountinyear-'.$year.'.png';
+
+	$data = [];
+	$px3 = new DolGraph();
+	$mesg = $px3->isGraphKo();
+
+	if (!$mesg) {
+		$px3->SetData($dataGraph);
+		$i = $startyear;
+		$legend = array();
+			while ($i <= $endyear) {
+				$legend[] = $i;
+				$i++;
+			}
+		$px3->SetLegend($legend);
+		$px3->SetType(array('lines'));
+		$px3->datacolor = array(array(208,255,126), array(255,206,126), array(138,233,232));
+		$px3->SetMaxValue($px3->GetCeilMaxValue());
+		$px3->SetWidth('500');
+		$px3->SetHeight('250');
+		$px3->SetTitle("Montant de factures clients par mois");
+		$amountInvoiceByMonth = $px3->draw($filenameamount, $fileurlamount);
+		}
+
+
+
+
+	/**
+	* Suppliers chart
+	*/
+
+ 	// Drawing the second graph for amount invoices by month
+
+		$stats = new FactureStats($db, $socid, $mode = 'supplier', ($userid > 0 ? $userid : 0), ($typent_id > 0 ? $typent_id : 0), ($categ_id > 0 ? $categ_id : 0));
+
+		$dataGraphSupp = $stats->getNbByMonthWithPrevYear($endyear, $startyear);
 
 		$filenamenb = $dir."/invoicesnbinyear-".$year.".png";
-		$fileurlnb = DOL_URL_ROOT.'/viewimage.php?modulepart=billstats&amp;file=invoicesnbinyear-'.$year.'.png';
+		if ($mode == 'customer') {
+			$fileurlnb = DOL_URL_ROOT.'/viewimage.php?modulepart=billstats&amp;file=invoicesnbinyear-'.$year.'.png';
+		}
+		if ($mode == 'supplier') {
+			$fileurlnb = DOL_URL_ROOT.'/viewimage.php?modulepart=billstatssupplier&amp;file=invoicesnbinyear-'.$year.'.png';
+		}
 
-		$px2 = new DolGraph();
-		$mesg = $px2->isGraphKo();
-
-		// NB
+		$px4 = new DolGraph();
+		$mesg = $px4->isGraphKo();
 		if (!$mesg) {
-			$px2->SetData($dataGraph);
+			$px4->SetData($dataGraphSupp);
 			$i = $startyear;
 			$legend = array();
 			while ($i <= $endyear) {
 				$legend[] = $i;
 				$i++;
 			}
-			$px2->SetLegend($legend);
-			$px2->SetType(array('bar'));
-			$px2->datacolor = array(array(208,255,126), array(255,206,126), array(138,233,232));
-			$px2->SetMaxValue($px2->GetCeilMaxValue());
-			$px2->SetWidth('500');
-			$px2->SetHeight('250');
-			$px2->SetTitle("Nb de factures client par mois");
-			$px2->SetShading(3);
-			$nbInvoiceByMonth = $px2->draw($filenamenb, $fileurlnb);
-		}
-
-		$graphiqueB = $px2->show($nbInvoiceByMonth);
+			$px4->SetLegend($legend);
+			$px4->datacolor = array(array(208,255,126), array(255,206,126), array(138,233,232));
+			$px4->SetMaxValue($px4->GetCeilMaxValue());
+			$px4->SetWidth('500');
+			$px4->SetHeight('250');
+			$px4->SetType(array('bar'));
+			$px4->SetTitle("Montant des factures fournisseurs par mois - HT");
+			$nbInvoiceSupplierByMonth = $px4->draw($filenamenb, $fileurlnb);
+			}
 
 
-		// Drawing the second graph for amount of customer invoices by month
-		$stats = new FactureStats($db, $socid, $mode = 'customer', ($userid > 0 ? $userid : 0), ($typent_id > 0 ? $typent_id : 0), ($categ_id > 0 ? $categ_id : 0));
-		$dataGraph = $stats->getAmountByMonthWithPrevYear($endyear, $startyear);
+		 // Drawing the second graph for amount invoices by month
+		$dataGraph = [];
+		$dataGraphSupp = $stats->getAmountByMonthWithPrevYear($endyear, $startyear);
 
 		$filenameamount = $dir."/invoicesamountinyear-".$year.".png";
-		$fileurlamount = DOL_URL_ROOT.'/viewimage.php?modulepart=billstats&amp;file=invoicesamountinyear-'.$year.'.png';
+		$fileurlamount = DOL_URL_ROOT.'/viewimage.php?modulepart=billstatssupplier&amp;file=invoicesamountinyear-'.$year.'.png';
 
 
-		$data = [];
-		$px3 = new DolGraph();
-		$mesg = $px3->isGraphKo();
-
+		$px5 = new DolGraph();
+		$mesg = $px5->isGraphKo();
 		if (!$mesg) {
-			$px3->SetData($dataGraph);
+			$px5->SetData($dataGraphSupp);
 			$i = $startyear;
 			$legend = array();
 			while ($i <= $endyear) {
 				$legend[] = $i;
 				$i++;
 			}
-			$px3->SetLegend($legend);
-			$px3->SetType(array('bar'));
-			$px3->datacolor = array(array(208,255,126), array(255,206,126), array(138,233,232));
-			$px3->SetMaxValue($px3->GetCeilMaxValue());
-			$px3->SetWidth('500');
-			$px3->SetHeight('250');
-			$px3->SetTitle("Montant de factures clients par mois");
-			$px3->SetShading(3);
-			$amountInvoiceByMonth = $px3->draw($filenameamount, $fileurlamount);
+			$px5->SetLegend($legend);
+			$px5->datacolor = array(array(208,255,126), array(255,206,126), array(138,233,232));
+			$px5->SetMaxValue($px5->GetCeilMaxValue());
+			$px5->SetWidth('500');
+			$px5->SetHeight('250');
+			$px5->SetType(array('lines'));
+			$px5->SetTitle("Montant des factures fournisseurs par mois - HT");
+			$amountInvoiceSupplierByMonth = $px5->draw($filenameamount, $fileurlamount);
+			}
+
+		// Display type of graph (customer or supplier)
+		$mode = $_GET['mode'];
+
+		if($mode == 'customer'){
+			?>
+			<style>
+				a#customer{
+					border-bottom: 1px solid black;
+				}
+			</style>
+			<?php
+			$graphiqueB = $px2->show($nbInvoiceByMonth);
+			$graphiqueB1 = $px3->show($amountInvoiceByMonth);
+
+		} elseif($mode == 'supplier') {
+			?>
+			<style>
+				a#supplier{
+					border-bottom: 1px solid black;
+				}
+
+			</style>
+			<?php
+			$graphiqueB2 = $px4->show($nbInvoiceSupplierByMonth);
+			$graphiqueB3 = $px5->show($amountInvoiceSupplierByMonth);
 		}
-
-		$graphiqueB1 = $px3->show($amountInvoiceByMonth);
-
-	} elseif($mode == 'supplier') {
-		print "c graphique fournisseurs";
-	}
-
-
- // Drawing the second graph for amount invoices by month
-// $data = [];
-// $dataGraph = $stats->getAmountByMonthWithPrevYear($endyear, $startyear);
-
-// $px4 = new DolGraph();
-// $mesg = $px4->isGraphKo();
-// if (!$mesg) {
-// 	$px4->SetData($dataGraph);
-// 	$i = $startyear;
-// 	$legend = array();
-// 	while ($i <= $endyear) {
-// 		$legend[] = $i;
-// 		$i++;
-// 	}
-// 	$px4->SetLegend($legend);
-// 	$px4->datacolor = array(array(208,255,126), array(255,206,126), array(138,233,232));
-// 	$px4->SetMaxValue($px4->GetCeilMaxValue());
-// 	$px4->SetWidth('500');
-// 	$px4->SetHeight('250');
-// 	$px4->SetType(array('lines'));
-// 	$px4->SetTitle("Montant des factures clients par mois - HT");
-// 	$amountInvoiceByMonth = $px4->draw($filenameamount, $fileurlamount);
-// 	}
-
-// 	$graphiqueB3 = $px4->show($amountInvoiceByMonth);
-
 
 // For second popup info
 $secondPop_info1 = $titleItem2;
 $secondPop_info2 = $info3;
 $secondPop_info3 = $info4;
 
-$secondPop_data1 = " Addition de l'ensemble des factures (client et fournisseur) impayées sur l'année en cours";
+$secondPop_data1 = " Addition de l'ensemble des factures (client et fournisseur) impayées sur l'exercice fiscal en cours";
 $secondPop_data2 = " Somme de toutes les factures clients impayées sur le mois courant (HT - hors brouillon)";
 $secondPop_data3 = "Somme du 'total_ht' de toutes les factures fournisseurs impayées sur le mois en courant (HT - hors brouillon) ";
 
@@ -389,7 +444,7 @@ $dataInfo6 = $forecastMargin."\n€";
 $file = "marginChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 
-$marginArray = $object->grossMargin($firstDayYear, $lastDayYear);
+$marginArray = $object->grossMargin($startFiscalyear, $lastDayYear);
 
 for($i = 0; $i <= 12; $i++){
 
@@ -407,28 +462,26 @@ for($i = 0; $i <= 12; $i++){
 	$data[] = [
 		html_entity_decode($monthsArr[$i]),
 		$validatedOrder,
+
 	];
 }
 
-$data = [];
-$px5 = new DolGraph();
-$mesg = $px5->isGraphKo();
-$legend = ["2022"];
+$px6 = new DolGraph();
+$mesg = $px6->isGraphKo();
+$legend = ['2022'];
 
 if (!$mesg){
-	$px5->SetTitle("Evolution de la marge brute sur l'année");
-	$px5->datacolor = array(array(240,128,128), array(128, 187, 240));
-	$px5->SetData($data);
-	$px5->SetLegend($legend);
-	$px5->SetType(array('lines')); // Array with type for each serie. Example: array('type1', 'type2', ...) where type can be: 'pie', 'piesemicircle', 'polar', 'lines', 'linesnopoint', 'bars', 'horizontalbars'...
-	$px5->setHeight('400');
-	$px5->SetWidth('600');
-	$marginChart = $px5->draw($file, $fileurl);
+	$px6->SetTitle("Evolution de la marge brute");
+	$px6->datacolor = array(array(138,233,232));
+	$px6->SetData($data);
+	$px6->SetLegend($legend);
+	$px6->SetType(array('lines')); // Array with type for each serie. Example: array('type1', 'type2', ...) where type can be: 'pie', 'piesemicircle', 'polar', 'lines', 'linesnopoint', 'bars', 'horizontalbars'...
+	$px6->setHeight('250');
+	$px6->SetWidth('500');
+	$marginChart = $px6->draw($file, $fileurl);
 }
 
-$graphiqueC = $px5->show($marginChart);
-
-
+$graphiqueC = $px6->show($marginChart);
 
 
 // For margin info popup
@@ -436,7 +489,7 @@ $thirdPop_info1 = $titleItem3;
 $thirdPop_info2 = $info5;
 $thirdPop_info3 = $info6;
 
-$thirdPop_data1 = "Somme (HT) des commandes clients validées - sur l'année en cours";
+$thirdPop_data1 = "Somme (HT) des commandes clients validées - sur l'exercice fiscal en cours";
 $thirdPop_data2 = "Total de la marge des commandes validées - la marge définit dans la configuration du module";
 $thirdPop_data3 = "Définit dans la configuration du module";
 
@@ -446,51 +499,62 @@ $thirdPop_data3 = "Définit dans la configuration du module";
  * ---- TREASURY BOX -------
  */
 $titleItem4 = "Trésorerie nette";
-$solde = $object->fetchSoldeOnYear();
+$solde = $object->fetchSoldeOnYear($startFiscalyear, $lastDayYear);
 $dataItem4 = price($solde) . "\n€";
 
 $info7 = "Charges mensuelles"; // CV + CF
-$staticExpenses = $object->fetchStaticExpenses($firstDay, $lastDayYear); // static charge
-$variablesExpenses = $object->fetchVariablesExpenses($firstDayYear, $lastDayYear); // variable charge
+$staticExpenses = $object->fetchStaticExpenses($startFiscalyear, $lastDayYear); // static charge
+$variablesExpenses = $object->fetchVariablesExpenses($startFiscalyear, $lastDayYear); // variable charge
 
-$result3 = ( ($variablesExpenses + $staticExpenses) / 12);
-$dataInfo7 = price($result3) . "\n€";
+$result3 = intval( ($variablesExpenses + $staticExpenses) / 12);
+$dataInfo7 = price($result3) . "\n€"; // arrondi
 
 $info8 = "Recurrent mensuel";
+$dataInfo8 = price(1500) . "\n";
 
 // Graph
-$file = "tresuryChart"; // id javascript
-$fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
-$tresuryArray = $object->fetchSolde($firstDayYear, $lastDayYear);
-
 $data = [];
-$dataGraph = $stats->getAmountByMonthWithPrevYear($endyear, $startyear);
+$file = "tresuryChart";
+$fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 
-$px4 = new DolGraph();
+$tresuryArray = $object->fetchSolde($ret->rowid);
 
+for($i = 0; $i <= 12; $i++){
 
-$px4 = new DolGraph();
-$mesg = $px4->isGraphKo();
+	// We get the total of customers validated order for each month
+	foreach($tresuryArray as $val){
+		$acc = new Account($db);
+		$acc->fetch($val->rowid);
 
-if (!$mesg) {
-	$px4->SetData($dataGraph);
-	$i = $startyear;
-	$legend = array();
-	while ($i <= $endyear) {
-		$legend[] = $i;
-		$i++;
+		if(date('n', $acc->datec)  == $i ){
+			$solde += $acc->amount;
+		}
 	}
-	$px4->SetTitle("Evolution de la trésorerie nette sur l'année");
-	$px4->datacolor = array(array(240,128,128), array(128, 187, 240));
-	$px4->SetData($data);
-	$px4->SetLegend($legend);
-	$px4->SetType(array('lines')); // Array with type for each serie. Example: array('type1', 'type2', ...) where type can be: 'pie', 'piesemicircle', 'polar', 'lines', 'linesnopoint', 'bars', 'horizontalbars'...
-	$px4->setHeight('400');
-	$px4->SetWidth('600');
-	$tst = $px4->draw($file, $fileurl);
+
+	// We add datas in the graph
+	$data[] = [
+		html_entity_decode($monthsArr[$i]),
+		$solde,
+	];
 }
 
-$graphiqueD = $px4->show($tst);
+$px7 = new DolGraph();
+$mesg = $px7->isGraphKo();
+$legend = ['2022'];
+
+if (!$mesg){
+	$px7->SetTitle("Evolution de la trésorerie nette");
+	$px7->datacolor = array(array(138,233,232));
+	$px7->SetData($data);
+	$px7->SetLegend($legend);
+	$px7->SetType(array('lines'));
+	$px7->setHeight('250');
+	$px7->SetWidth('500');
+	$tresuryChart = $px7->draw($file, $fileurl);
+}
+
+$graphiqueD = $px7->show($tresuryChart);
+
 
 
 
@@ -503,10 +567,8 @@ $fourPop_info2 = $info7;
 $fourPop_info3 = $info8;
 
 $fourPop_data1 = "Correspond à l'argent en banque (solde du compte - Banques & Caisse) - le 'reste à payer' qui a été encaissé sur les factures fournisseurs - 'reste à payer' qui a été réglé sur les factures fournisseurs";
-$fourPop_data2 = "Sommes des charges variables et fixes sur l'année en cours";
+$fourPop_data2 = "Sommes des charges variables et fixes sur l'exercice fiscal en cours";
 $fourPop_data3 = "Le MMR (Monthly Recurring Revenue) est un terme désignant les revenus issus des clients réguliers";
-
-
 
 
 /*
@@ -529,7 +591,6 @@ llxHeader('', $langs->trans("Global - Général"));
 
 print load_fiche_titre($langs->trans("Général"));
 
-$currentPage = $_SERVER['PHP_SELF'];
 
 print $object->load_navbar($currentPage);
 
