@@ -20,23 +20,18 @@
 		font-size: 10px;
 	  }
 	h1 {
-		font-size: 65px;
+		font-size: 40px;
 	}
 	h2 {
-		font-size: 65px;
+		font-size: 40px;
 	}
 	h3 {
-		font-size: 30px;
+		font-size: 15px;
 	}
 	.card-block {
 		width: 60%;
-	  }
+	}
 }
-
-.wrapper {
-	height: 200px !important;
-}
-  
 
 /* NAVBAR */
 .navbar {
@@ -57,6 +52,7 @@
 	.navbar a.active{ 
 		border-bottom:1px solid rgb(255, 255, 255); 
 	}
+
   
   @media screen and (max-width: 500px) {
 	.navbar a {
@@ -65,26 +61,21 @@
 	}
   }
 
+  html{
+	font-size: 15px; 
+  }
+
   /* Navbar links on mouse-over */
 .navbar a:hover {
 	color: rgb(47, 47, 47);
-  }
-  
-
-  
-  /* BODY */
-.element {
-	display: flex;
-	height: 25px;
-	border-right: rgb(179, 179, 179);
 }
 
-hr.vertical {
-	white-space: 5px;
+.navbar{
+	list-style-type: none;
 }
 
-.card .card-block {
-	padding: 15px;
+li.current {
+	border-bottom: 1px solid white;
 }
 
 .grid-container-4 {
@@ -94,28 +85,9 @@ hr.vertical {
 	padding: 20px;
 }
 
-canvas {
-	width: 50%;
-	height: 50px;
-}
-
-
-.element {
-	flex: auto;
-	height: auto;
-	width: 100%;
-}
-
-
-span.classfortooltip {
-	color: #5B86E5;
-	max-width: 100% !important;
-}
-
 div.container-fluid-2{
 	width: auto;
 }
-
 
 /* POPUP INFO */ 
 
@@ -137,9 +109,9 @@ div.container-fluid-2{
 	padding-left: 20px;
 	padding-right: 25px;
 	z-index: 1;
-	left: 500;
+	left: 10em;
 	padding-left: 5%;
-	margin-left: -80px;
+	margin-left: -100px;
 	position: absolute;
 	text-align: justify;
 	border-radius: 6px;
@@ -170,4 +142,5 @@ div.container-fluid-2{
 	from {opacity: 0;}
 	to {opacity:1 ;}
   } 
+
 
