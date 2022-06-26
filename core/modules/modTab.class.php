@@ -108,14 +108,11 @@ class modTab extends DolibarrModules
 			// Set this to relative path of css file if module has its own css file
 			'css' => array(
 				'/tab/css/tab.css',
-				'/tab/css/boostrap.min.css',
-				'/tab/css/Tables.boostrap5.min.css',
-				'/tab/css/style.css'
 			),
 			// Set this to relative path of js file if module must load a js on all pages
-			'js' => array(
-				'/tab/js/tab.js',
-			),
+			//  'js' => array(
+			// 	//
+			// ),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(
 				//   'data' => array(
@@ -294,7 +291,7 @@ class modTab extends DolibarrModules
 			'titre'=>'Dashboard',
 			'mainmenu'=>'tab',
 			'leftmenu'=>'',
-			'url'=>'/tab/global/overview.php',
+			'url'=>'/tab/global/overview.php?mode=customer',
 			'langs'=>'tab@tab', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position'=>1000 + $r,
 			'enabled'=>'$conf->tab->enabled', // Define condition to show or hide menu entry. Use '$conf->sav->enabled' if entry must be visible if module is enabled.
@@ -358,7 +355,7 @@ class modTab extends DolibarrModules
 			'titre'=>'Général',
 			'mainmenu'=>'tab',
 			'leftmenu'=>'general',
-			'url'=>'/tab/global/overview.php',
+			'url'=>'/tab/global/overview.php?mode=customer',
 			'langs'=>'tab@tab',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position'=>1000+$r,
 			'enabled'=>'$conf->tab->enabled',  // Define condition to show or hide menu entry. Use '$conf->tab->enabled' if entry must be visible if module is enabled.
