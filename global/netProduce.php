@@ -218,7 +218,7 @@ $thirdPop_data1 = "Date de livraison prévues d'une commande client validée du 
 $titleItem3 = "<h4>Clients à produire</h4>";
 
 $thirdPop_info1 = $titleItem3;
-$thirdPop_data1 = "Liste des tiers pour chaques commandes validées";
+$thirdPop_data2 = "Liste des tiers pour chaques commandes validées";
 
 ?>
 
@@ -247,40 +247,40 @@ $thirdPop_data1 = "Liste des tiers pour chaques commandes validées";
 								popup.classList.toggle("show");
 							}
 						</script>
-	  		<?php print $titleItem1  ."\n".	"(".count($result3).")" ?>
+						<?php print $titleItem1  ."\n".	"(".count($result3).")" ?>
 
-				<p class="card-text">
+							<p class="card-text">
 
-						<?php
-							if(is_array($result3) && $result3 != null){
+									<?php
+										if(is_array($result3) && $result3 != null){
 
 
-								foreach ($result3 as $res)
-								{
-									$societe = new Societe($db);
-									$societe->fetch($res->fk_soc);
+											foreach ($result3 as $res)
+											{
+												$societe = new Societe($db);
+												$societe->fetch($res->fk_soc);
 
-									$commande = new Commande($db);
-									$commande->fetch($res->rowid);
-									$customer = $societe->name;
+												$commande = new Commande($db);
+												$commande->fetch($res->rowid);
+												$customer = $societe->name;
 
-									print '<ul class="list-group">';
-									print '<li class="list-group-item d-flex justify-content-between align-items-center">';
-									print  '<i class="fas fa-address-card"></i><a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'">'.$societe->name.'</hr></a>';
+												print '<ul class="list-group">';
+												print '<li class="list-group-item d-flex justify-content-between align-items-center">';
+												print  '<i class="fas fa-address-card"></i><a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'">'.$customer.'</hr></a>';
 
-									if($commande->date_livraison != null) {
-										print '<p><span class="badge badge-pill badge-primary">Date de livraison prévue : '.date('j-m-Y', $commande->date_livraison).'</span></p></li>'."\n";
-									} else {
-										 print '<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
-									}
-									print '</ul>';
-								}
-							}
-						?>
+												if($commande->date_livraison != null) {
+													print '<p><span class="badge badge-pill badge-primary">Date de livraison prévue : '.date('j-m-Y', $commande->date_livraison).'</span></p></li>'."\n";
+												} else {
+													print '<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span></li>';
+												}
+												print '</ul>';
+											}
+										}
+									?>
 
-						</div>
-					</div>
-				</div>
+									</div>
+								</div>
+							</div>
 
 
 
@@ -326,7 +326,7 @@ $thirdPop_data1 = "Liste des tiers pour chaques commandes validées";
 							print '<li class="list-group-item d-flex justify-content-between align-items-center">';
 							print  '<i class="fas fa-address-card"></i><a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'">'.$societe->name.'</a>';
 							print '<span class="badge badge-pill badge-primary">';
-							print '<a href="'.DOL_URL_ROOT.'/commande/card.php?id='.$commande->id.'">Réf. commande :  '.$commande->ref.'</span></li>';
+							print '<a href="'.DOL_URL_ROOT.'/commande/card.php?id='.$commande->id.'"><span>Réf. commande :  '.$commande->ref.'</span></li>';
 							print '</ul>';
 						}
 					}
@@ -377,10 +377,9 @@ $thirdPop_data1 = "Liste des tiers pour chaques commandes validées";
 
 							print '<ul class="list-group">';
 							print '<li class="list-group-item d-flex justify-content-between align-items-center">';
-							print  '<i class="fas fa-address-card"></i>';
-							print '<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'">'.$societe->name.'</hr>';
-							print '<span class="badge badge-pill badge-primary"><a href="'.DOL_URL_ROOT.'/commande/card.php?id='.$commande->id.'">';
-							print '<span class="badge badge-pill badge-primary">Réf. commande :  '.$commande->ref.'</a></span>';
+
+							print '<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'">'.$societe->name.'</hr></a>';
+							print '<span class="badge badge-pill badge-primary">Réf. commande :  '.$commande->ref.'</span>';
 
 							if($commande->date_livraison != null) {
 								print '<p><strong>Date de création : </strong>'.date('j-m-Y', $commande->date_commande).'';
@@ -392,15 +391,14 @@ $thirdPop_data1 = "Liste des tiers pour chaques commandes validées";
 						}
 
 					} else {
-						print '<p class="center"><pan class="badge badge-pill badge-danger">Aucune commande validées pour ce jour </span></p>';
+						print '<p class="center"><span class="badge badge-pill badge-danger">Aucune commande validées pour ce jour </span></p>';
+						print '</br>';
 					}
 
 					?>
 					</div>
 				</div>
 			</div>
-
-
 <?php
 
 // End of page
