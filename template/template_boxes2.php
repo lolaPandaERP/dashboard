@@ -1,12 +1,6 @@
-<head>
-	<meta charset="UTF-4">
-	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=no">
-	<link rel="stylesheet" type="text/css"  href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/css/bootstrap-extended.min.css">
-	<!-- <link rel="stylesheet" type="text/css"  href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/fonts/simple-line-icons/style.min.css"> -->
-	<link rel="stylesheet" type="text/css"  href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/css/bootstrap.min.css">
-</head>
-
-<body>
+<?php
+include('../template/template_admin.php');
+?>
 		<!-- grid-based layout -->
 		<div class="grid-container-4">
 			<div class="grid-1">
@@ -90,7 +84,7 @@
 							</div>
 							</div>
 						</div>
-							<?php print $graphiqueA ?>
+							<?php print $graphiqueB ?>
 					</div>
 				</div>
 
