@@ -147,38 +147,34 @@ $firstPop_data3 = "Progression du nombre total d'encours clients pa rapport au m
 // Drawing the first graph for nb of customer invoices by month
 $stats = new FactureStats($db, $socid, $mode = 'customer', ($userid > 0 ? $userid : 0), ($typent_id > 0 ? $typent_id : 0), ($categ_id > 0 ? $categ_id : 0));
 
-if($mode == 'customer') {
-	$dataGraph = $stats->getNbByMonthWithPrevYear($endyear, $startyear, 0, 0, 1);
+$dataGraph = $stats->getNbByMonthWithPrevYear($endyear, $startyear, 0, 0, 1);
 
-	$filenamenb = $dir."/invoicesnbinyear-".$year.".png";
-	$fileurlnb = DOL_URL_ROOT.'/viewimage.php?modulepart=billstats&amp;file=invoicesnbinyear-'.$year.'.png';
+$filenamenb = $dir."/invoicesnbinyear-".$year.".png";
+$fileurlnb = DOL_URL_ROOT.'/viewimage.php?modulepart=billstats&amp;file=invoicesnbinyear-'.$year.'.png';
 
-	$px2 = new DolGraph();
-	$mesg = $px2->isGraphKo();
+$px1 = new DolGraph();
+$mesg = $px1->isGraphKo();
 
-	// NB
-	if (!$mesg) {
-		$px2->SetData($dataGraph);
-		$i = $startyear;
-		$legend = array();
+if (!$mesg) {
+	$px1->SetData($dataGraph);
+	$i = $startyear;
+	$legend = array();
 		while ($i <= $endyear) {
 			$legend[] = $i;
 			$i++;
 		}
-		$px2->SetLegend($legend);
-		$px2->SetType(array('bar'));
-		$px2->datacolor = array(array(208,255,126), array(255,206,126), array(138,233,232));
-		$px2->SetMaxValue($px2->GetCeilMaxValue());
-		$px2->SetWidth('500');
-		$px2->SetHeight('250');
-		$px2->SetTitle("Evolution du nb d'encours client");
-		$px2->SetShading(3);
-		$nbInvoiceByMonth = $px2->draw($filenamenb, $fileurlnb);
+	$px1->SetLegend($legend);
+	$px1->SetType(array('lines'));
+	$px1->datacolor = array(array(208,255,126), array(255,206,126), array(138,233,232));
+	$px1->SetMaxValue($px1->GetCeilMaxValue());
+	$px1->SetWidth('500');
+	$px1->SetHeight('250');
+	$px1->SetTitle("Evolution du nb d'encours clients");
+	$nbtInvoiceByMonth = $px1->draw($filenamenb, $fileurlnb);
 	}
-	// $graphiqueA = $px2->show($nbInvoiceByMonth);
 
-}
 
+	$graphiqueA = $px1->show($nbtInvoiceByMonth);
 
 /**
  *  SUPPLIERS OUTSTANDING
@@ -188,25 +184,58 @@ $titleItem2 = "Encours fournisseurs";
 $outstandingSupplierOnYear = $object->outstandingSupplierOnYear($startFiscalyear, $lastDayYear);
 $dataItem2 = price($outstandingSupplierOnYear) . "\n€";
 
+
 $info3 = "Encours fournisseur M-1";
 $outstandingSupplierOnLastMonth = $object->outstandingSupplierOnLastMonth($firstDayLastMonth, $lastDayLastMonth);
 $dataInfo3 = price($outstandingSupplierOnLastMonth)."\n€";
 
 $info4 = "Progression";
-// $outSupplierCurrentMonth = $object->outstandingSupplierOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
+$outSupplierCurrentMonth = $object->outstandingSupplierOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
 
-// $resultat = $object->progress($outSupplierCurrentMonth, $outstandingSupplierOnLastMonth);
-// $dataInfo4 = $resultat."\n%";
+// Progression du nb d'encours entre le mois dernier / courant
+$resultat = $object->progress($outSupplierCurrentMonth, $outstandingSupplierOnLastMonth);
+$dataInfo4 = $resultat."\n%";
 
 // Condition d'affichage pour l'augmentation/diminution des encours fournisseurs
 
 if($dataInfo3 <= 0){
 	$dataInfo3 = '<p class="badge badge-success" style="color:green;">Aucun encours';
 } else {
-	$dataInfo3 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustomerExceeded) . "\n€";
-
+	$dataInfo3 = $dataInfo3;
 }
-// Load info for otstanding customer popupinfo
+
+// Supplier chart
+$stats = new FactureStats($db, $socid, $mode = 'supplier', ($userid > 0 ? $userid : 0), ($typent_id > 0 ? $typent_id : 0), ($categ_id > 0 ? $categ_id : 0));
+		 // Drawing the second graph for amount invoices by month
+		 $dataGraph = [];
+		 $dataGraphSupp = $stats->getAmountByMonthWithPrevYear($endyear, $startyear);
+
+		 $filenameamount = $dir."/invoicesamountinyear-".$year.".png";
+		 $fileurlamount = DOL_URL_ROOT.'/viewimage.php?modulepart=billstatssupplier&amp;file=invoicesamountinyear-'.$year.'.png';
+
+
+		 $px5 = new DolGraph();
+		 $mesg = $px5->isGraphKo();
+		 if (!$mesg) {
+			 $px5->SetData($dataGraphSupp);
+			 $i = $startyear;
+			 $legend = array();
+			 while ($i <= $endyear) {
+				 $legend[] = $i;
+				 $i++;
+			 }
+			 $px5->SetLegend($legend);
+			 $px5->datacolor = array(array(208,255,126), array(255,206,126), array(138,233,232));
+			 $px5->SetMaxValue($px5->GetCeilMaxValue());
+			 $px5->SetWidth('500');
+			 $px5->SetHeight('250');
+			 $px5->SetType(array('lines'));
+			 $px5->SetTitle("Montant des factures fournisseurs par mois - HT");
+			 $amountInvoiceSupplierByMonth = $px5->draw($filenameamount, $fileurlamount);
+			 }
+			 $graphiqueB = $px5->show($amountInvoiceSupplierByMonth);
+
+			 // Load info for otstanding customer popupinfo
 $secondPop_info1 = $titleItem2;
 $secondPop_info2 = $info3;
 $secondPop_info3 = $info4;
@@ -259,7 +288,6 @@ print $object->load_navbar($currentPage);
 // template for boxes
 include DOL_DOCUMENT_ROOT . '/custom/tab/template/template_boxes2.php';
 
-
 ?>
 
 <!-- CUSTOMER OUTSTANDING -->
@@ -304,6 +332,7 @@ include DOL_DOCUMENT_ROOT . '/custom/tab/template/template_boxes2.php';
 							<?php print $graphiqueA ?>
 					</div>
 				</div>
+			</div>
 <?php
 
 // Supplier outstandings exceeded

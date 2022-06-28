@@ -24,8 +24,6 @@
  *	\brief      Home page of tab top menu
  */
 
-use Stripe\Terminal\Location;
-
 ob_start();
 ob_clean();
 
@@ -66,9 +64,18 @@ global $db, $conf;
 // Security check
 if (empty($conf->tab->enabled)) accessforbidden('Module not enabled');
 $socid = 0;
+
 if ($user->socid > 0) { // Protection if external user
 	accessforbidden();
 }
+
+if(empty($conf->global->START_FISCAL_YEAR) || empty($conf->global->START_FISCAL_LAST_YEAR) ){
+	accessforbidden('Vous devez obligatoirement renseigné le début de l\'exercice fiscal dans la configuration du module');
+} else {
+	$startFiscalyear = $conf->global->START_FISCAL_YEAR;
+	$startFiscalLastyear = $conf->global->START_FISCAL_LAST_YEAR;
+}
+
 
 // fetch current bank account
 $object = new General($db);
@@ -78,6 +85,17 @@ $datetime = dol_now();
 $year = dol_print_date($datetime, "%Y");
 $month = dol_print_date($datetime, "%m");
 $day = dol_print_date($datetime, "%d");
+
+// Calcul for last day in current year according to the beginning of the fiscal year
+$duree = 1;
+
+// Transform date in timestamp
+$TimestampCurrentYear = strtotime($startFiscalyear);
+$TimestampCurrentLastYear = strtotime($startFiscalLastyear);
+
+// calcul the end date for current and last year
+$endYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentYear));
+$endLastYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentLastYear));
 
 // First day and last day of current mounth
 $firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
@@ -107,8 +125,6 @@ $socid = GETPOST('socid', 'int');
 $action = GETPOST('action', 'aZ09');
 $userid = GETPOST('userid', 'int');
 $currentPage = $_SERVER['PHP_SELF'];
-$startFiscalyear = $conf->global->START_FISCAL_YEAR;
-$startFiscalLastyear = $conf->global->START_FISCAL_LAST_YEAR;
 
 /**
  * Description Data for first box
@@ -118,13 +134,24 @@ $titleItem1 = "Chiffre d'affaires";
 $info1 = "Chiffre d'affaire n-1";
 $info2 = "Progression ";
 
-$turnover = $object->turnover($startFiscalyear, $lastDayYear); // fetch datas
-$dataItem1 = price($turnover)."\n€"; // display datas
+// Fiscal current years
+$total_standard_invoice = $object->turnover($startFiscalyear, $endYear); // paye + imp
+$total_avoir_invoice = $object->avoir($startFiscalyear, $endYear, $paye = ''); // paye + imp
 
-$turnoverLastYear = $object->turnover($startFiscalLastyear, $lastDayLastYear);
-$dataInfo1 = price($turnoverLastYear)."\n€";
+$total_CA = $total_standard_invoice + $total_avoir_invoice; // total
 
-$result = $object->progress($turnover, $turnoverLastYear);
+$dataItem1 = price($total_CA)."\n€"; // display datas
+
+// Fiscal last years
+$total_standard_invoice_lastYear = $object->turnover($startFiscalLastyear, $endLastYear); // paye + imp
+$total_avoir_invoice_lastYear = $object->avoir($startFiscalLastyear, $endLastYear, $paye = ''); // paye + imp
+
+$total_CA_lastYear = $total_standard_invoice_lastYear + $total_avoir_invoice_lastYear; // total
+
+$dataInfo1 = price($total_CA_lastYear)."\n€"; // display data
+
+// progression turnover
+$result = $object->progress($total_CA, $total_CA_lastYear);
 $dataInfo2 = intval($result)  . "\n%";
 
 // Display increase/decrease
@@ -142,41 +169,49 @@ $monthsArr = monthArray($langs, 1); // months
 
 $file = "evolutionCAchart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
+$invoice = new Facture($db);
+$total_CA = $total_standard_invoice + $total_avoir_invoice;
 
-for($i = 0; $i <= 12; $i++){
+if(!empty($conf->global->START_FISCAL_YEAR)){
+	$startMonthTimestamp = strtotime($startFiscalyear);
+	$duree = 12;
+	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
+	$i = $startMonthFiscalYear;
+} else {
+	$i = 1;
+}
 
-	$customerUnpaidInvoiceArrayOnYear = $object->fetchCA($startFiscalyear, $lastDayYear);
-	$customerUnpaidInvoiceArrayOnLastYear = $object->fetchCA($startFiscalLastyear, $lastDayLastYear);
+for($i = $i; $i <= 12; $i++){
 
-	if($customerUnpaidInvoiceArrayOnYear){
-		// fetch all invoices for current year
-		foreach($customerUnpaidInvoiceArrayOnYear as $res){
+	$lastyear = strtotime('Last Year');
+	$lastyear = date($year-1);
 
-			$invoice = new Facture($db);
-			$invoice->fetch($res->rowid);
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
 
-			// for each months,
-			if(date('n', $invoice->date_creation) == $i){
-				$amount += $invoice->total_ht;
-			}
-		}
-	} elseif($customerUnpaidInvoiceArrayOnLastYear) {
+	// Current Year
+	$date_start = $year.'-'.$i.'-01';
+	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-		foreach($customerUnpaidInvoiceArrayOnLastYear as $rest){
+	// Last Year
+	$date_start_lastYear = $lastyear.'-'.$i.'-01';
+	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
 
-			$invoice = new Facture($db);
-			$invoice->fetch($rest->rowid);
+	$total_standard_invoice_Year = $object->turnover($date_start, $date_end); // current
+	$total_standard_invoice_LastYear = $object->turnover($date_start_lastYear, $date_end_lastYear); // last year
 
-				if(date('n', $invoice->date_creation) == $i){
-					$amountLastYear += $invoice->total_ht;
-				 }
-			}
+	if(date('n', $date_start) == $i ){
+		$total_standard_invoice_Year += $invoice->total_ht;
+		$total_standard_invoice_LastYear += $invoice->total_ht;
 	}
+		$ladder = html_entity_decode($monthsArr[$i]);
+
 
 	$data[] = [
-		html_entity_decode($monthsArr[$i]), // month
-		$amountLastYear,
-		$amount,
+		$ladder, // month : alors on recupere le mois de la var. $startFiscalyear pour que l'echelle commence au bon mois
+		$total_standard_invoice_LastYear,
+		$total_standard_invoice_Year
+
 	];
 
 }
@@ -202,9 +237,23 @@ $firstPop_info1 = $titleItem1;
 $firstPop_info2 = $info1;
 $firstPop_info3 = $info2;
 
-$firstPop_data1 = "Somme des factures clients sur l'exercice fiscal en cours (HORS BORUILLON)";
-$firstPop_data2 = "Somme des factures clients sur l'exercice fiscal précédente (HORS BROUILLON)";
-$firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100 ) ";
+// All unpaid or paid invoice on current year and last year
+$total_unpaid_invoice_year = $object->allInvoice($startFiscalyear, $endYear, $paye = 0);
+$total_paid_invoice_year = $object->allInvoice($startFiscalyear, $endYear, $paye = 1);
+
+$total_unpaid_invoice_lastyear = $object->allInvoice($startFiscalLastyear, $endLastYear, $paye = 0);
+$total_paid_invoice_lastYear = $object->allInvoice($startFiscalLastyear, $endLastYear, $paye = 1);
+
+// All Unpaid / pay desposit on current year and last year
+$total_unpaid_deposit_year = $object->allDeposit($startFiscalyear, $endYear, $paye = 0);
+$total_paid_deposit_year = $object->allDeposit($startFiscalyear, $endYear, $paye = 1);
+
+$total_unpaid_deposit_lastYear = $object->allDeposit($startFiscalLastyear, $endLastYear, $paye = 0);
+$total_paid_deposit_lastYear = $object->allDeposit($startFiscalLastyear, $endLastYear, $paye = 1);
+
+$firstPop_data1 = 'Factures clients impayées <strong>('.price($total_unpaid_invoice_year).' €)</strong> + payées <strong>('.price($total_paid_invoice_year).' €)</strong> + Avoirs clients impayés <strong>('.price($total_unpaid_deposit_year).' €)</strong> + payés <strong>('.price($total_paid_deposit_year).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
+$firstPop_data2 = 'Factures clients impayées <strong>('.price($total_unpaid_invoice_lastyear).' €)</strong> + payées <strong>('.price($total_paid_invoice_lastYear).' €)</strong> + Avoirs clients impayés <strong>('.price($total_unpaid_deposit_lastYear).' €)</strong> + payés <strong>('.price($total_paid_deposit_lastYear).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
+$firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100 ) </br> <strong> ( (".$total_CA." - ".$total_CA_lastYear.") / ".$total_CA.") x 100 </strong>";
 
 ?>
 
@@ -216,8 +265,8 @@ $firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100 ) ";
  */
 
 $titleItem2 = "Encours C/F";
-$customerOutstandingYear = $object->outstandingBill($startFiscalyear, $lastDayYear);
-$supplierOutstandingYear = $object->outstandingSupplierOnYear($startFiscalyear, $lastDayYear);
+$customerOutstandingYear = $object->allInvoice($startFiscalyear, $endYear, 0);
+$supplierOutstandingYear = $object->outstandingSupplierOnYear($startFiscalyear, $endYear);
 
 $totalOutstangdingCF = ($customerOutstandingYear - $supplierOutstandingYear);
 
@@ -279,7 +328,6 @@ if (!$mesg) {
 
 	// Drawing the second graph for amount of customer invoices by month
 
-	// graphique B1
 	$dataGraph = $stats->getAmountByMonthWithPrevYear($endyear, $startyear);
 
 	$filenameamount = $dir."/invoicesamountinyear-".$year.".png";
@@ -308,13 +356,11 @@ if (!$mesg) {
 		}
 
 
-
-
 	/**
 	* Suppliers chart
 	*/
 
- 	// Drawing the second graph for amount invoices by month
+ 	// Drawing the second graph for NB invoices by month
 
 		$stats = new FactureStats($db, $socid, $mode = 'supplier', ($userid > 0 ? $userid : 0), ($typent_id > 0 ? $typent_id : 0), ($categ_id > 0 ? $categ_id : 0));
 
@@ -385,6 +431,7 @@ if (!$mesg) {
 			<style>
 				a#customer{
 					border-bottom: 1px solid black;
+					font-weight: bold;
 				}
 			</style>
 			<?php
@@ -396,6 +443,7 @@ if (!$mesg) {
 			<style>
 				a#supplier{
 					border-bottom: 1px solid black;
+					font-weight: bold;
 				}
 
 			</style>
@@ -409,28 +457,27 @@ $secondPop_info1 = $titleItem2;
 $secondPop_info2 = $info3;
 $secondPop_info3 = $info4;
 
-$secondPop_data1 = " Addition de l'ensemble des factures (client et fournisseur) impayées sur l'exercice fiscal en cours";
-$secondPop_data2 = " Somme de toutes les factures clients impayées sur le mois courant (HT - hors brouillon)";
-$secondPop_data3 = "Somme du 'total_ht' de toutes les factures fournisseurs impayées sur le mois en courant (HT - hors brouillon) ";
-
-
+$secondPop_data1 = " Factures clients impayées <strong>(".price($customerOutstandingYear)." €)</strong> - factures fournisseurs impayées <strong>(".price($supplierOutstandingYear)." €)</strong>";
+$secondPop_data2 = " Somme de toutes les factures clients impayées sur le mois courant (hors brouillon) : <strong>".price($customerOutstandingMonth)."\n€</strong>";
+$secondPop_data3 = "Somme du 'total_ht' de toutes les factures fournisseurs impayées sur le mois en courant (hors brouillon) : <strong>".price($supplierOutstandingMonth)."\n€</strong>";
 
 
 /**
  *  MARGIN BOXE
  */
 $titleItem3 = "Marge brute N";
-$grossMargin = $object->grossMarginOnYear($firstDayYear, $lastDayYear);
+$grossMargin = $object->grossMargin($startFiscalyear, $endYear);
+
 $dataItem3 = price($grossMargin) . "\n€";
 
 // Margin To produce on current mounth
-$info5 = "Marges restant à produire";
+$info5 = "Marge restant à produire";
 
 // request for gross margin on current mounth for calculate the margin to be produced
 $grossMarginOnCurrentMonth = $object->grossMarginOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
 $dataInfo5 = price($grossMarginOnCurrentMonth) . "\n€";
 
-// saisie manuelle
+// possibility modify in module's configuration
 $marginToBeProduced = $conf->global->MARGIN_PRODUCED;
 
 // calcul for remaining margin to produce
@@ -441,38 +488,51 @@ $forecastMargin = $conf->global->FORECAST_MARGIN; // manual entry
 $dataInfo6 = $forecastMargin."\n€";
 
 // Cart
+
 $file = "marginChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 
-$marginArray = $object->grossMargin($startFiscalyear, $lastDayYear);
+$commande = new Commande($db);
 
-for($i = 0; $i <= 12; $i++){
+for($i = 1; $i <= 12; $i++){
 
-	// We get the total of customers validated order for each month
-	foreach($marginArray as $ret){
-		$cmd = new Commande($db);
-		$rest = $cmd->fetch($ret->rowid);
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
 
-		if(date('n', $cmd->date_commande) == $i){
-			 $validatedOrder += $cmd->total_ht;
-		}
+	$lastyear = strtotime('Last Year');
+	$lastyear = date($year-1);
+
+	// Current Year
+	$date_start = $year.'-'.$i.'-01';
+	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
+
+	// Last Year
+	$date_start_lastYear = $lastyear.'-'.$i.'-01';
+	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
+
+	$total_grossMargin_year = $object->grossMargin($date_start, $date_end);
+	$total_grossMargin_LastYear = $object->grossMargin($date_start_lastYear, $date_end_lastYear);
+
+	if(date('n', $date_start) == $i ){
+		$total_grossMargin_year += $commande->total_ht;
+		$total_grossMargin_LastYear += $commande->total_ht;
 	}
 
-	// We add datas in the graph
 	$data[] = [
-		html_entity_decode($monthsArr[$i]),
-		$validatedOrder,
-
+		html_entity_decode($monthsArr[$i]), // month
+		$total_grossMargin_LastYear,
+		$total_grossMargin_year
 	];
+
 }
 
 $px6 = new DolGraph();
 $mesg = $px6->isGraphKo();
-$legend = ['2022'];
+$legend = ['2021', '2022'];
 
 if (!$mesg){
 	$px6->SetTitle("Evolution de la marge brute");
-	$px6->datacolor = array(array(138,233,232));
+	$px6->datacolor = array(array(255,206,126), array(138,233,232));
 	$px6->SetData($data);
 	$px6->SetLegend($legend);
 	$px6->SetType(array('lines')); // Array with type for each serie. Example: array('type1', 'type2', ...) where type can be: 'pie', 'piesemicircle', 'polar', 'lines', 'linesnopoint', 'bars', 'horizontalbars'...
@@ -489,15 +549,16 @@ $thirdPop_info1 = $titleItem3;
 $thirdPop_info2 = $info5;
 $thirdPop_info3 = $info6;
 
-$thirdPop_data1 = "Somme (HT) des commandes clients validées - sur l'exercice fiscal en cours";
-$thirdPop_data2 = "Total de la marge des commandes validées - la marge définit dans la configuration du module";
-$thirdPop_data3 = "Définit dans la configuration du module";
+$thirdPop_data1 = "Somme (HT) des commandes clients validées <strong>(".price($grossMargin)."\n€)</strong> sur l'exercice fiscal en cours";
+$thirdPop_data2 = "Total de la marge des commandes validées <strong>(".price($grossMargin)."\n€)</strong> - la marge définit dans la configuration du module <strong>(".price($marginToBeProduced)."\n€)</strong>";
+$thirdPop_data3 = "Définit dans la configuration du module : <strong>(".price($forecastMargin)."\n€)</strong>";
 
 
 
 /**
  * ---- TREASURY BOX -------
  */
+
 $titleItem4 = "Trésorerie nette";
 $solde = $object->fetchSoldeOnYear($startFiscalyear, $lastDayYear);
 $dataItem4 = price($solde) . "\n€";
@@ -512,30 +573,33 @@ $dataInfo7 = price($result3) . "\n€"; // arrondi
 $info8 = "Recurrent mensuel";
 $dataInfo8 = price(1500) . "\n";
 
-// Graph
+$bankAccount = $object->fetchSolde(5, $date_start, $date_end);
+
+// Graph tresury
 $data = [];
 $file = "tresuryChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 
-$tresuryArray = $object->fetchSolde($ret->rowid);
 
-for($i = 0; $i <= 12; $i++){
+for($i = 1; $i <= 12; $i++){
 
-	// We get the total of customers validated order for each month
-	foreach($tresuryArray as $val){
-		$acc = new Account($db);
-		$acc->fetch($val->rowid);
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
 
-		if(date('n', $acc->datec)  == $i ){
-			$solde += $acc->amount;
-		}
+	// Current Year
+	$date_start = $year.'-'.$i.'-01';
+	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
+
+	$tresury = $object->fetchSoldeOnYear(5, $date_start, $date_end);
+
+	if($date_start == $i){
+		$tresury += $acc->amount; // 2022
 	}
 
-	// We add datas in the graph
 	$data[] = [
-		html_entity_decode($monthsArr[$i]),
-		$solde,
+		html_entity_decode($monthsArr[$i]), // month
+		$tresury,
 	];
+
 }
 
 $px7 = new DolGraph();
@@ -553,7 +617,7 @@ if (!$mesg){
 	$tresuryChart = $px7->draw($file, $fileurl);
 }
 
-$graphiqueD = $px7->show($tresuryChart);
+ $graphiqueD = $px7->show($tresuryChart);
 
 
 
