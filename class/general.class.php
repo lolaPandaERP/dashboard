@@ -1062,40 +1062,32 @@ class General extends FactureStats
 		return $result;
 	}
 
-	public function fetchSolde($account){
+	public function fetchSolde($account, $date_start, $date_end){
 
 		$account = $account->id;
 
-		$sql = "SELECT * ";
+		$sql = "SELECT SUM(amount) as amount";
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank";
 		$sql .= "WHERE fk_account = ".$account;
+		$sql .= "AND datec BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
 		$resql = $this->db->query($sql);
 
-		$result = [];
-
-		if($resql){
-			while($obj = $this->db->fetch_object(($resql))){
-				$result[] = $obj;
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->amount;
 			}
+			$this->db->free($resql);
 		}
 		return $result;
 	}
 
 	/**
-	 * Loading NavBar Template :
-	 // TODO : on peux passer en parametre l'onglet actif
+	 * Loading NavBar Template
 	 */
 
 	public function load_navbar()
 	{
-			$html = '';
-			$tab1 = DOL_URL_ROOT.'/custom/tab/global/overview.php?mode=customer';
-			$tab2 = DOL_URL_ROOT.'/custom/tab/global/encoursCF.php';
-			$tab3 = DOL_URL_ROOT.'/custom/tab/global/treso_previ.php';
-			$tab4 = DOL_URL_ROOT.'/custom/tab/global/netProduce.php';
-
-			$html .= "\n";
-
 			$path = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 			$current = basename($path);
 		?>
@@ -1136,7 +1128,7 @@ class General extends FactureStats
 			'Décembre',
 		];
 
-		if ($month >= 1 AND $month <= 12) return $listMonth[$month - 1];
+		if ($month >= 1 AND $month <= 12) return $listMonth[$month];
 		else return 'Mois inconnu';
 	}
 
@@ -1150,28 +1142,6 @@ class General extends FactureStats
 		$sql = "SELECT SUM(amount) as amount";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "bank";
 		$sql .= " WHERE fk_account = " . $ret->rowid;
-		$resql = $this->db->query($sql);
-
-		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$result = $obj->amount;
-			}
-			$this->db->free($resql);
-		}
-		return $result;
-	}
-
-	/**
-	 * Retourne le solde du compte sur le mois dernier (tresoreire m-1) (débit)
-	 */
-	public function fetchSoldeOnLastMonth($firstDayLastMonth, $lastDayLastMonth){
-
-		// $sql = "SELECT SUM(amount) as amount";
-		// $sql .= " FROM " . MAIN_DB_PREFIX . "bank";
-		// $sql .= "WHERE datec BETWEEN '".$firstDayLastMonth."' AND '".$lastDayLastMonth."' ";
-		// $sql .= "WHERE dateo BETWEEN \"2022-04-01\" AND \"2022-04-31\";";
-
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
@@ -1403,26 +1373,94 @@ class General extends FactureStats
 		return $result;
 	 }
 
-	 //retourne toutes les factures (hors brouillon) sur l'exercice fiscal
+	 //retourne toutes les factures standard impayée (hors brouillon) sur l'exercice fiscal
 	public function turnover($startfiscalyear, $lastDayYear){
 		global $db, $conf;
 
 		$sql = "SELECT SUM(total_ht) as total_ht ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $startfiscalyear . "' AND '" . $lastDayYear . "' ";
-		$sql .= "AND fk_statut != 0 AND type = 0 OR type = 2";
+		$sql .= "AND fk_statut != 0 "; // not draft
+		$sql .= "AND type = 0 "; // standard invoice
+
 		$resql = $db->query($sql);
 
 		if ($resql) {
 			if ($db->num_rows($resql)) {
 				$obj = $db->fetch_object($resql);
-				$result = $obj->total_ht;
+				$standard_invoice = $obj->total_ht;
 			}
 			$db->free($resql);
 		}
-		return $result;
+		return $standard_invoice;
 	 }
 
+
+	 public function avoir($startfiscalyear, $lastDayYear, $paye){
+		global $db, $conf;
+
+		$sql = "SELECT SUM(total_ht) as total_ht ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE datef BETWEEN '" . $startfiscalyear . "' AND '" . $lastDayYear . "' ";
+		$sql .= "AND fk_statut != 0 ";
+		$sql .= "AND type = 2 "; // avoir
+
+		$resql = $db->query($sql);
+
+		if ($resql) {
+			if ($db->num_rows($resql)) {
+				$obj = $db->fetch_object($resql);
+				$avoir = $obj->total_ht;
+			}
+			$db->free($resql);
+		}
+		return $avoir;
+	 }
+
+
+	 // retourne les factures standard impayées ou payées
+	 public function allInvoice($startfiscalyear, $lastDayYear, $paye = ''){
+		global $db;
+
+		$sql = "SELECT SUM(total_ht) as total_ht ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE datef BETWEEN '" . $startfiscalyear . "' AND '" . $lastDayYear . "' ";
+		$sql .= "AND fk_statut != 0 "; // not draft
+		$sql .= "AND paye = ".$paye." AND type = 0"; // paid or unpaid
+
+		$resql = $db->query($sql);
+
+		if ($resql) {
+			if ($db->num_rows($resql)) {
+				$obj = $db->fetch_object($resql);
+				$standard_invoices = $obj->total_ht;
+			}
+			$db->free($resql);
+		}
+		return $standard_invoices;
+	 }
+
+	 public function allDeposit($startfiscalyear, $lastDayYear, $paye = ''){
+		global $db;
+
+		$sql = "SELECT SUM(total_ht) as total_ht ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE datef BETWEEN '" . $startfiscalyear . "' AND '" . $lastDayYear . "' ";
+		$sql .= "AND fk_statut != 0 ";
+		$sql .= "AND type = 2 "; // avoir
+		$sql .= "AND paye = ".$paye;
+
+		$resql = $db->query($sql);
+
+		if ($resql) {
+			if ($db->num_rows($resql)) {
+				$obj = $db->fetch_object($resql);
+				$avoir = $obj->total_ht;
+			}
+			$db->free($resql);
+		}
+		return $avoir;
+	 }
 
 	 // return all unpaid invoice customer
 	 public function nbCustomerOutstanding($firstDayCurrentMonth, $lastDayCurrentMonth){
@@ -1448,18 +1486,20 @@ class General extends FactureStats
 	// return all invoices on n years (without draft statut)
 	public function fetchCA($firstDayYear, $lastDayYear){
 
-		$sql = "SELECT * ";
+		$sql = "SELECT SUM(total_ht) as total_ht ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-		$sql .= " WHERE fk_statut != 0 ";
-		$sql .= " AND datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+		$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+		$sql .= " AND fk_statut != 0";
+		$sql .= " AND type = 0 ";
 
 		$resql = $this->db->query($sql);
 
-		$result = [];
-		if($resql){
-			while($obj = $this->db->fetch_object(($resql))){
-				$result[] = $obj;
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->total_ht;
 			}
+			$this->db->free($resql);
 		}
 		return $result;
  	}
@@ -1737,40 +1777,22 @@ class General extends FactureStats
 
 	public function grossMargin($firstDayYear, $lastDayYear){
 
-		$sql = "SELECT * ";
+		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
 		$sql .= " WHERE date_commande BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
 		$sql .= " AND fk_statut =1";
 		$resql = $this->db->query($sql);
 
-		$result = [];
-		if($resql){
-			while($obj = $this->db->fetch_object(($resql))){
-				$result[] = $obj;
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->total_ht;
 			}
+			$this->db->free($resql);
 		}
 		return $result;
 	}
 
-
-
-	public function grossMarginOnYear($firstDayYear, $lastDayYear){
-
-			$sql = "SELECT SUM(total_ht) as total_ht";
-			$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
-			$sql .= " WHERE date_commande BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-			$sql .= " AND fk_statut =1";
-			$resql = $this->db->query($sql);
-
-			if ($resql) {
-				if ($this->db->num_rows($resql)) {
-					$obj = $this->db->fetch_object($resql);
-					$result = $obj->total_ht;
-				}
-				$this->db->free($resql);
-			}
-			return $result;
-	}
 
 	public function grossMarginOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth){
 
