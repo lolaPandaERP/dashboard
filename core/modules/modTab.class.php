@@ -291,7 +291,7 @@ class modTab extends DolibarrModules
 			'titre'=>'Dashboard',
 			'mainmenu'=>'tab',
 			'leftmenu'=>'',
-			'url'=>'/tab/global/overview.php?mode=customer',
+			'url'=>'/tab/global/overview.php?mode=customer&idmenu=661&mainmenu=tab&leftmenu=',
 			'langs'=>'tab@tab', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position'=>1000 + $r,
 			'enabled'=>'$conf->tab->enabled', // Define condition to show or hide menu entry. Use '$conf->sav->enabled' if entry must be visible if module is enabled.
