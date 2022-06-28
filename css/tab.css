@@ -1,7 +1,7 @@
 /* Font */ 
 @import url('https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet');
 
-/* Design */
+/* Responsive Design */
 
 @media (min-width: 300px) {
 	.card-block {
