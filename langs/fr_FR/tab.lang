@@ -30,7 +30,7 @@ Settings = Réglages
 TabSetupPage = Page de configuration du module Dashboard
 MARGIN_PRODUCED = Marge restant à produire
 FORECAST_MARGIN = Marge brut prévisionnelle
-START_FISCAL_YEAR = Début d'exercice
+START_FISCAL_YEAR = Début d'exercice (Année-Mois-Jour)
 START_FISCAL_LAST_YEAR = Début d'exercice (année précédente)
 
 #

@@ -26,7 +26,7 @@ ModuleTabDesc = Tableau de bord interne pour visualiser rapidement ses chiffres 
 # Admin page
 #
 TabSetup = Tab setup
-Settings = Settings
+Settings = Réglages
 TabSetupPage = Tab setup page
 TAB_MYPARAM1 = My param 1
 TAB_MYPARAM1Tooltip = My param 1 tooltip

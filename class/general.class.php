@@ -1462,27 +1462,6 @@ class General extends FactureStats
 		return $avoir;
 	 }
 
-	 // return all unpaid invoice customer
-	 public function nbCustomerOutstanding($firstDayCurrentMonth, $lastDayCurrentMonth){
-		global $db;
-
-		$sql = "SELECT * FROM " . MAIN_DB_PREFIX . "facture";
-		$sql .= "WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
-		$sql .= "AND fk_statut != 0";
-		$sql .= "AND paye = 0";
-		$resql = $db->query($sql);
-
-		if ($resql) {
-			if ($db->num_rows($resql)) {
-				$obj = $db->fetch_object($resql);
-				$result = $obj;
-			}
-			$db->free($resql);
-		}
-		return $result;
-	}
-
-
 	// return all invoices on n years (without draft statut)
 	public function fetchCA($firstDayYear, $lastDayYear){
 
@@ -1510,45 +1489,43 @@ class General extends FactureStats
 			global $db;
 
 		 	// Encours total sur l'annee
-			$sql = "SELECT SUM(total_ht) as total_ht";
+			$sql = "SELECT * ";
 			$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 			$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
 			$sql .= " AND paye = 0";
 			$sql .= " AND fk_statut != 0 ";
 
 			$resql = $this->db->query($sql);
+			$result = [];
 
-			if ($resql) {
-				if ($db->num_rows($resql)) {
-					$obj = $db->fetch_object($resql);
-					$result = $obj->total_ht;
+			if($resql){
+				while($obj = $this->db->fetch_object(($resql))){
+					$result[] = $obj->total_ht;
 				}
-				$db->free($resql);
 			}
 			return $result;
 	 }
 
 
 	 // Fetch all unpaid customer invoices whose due date has passed
-	public function fetchCustomerBillExceed(){
+	public function fetchCustomerBillExceed($date){
 		global $db;
 
-		$day = date('Y-m-d');
-		$sql = "SELECT SUM(total_ttc) as total_ttc FROM ".MAIN_DB_PREFIX."facture";
-		$sql .= " WHERE date_lim_reglement < \"$day\" ";
+		$sql = "SELECT * FROM ".MAIN_DB_PREFIX."facture";
+		$sql .= " WHERE date_lim_reglement < \"$date\" ";
 		$sql .= "AND paye = 0 ";
 		$sql .= "AND fk_statut != 0 ";
 
 		$resql = $db->query($sql);
 
-		if ($resql) {
-			if ($db->num_rows($resql)) {
-				$obj = $db->fetch_object($resql);
-				$result = $obj->total_ttc;
-			}
-			$db->free($resql);
-		}
-		return $result;
+		$result = [];
+
+	   if($resql){
+		   while($obj = $this->db->fetch_object(($resql))){
+			   $result[] = $obj->total_ttc;
+		   }
+	   }
+	   return $result;
 	}
 
 
@@ -1557,72 +1534,23 @@ class General extends FactureStats
 	 */
 
 	 /**
-	  * Return all unpaid supplier invoices on current year
+	  * Return all inpaid supplier invoice on period
 	  */
-	 public function outstandingSupplierOnYear($firstDayYear, $lastDayYear){
-
-		$sql = "SELECT SUM(total_ht) as total_ht";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-		$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-		$sql .= " AND paye=0 ";
-		$sql .= " AND fk_statut != 0 ";
-
-		$resql = $this->db->query($sql);
-
-		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$result = $obj->total_ht;
-			}
-			$this->db->free($resql);
-		}
-		return $result;
-	 }
-
-	 /**
-	  * Return all inpaid supplier invoice on current month
-	  */
-	 public function outstandingSupplierOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth){
+	 public function outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth){
 
 		// Encours fournisseur du mois courant
-	   $sql = "SELECT SUM(total_ht) as total_ht";
+	   $sql = "SELECT * ";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
 	   $sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
-	   $sql .= " AND paye = 0 ";
-	   $sql .= " AND fk_statut != 0 ";
+	   $sql .= " AND paye = 0 AND fk_statut != 0 ";
 
 	   $resql = $this->db->query($sql);
+	   $result = [];
 
-	   if ($resql) {
-		   if ($this->db->num_rows($resql)) {
-			   $obj = $this->db->fetch_object($resql);
-			   $result = $obj->total_ht;
+	   if($resql){
+		   while($obj = $this->db->fetch_object(($resql))){
+			   $result[] = $obj->total_ttc;
 		   }
-		   $this->db->free($resql);
-	   }
-	   return $result;
-	}
-
-	 /**
-	  * Return all inpaid supplier invoice on last month
-	  */
-	  public function outstandingSupplierOnLastMonth($firstDayLastMonth, $lastDayLastMonth){
-
-		// Encours fournisseur du mois courant
-	   $sql = "SELECT SUM(total_ht) as total_ht";
-	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-	   $sql .= " WHERE datef BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "'";
-	   $sql .= " AND paye=0 ";
-	   $sql .= " AND fk_statut != 0 ";
-
-	   $resql = $this->db->query($sql);
-
-	   if ($resql) {
-		   if ($this->db->num_rows($resql)) {
-			   $obj = $this->db->fetch_object($resql);
-			   $result = $obj->total_ht;
-		   }
-		   $this->db->free($resql);
 	   }
 	   return $result;
 	}
@@ -1768,6 +1696,49 @@ class General extends FactureStats
 		$resultat = ($salarys + $socialesTaxes_charges + $emprunts + $variousPaiements);
 
 		return $resultat;
+	}
+
+
+	// Retourne les factures fournisseurs réglées sur l'exercice fiscal
+	public function allSupplierPaidInvoices($firstDayYear, $lastDayYear, $paye=''){
+
+	$sql = "SELECT SUM(total_ht) as total_ht";
+	$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+	$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
+	$sql .= " AND fk_statut != 0 AND paye = ".$paye." AND type=0";
+
+	$resql = $this->db->query($sql);
+
+	if ($resql) {
+		if ($this->db->num_rows($resql)) {
+			$obj = $this->db->fetch_object($resql);
+			$result = $obj->total_ht;
+		}
+		$this->db->free($resql);
+	}
+
+	return $result;
+}
+
+	// Retourne les factures fournisseurs réglées sur l'exercice fiscal
+	public function allSupplierPaidDeposit($firstDayYear, $lastDayYear){
+
+		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
+		$sql .= " AND fk_statut != 0 AND paye = 1 AND type=2";
+
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->total_ht;
+			}
+			$this->db->free($resql);
+		}
+
+		return $result;
 	}
 
 

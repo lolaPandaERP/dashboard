@@ -98,7 +98,8 @@ if ($resql) {
 	}
 	$this->db->free($resql);
 }
-$soldeOnLastMonth = $object->fetchSoldeOnLastMonth($firstDayLastMonth, $lastDayLastMonth);
+$account = $object->getIdBankAccount();
+$soldeOnLastMonth = $object->fetchSolde($account->id, $firstDayLastMonth, $lastDayLastMonth);
 $dataInfo1 = price($result) ."\n€";
 
 $info2 = "Progression";

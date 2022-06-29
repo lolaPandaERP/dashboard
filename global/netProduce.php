@@ -56,8 +56,6 @@ if ($user->socid > 0) { // Protection if external user
 $langs->loadLangs(array("tab@tab"));
 $action = GETPOST('action', 'aZ09');
 
-
-
 /**
  * DEFINE TIME FOR REQUEST
  */
