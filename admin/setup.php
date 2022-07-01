@@ -60,7 +60,6 @@ $scandir = GETPOST('scan_dir', 'alpha');
 $type = 'myobject';
 
 $arrayofparameters = array(
-	'MARGIN_PRODUCED'=>array('css'=>'minwidth200', 'enabled'=>1),
 	'FORECAST_MARGIN'=>array('css'=>'minwidth200', 'enabled'=>1),
 	'START_FISCAL_YEAR'=>array('css'=>'minwidth200', 'enabled'=>1),
 	'START_FISCAL_LAST_YEAR'=>array('css'=>'minwidth200', 'enabled'=>1, 'help'=>'Format valide'),
