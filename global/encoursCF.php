@@ -427,7 +427,6 @@ $outCustomerExceeded = $object->fetchCustomerBillExceed($startFiscalyear, $endYe
 $total_outCustomerExceeded = array_sum($outCustomerExceeded);
 $nb_outCustomerExceeded = count($outCustomerExceeded);
 
-
 $titleItem4 = "Encours clients dépassés (".$nb_outCustomerExceeded.") ";
 
 if($total_outCustomerExceeded <= 0){
@@ -437,59 +436,112 @@ if($total_outCustomerExceeded <= 0){
 }
 
 // Datas for exceed oustanding customer and suppliers
-// $monthsArr = monthArray($langs, 1); // months
+$monthsArr = monthArray($langs, 1); // months
 
-// $file = "customerOutstandingExceed";
-// $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
-// $invoice = new Facture($db);
+$file = "customerOutstandingExceed";
+$fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
+$invoice = new Facture($db);
 
-// for($i = $i; $i <= 12; $i++){
+for($i = $i; $i <= 12; $i++){
 
-// 	$lastyear = strtotime('Last Year');
-// 	$lastyear = date($year-1);
+	$lastyear = strtotime('Last Year');
+	$lastyear = date($year-1);
 
-// 	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
-// 	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
 
-// 	// Current Year
-// 	$date_start = $year.'-'.$i.'-01';
-// 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
+	// Current Year
+	$date_start = $year.'-'.$i.'-01';
+	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-// 	// Last Year
-// 	$date_start_lastYear = $lastyear.'-'.$i.'-01';
-// 	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
+	// Last Year
+	$date_start_lastYear = $lastyear.'-'.$i.'-01';
+	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
 
-// 	$customer_outstanding_exceed = $object->fetchCustomerBillExceed($date_start, $date_end, $date);
-// 	$total_customer_outstanding_exceed = array_sum($customer_outstanding_exceed);
+	$customer_outstanding_exceed = $object->fetchCustomerBillExceed($date_start, $date_end, $date);
+	$total_customer_outstanding_exceed = array_sum($customer_outstanding_exceed);
 
-// 	if($date_start == $i ){
-// 		$total_customer_outstanding_exceed = $invoice->total_ttc;
-// 	}
+	if($date_start == $i ){
+		$total_customer_outstanding_exceed = $invoice->total_ttc;
+	}
 
-// 	$ladder = html_entity_decode($monthsArr[$i]);
+	$ladder = html_entity_decode($monthsArr[$i]);
 
-// 	$data[] = [
-// 		$ladder,
-// 		$total_customer_outstanding_exceed
-// 	];
-// }
+	$data[] = [
+		$ladder,
+		$total_customer_outstanding_exceed
+	];
+}
 
-// $px2 = new DolGraph();
-// $mesg = $px2->isGraphKo();
-// $legend = ['2022'];
+$px2 = new DolGraph();
+$mesg = $px2->isGraphKo();
+$legend = ['2022'];
 
-// if (!$mesg){
-// 	$px2->SetTitle("Evolution de la trésorerie nette");
-// 	$px2->datacolor = array(array(138,233,232));
-// 	$px2->SetData($data);
-// 	$px2->SetLegend($legend);
-// 	$px2->SetType(array('lines'));
-// 	$px2->setHeight('250');
-// 	$px2->SetWidth('500');
-// 	$total_customer_outstanding_exceedChart = $px2->draw($file, $fileurl);
-// }
+if (!$mesg){
+	$px2->SetTitle("Evolution de la trésorerie nette");
+	$px2->datacolor = array(array(138,233,232));
+	$px2->SetData($data);
+	$px2->SetLegend($legend);
+	$px2->SetType(array('lines'));
+	$px2->setHeight('250');
+	$px2->SetWidth('500');
+	$total_customer_outstanding_exceedChart = $px2->draw($file, $fileurl);
+}
 
-// $graphiqueD = $px2->show($total_customer_outstanding_exceedChart);
+$graphiqueD = $px2->show($total_customer_outstanding_exceedChart);
+$monthsArr = monthArray($langs, 1); // months
+
+$file = "customerOutstandingExceed";
+$fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
+$invoice = new Facture($db);
+
+for($i = $i; $i <= 12; $i++){
+
+	$lastyear = strtotime('Last Year');
+	$lastyear = date($year-1);
+
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
+
+	// Current Year
+	$date_start = $year.'-'.$i.'-01';
+	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
+
+	// Last Year
+	$date_start_lastYear = $lastyear.'-'.$i.'-01';
+	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
+
+	$customer_outstanding_exceed = $object->fetchCustomerBillExceed($date_start, $date_end, $date);
+	$total_customer_outstanding_exceed = array_sum($customer_outstanding_exceed);
+
+	if($date_start == $i ){
+		$total_customer_outstanding_exceed = $invoice->total_ttc;
+	}
+
+	$ladder = html_entity_decode($monthsArr[$i]);
+
+	$data[] = [
+		$ladder,
+		$total_customer_outstanding_exceed
+	];
+}
+
+$px2 = new DolGraph();
+$mesg = $px2->isGraphKo();
+$legend = ['2022'];
+
+if (!$mesg){
+	$px2->SetTitle("Evolution de la trésorerie nette");
+	$px2->datacolor = array(array(138,233,232));
+	$px2->SetData($data);
+	$px2->SetLegend($legend);
+	$px2->SetType(array('lines'));
+	$px2->setHeight('250');
+	$px2->SetWidth('500');
+	$total_supplier_exceedChart = $px2->draw($file, $fileurl);
+}
+
+$graphiqueE = $px2->show($total_supplier_exceedChart);
 
 
 
