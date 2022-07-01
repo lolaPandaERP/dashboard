@@ -1044,12 +1044,19 @@ class General extends FactureStats
 		$sql = "SELECT rowid";
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
 		$resql = $this->db->query($sql);
-		$result = $this->db->fetch_object($resql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->rowid;
+			}
+			$this->db->free($resql);
+		}
 		return $result;
 	}
 
 	public function fetchAllBankAccount(){
-		$sql = "SELECT * ";
+		$sql = "SELECT rowid as rowid ";
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
 		$resql = $this->db->query($sql);
 
@@ -1066,18 +1073,17 @@ class General extends FactureStats
 
 		$account = $account->id;
 
-		$sql = "SELECT SUM(amount) as amount";
+		$sql = "SELECT * ";
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank";
 		$sql .= "WHERE fk_account = ".$account;
 		$sql .= "AND datec BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
 		$resql = $this->db->query($sql);
 
-		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$result = $obj->amount;
+		$result = [];
+		if($resql){
+			while($obj = $this->db->fetch_object(($resql))){
+				$result[] = $obj;
 			}
-			$this->db->free($resql);
 		}
 		return $result;
 	}
@@ -1135,21 +1141,21 @@ class General extends FactureStats
 	/**
 	 * Return le cumul des montants du compte courant sur l'année
 	 */
-	public function fetchSoldeOnYear(){
+	public function fetchSoldeOnYear($firstDayYear, $lastDayYear, $account){
 
-		$ret = $this->getIdBankAccount();
 
-		$sql = "SELECT SUM(amount) as amount";
+		$sql = "SELECT * ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "bank";
-		$sql .= " WHERE fk_account = " . $ret->rowid;
+		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+		$sql .= "AND fk_account = 4";
 		$resql = $this->db->query($sql);
 
-		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$result = $obj->amount;
+		$result = [];
+
+		if($resql){
+			while($obj = $this->db->fetch_object(($resql))){
+				$result[] = $obj->amount;
 			}
-			$this->db->free($resql);
 		}
 		return $result;
 	}
@@ -1231,13 +1237,13 @@ class General extends FactureStats
 	}
 
 
-	function fetchValidatedOrderOnCurrentYears($firstDayYear, $lastDayYear){
+	function fetchValidatedOrder($firstDayYear, $lastDayYear){
 
 		global $db;
 		// request
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
-		$sql .= " WHERE date_creation BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+		$sql .= " WHERE date_commande BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
 		$sql .= "AND fk_statut = 1";
 		$resql = $db->query($sql);
 
@@ -1270,68 +1276,7 @@ class General extends FactureStats
 		return $result;
 	}
 
-	function fetchDeliveredOrderOnLastMonth($firstDayLastMonth, $lastDayLastMonth){
-
-		global $db;
-		// request
-		$sql = "SELECT SUM(total_ht) as total_ht";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
-		$sql .= " WHERE date_commande BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "' ";
-		$sql .= "AND fk_statut = 3";
-		$resql = $db->query($sql);
-
-		if ($resql) {
-			if ($db->num_rows($resql)) {
-				$obj = $db->fetch_object($resql);
-				$result = $obj->total_ht;
-			}
-			$db->free($resql);
-		}
-
-		return $result;
-	}
-
-
-	function fetchDeliveredOrderOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth){
-
-		global $db;
-		// request
-		$sql = "SELECT SUM(total_ht) as total_ht";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
-		$sql .= " WHERE date_commande BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
-		$sql .= "AND fk_statut = 3";
-		$resql = $db->query($sql);
-
-		if ($resql) {
-			if ($db->num_rows($resql)) {
-				$obj = $db->fetch_object($resql);
-				$result = $obj->total_ht;
-			}
-			$db->free($resql);
-		}
-		return $result;
-	}
-
-	function fetchNbDeliveryOrderByYear($firstDayYear, $lastDayYear){
-
-		global $db;
-		// request
-		$sql = "SELECT * ";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
-		$sql .= " WHERE date_commande BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-		$sql .= "AND fk_statut = 3";
-		$resql = $db->query($sql);
-		$result = [];
-		if($resql){
-			while($obj = $db->fetch_object(($resql))){
-				$result[] = $obj;
-			}
-		}
-
-		return $result;
-	}
-
-	function fetchNbDeliveryOrder($firstDayLastMonth, $lastDayLastMonth){
+	function fetchDeliveredOrder($firstDayLastMonth, $lastDayLastMonth){
 
 		global $db;
 		// request
@@ -1340,15 +1285,16 @@ class General extends FactureStats
 		$sql .= " WHERE date_commande BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "' ";
 		$sql .= "AND fk_statut = 3";
 		$resql = $db->query($sql);
+
 		$result = [];
+
 		if($resql){
 			while($obj = $db->fetch_object(($resql))){
-				$result[] = $obj;
+				$result[] = $obj->total_ht;
 			}
 		}
 		return $result;
 	}
-
 
 
 	/**
@@ -1751,7 +1697,7 @@ class General extends FactureStats
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
 		$sql .= " WHERE date_commande BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-		$sql .= " AND fk_statut =1";
+		$sql .= " AND fk_statut !=0";
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
@@ -1763,25 +1709,6 @@ class General extends FactureStats
 		}
 		return $result;
 	}
-
-
-	public function grossMarginOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth){
-
-		$sql = "SELECT SUM(total_ht) as total_ht";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
-		$sql .= " WHERE date_commande BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "' ";
-		$sql .= " AND fk_statut =1";
-		$resql = $this->db->query($sql);
-
-		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$result = $obj->total_ht;
-			}
-			$this->db->free($resql);
-		}
-		return $result;
- 	}
 
 	 public function monthlyCharges($firstDayCurrentMonth, $lastDayCurrentMonth){
 
