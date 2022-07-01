@@ -42,6 +42,7 @@ if (!$res) die("Include of main fails");
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/tab/class/general.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/dolgraph.class.php';
 
 // Security check
 if (empty($conf->tab->enabled)) accessforbidden('Module not enabled');
@@ -49,18 +50,40 @@ $socid = 0;
 if ($user->socid > 0) { // Protection if external user
 	accessforbidden();
 }
+if(empty($conf->global->START_FISCAL_YEAR) || empty($conf->global->START_FISCAL_LAST_YEAR) ){
+	accessforbidden('Vous devez obligatoirement renseigner la date de début de l\'exercice fiscal dans la configuration du module');
+} else {
+	$startFiscalyear = $conf->global->START_FISCAL_YEAR;
+	$startFiscalLastyear = $conf->global->START_FISCAL_LAST_YEAR;
+}
 
-// Load translation files required by the page
-$langs->loadLangs(array("tab@tab"));
-$action = GETPOST('action', 'aZ09');
-$month = date('m');
-$year = date('Y');
-$day = date('Y-m-d');
+// fetch current bank account
 $object = new General($db);
+$ret = $object->getIdBankAccount();
 
-// First day and last day of month on n years
+$datetime = dol_now();
+$year = dol_print_date($datetime, "%Y");
+$month = dol_print_date($datetime, "%m");
+$day = dol_print_date($datetime, "%d");
+
+// Calcul for last day in current year according to the beginning of the fiscal year
+$duree = 1;
+
+// Transform date in timestamp
+$TimestampCurrentYear = strtotime($startFiscalyear);
+$TimestampCurrentLastYear = strtotime($startFiscalLastyear);
+
+// calcul the end date for current and last year
+$endYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentYear));
+$endLastYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentLastYear));
+
+// First day and last day of current mounth
 $firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
 $lastDayCurrentMonth = date('Y-m-t', mktime(0, 0, 0, $month, 1, $year));
+
+// M - 1
+$firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
+$lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
 
 // First day and last day of current years
 $firstDayYear = date('Y-m-d', mktime(0, 0, 0, 1, 1, $year));
@@ -70,37 +93,50 @@ $lastDayYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year));
 $firstDayLastYear = date('Y-m-d', mktime(0, 0, 1, 1, 1, $year - 1));
 $lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
 
-// M - 1
-$firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
-$lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
+$nowyear = strftime("%Y", dol_now());
+$year = GETPOST('year') > 0 ? GETPOST('year', 'int') : $nowyear;
+$startyear = $year - (empty($conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS) ? 2 : max(1, min(10, $conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS)));
+$endyear = $year;
 
-$startFiscalyear = $conf->global->START_FISCAL_YEAR;
-$startFiscalLastyear = $conf->global->START_FISCAL_LAST_YEAR;
+
+if(!empty($conf->global->START_FISCAL_YEAR)){
+	$startMonthTimestamp = strtotime($startFiscalyear);
+	$duree = 12;
+	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
+	$monthFiscalyear = $startMonthFiscalYear;
+} else {
+	$monthFiscalyear = 1;
+}
+
 
 /**
  * TRESURY
  */
 $titleItem1 = "Trésorerie";
-$result = $object->fetchSoldeOnYear();
-$dataItem1 = price($result) ."\n€";
+
+$idBankAccount = $object->getIdBankAccount();
+$array_tresury = $object->fetchSoldeOnYear($startFiscalyear, $endYear, 3);
+$total_tresury = array_sum($array_tresury);
+
+$dataItem1 = price($account) ."\n€";
 
 $info1 = "Trésorerie M-1";
 
-$sql = "SELECT SUM(amount) as amount";
-$sql .= " FROM ".MAIN_DB_PREFIX."bank";
-$sql .= " WHERE dateo BETWEEN '".$firstDayLastMonth."' AND '".$lastDayLastMonth.'" ';
-$resql = $db->query($sql);
+// $sql = "SELECT SUM(amount) as amount";
+// $sql .= " FROM ".MAIN_DB_PREFIX."bank";
+// $sql .= " WHERE dateo BETWEEN '".$firstDayLastMonth."' AND '".$lastDayLastMonth.'" ';
+// $resql = $db->query($sql);
 
-if ($resql) {
-	if ($this->db->num_rows($resql)) {
-		$obj = $this->db->fetch_object($resql);
-		$result = $obj->amount;
-	}
-	$this->db->free($resql);
-}
-$account = $object->getIdBankAccount();
-$soldeOnLastMonth = $object->fetchSolde($account->id, $firstDayLastMonth, $lastDayLastMonth);
-$dataInfo1 = price($result) ."\n€";
+// if ($resql) {
+// 	if ($this->db->num_rows($resql)) {
+// 		$obj = $this->db->fetch_object($resql);
+// 		$result = $obj->amount;
+// 	}
+// 	$this->db->free($resql);
+// }
+// $account = $object->getIdBankAccount();
+// $soldeOnLastMonth = $object->fetchSolde($firstDayLastMonth, $lastDayLastMonth, 3);
+// $dataInfo1 = price($result) ."\n€";
 
 $info2 = "Progression";
 
@@ -114,14 +150,62 @@ $firstPop_data2 = "Cumul des montants du compte courant sur l'exercice précéde
 $firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100) ";
 
 
+$monthsArr = monthArray($langs, 1); // months
+
+$file = "tresuryChart";
+$fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
+$acc = new Account($db);
+
+for($i = $monthFiscalyear; $i <= 12 ; $i++){
+
+ 	strtotime('Last Year');
+	$lastyear = date($year-1);
+
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+
+	// Start and end of each month on current years
+	$date_start = $year.'-'.$i.'-01';
+	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
+
+	$solde = $object->fetchSolde($acc->id, $date_start, $date_end); // current
+	$total_solde = array_sum($solde); // current
+
+	if(date('n', $date_start) == $i){
+		$total_solde += $acc->amount;
+	}
+
+	$data[] = [
+		html_entity_decode($monthsArr[$i]),
+		$total_solde
+	];
+
+}
+
+$px = new DolGraph();
+$mesg = $px->isGraphKo();
+$legend = ['Année N-1', 'Année N'];
+
+if (!$mesg){
+	$px->SetTitle("Evolution du chiffre d'affaires");
+	$px->datacolor = array(array(255,206,126), array(138,233,232));
+	$px->SetData($data);
+	$px->SetLegend($legend);
+	$px->SetType(array('lines'));
+	$px->setHeight('250');
+	$px->SetWidth('500');
+	$tresuryChart = $px->draw($file, $fileurl);
+}
+$graphiqueA = $px->show($tresuryChart);
+
+
 
 // Total charge of current month
 $info3 = "Charges fixes";
-$staticExpenses = $object->fetchStaticExpenses($startFiscalyear, $lastDayYear);
+$staticExpenses = $object->fetchStaticExpenses($startFiscalyear, $endYear);
 $dataInfo3 = price($staticExpenses) . "\n€";
 
 $info4 = "Charges variables";
-$variablesExpenses = $object->fetchVariablesExpenses($startFiscalyear, $lastDayYear);
+$variablesExpenses = $object->fetchVariablesExpenses($startFiscalyear, $endYear);
 $dataInfo4 = price($variablesExpenses) . "\n€";
 
 $titleItem2 = "Charge totale";
@@ -137,6 +221,53 @@ $secondPop_info3 = $info4;
 $secondPop_data1 = "Charges fixes + charges variables";
 $secondPop_data2 = "Additions des dépenses fixes : salaire + charges sociales et fiscales + emprunts (crédits) + paiements divers";
 $secondPop_data3 = "Additions des dépenses variables : total (ht) des factures fournisseurs (hors brouillon) + le montant total de TVA sur l'exercice en cours ";
+
+/**
+ * GRAPH 2
+ */
+$file = "ChargesGraph";
+$fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
+$data = [];
+$supplier_invoice = new FactureFournisseur($db);
+
+for($i = $monthFiscalyear; $i <= 12 ; $i++){
+
+ 	strtotime('Last Year');
+	$lastyear = date($year-1);
+
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+
+	// Start and end of each month on current years
+	$date_start = $year.'-'.$i.'-01';
+	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
+
+	$staticExpenses += $object->fetchStaticExpenses($date_start, $date_end); // static
+	$variableExpenses += $object->fetchVariablesExpenses($date_start, $date_end); // variables
+
+	$total_charges = $staticExpenses + $variableExpenses;
+
+	$data[] = [
+		html_entity_decode($monthsArr[$i]),
+		$total_charges,
+	];
+
+}
+
+$px2 = new DolGraph();
+$mesg = $px2->isGraphKo();
+$legend = ['Année N'];
+
+if (!$mesg){
+	$px2->SetTitle("Evolution du chiffre d'affaires");
+	$px2->datacolor = array(array(255,206,126), array(138,233,232));
+	$px2->SetData($data);
+	$px2->SetLegend($legend);
+	$px2->SetType(array('lines'));
+	$px2->setHeight('250');
+	$px2->SetWidth('500');
+	$chargeGraph = $px2->draw($file, $fileurl);
+}
+$graphiqueB = $px2->show($chargeGraph);
 
 
 
@@ -184,9 +315,11 @@ $nbAccount = count($accounts);
 
 // total factures impayées et commandes clients validées sur l'année
 $info7 = "Clients à encaisser";
-$customer_validated_orders = $object->fetchValidatedOrderOnCurrentYears($startFiscalyear, $lastDayYear); // unpaid invoices
-$customer_validated_invoices = $object->outstandingBill($startFiscalyear, $lastDayYear); // validted orders
-$customerToCash = ($customer_validated_invoices + $customer_validated_orders);
+$customer_validated_orders = $object->fetchValidatedOrder($startFiscalyear, $endYear); // unpaid invoices
+$customer_validated_invoices = $object->outstandingBill($startFiscalyear, $endYear); // validated orders
+$total_customer_validated_invoices = array_sum($customer_validated_invoices);
+
+$customerToCash = ($total_customer_validated_invoices + $customer_validated_orders);
 
 $dataInfo7 = price($customerToCash) . "\n€";
 
@@ -205,10 +338,12 @@ $dataInfo8 = price($stayBank) . "\n€";
  * SUPPLIER TO PAID
  */
 $info10 = "Fournisseurs à payer"; // total factures F impayées et commandes fournisseurs validées
-$supplier_unpaid_invoices = $object->outstandingSupplierOnYear($startFiscalyear, $lastDayYear);
-$supplier_ordered_order = $object->supplier_ordered_orders($startFiscalyear, $lastDayYear);
+$supplier_unpaid_invoices = $object->outstandingSupplier($startFiscalyear, $endYear);
+$total_supplier_unpaid_invoices = array_sum($supplier_unpaid_invoices);
 
-$supplierToPaid = $supplier_unpaid_invoices + $supplier_ordered_order;
+$supplier_ordered_order = $object->supplier_ordered_orders($startFiscalyear, $endYear);
+
+$supplierToPaid = $total_supplier_unpaid_invoices + $supplier_ordered_order;
 
 $dataInfo10 = price($supplierToPaid) . "\n€";
 
@@ -304,8 +439,7 @@ $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes
 						<?php print $info10 ?> : <h4 class="center"><?php print $dataInfo10 ?></h4>
 					</div>
 				</div>
-
-</div>
+			</div>
 
 
 <?php
