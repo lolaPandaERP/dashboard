@@ -44,6 +44,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/tab/class/general.class.php';
 require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/dolgraph.class.php';
 
 // Security check
 if (empty($conf->tab->enabled)) accessforbidden('Module not enabled');
@@ -51,22 +52,40 @@ $socid = 0;
 if ($user->socid > 0) { // Protection if external user
 	accessforbidden();
 }
+if(empty($conf->global->START_FISCAL_YEAR) || empty($conf->global->START_FISCAL_LAST_YEAR) ){
+	accessforbidden('Vous devez obligatoirement renseigner la date de début de l\'exercice fiscal dans la configuration du module');
+} else {
+	$startFiscalyear = $conf->global->START_FISCAL_YEAR;
+	$startFiscalLastyear = $conf->global->START_FISCAL_LAST_YEAR;
+}
 
-// Load translation files required by the page
-$langs->loadLangs(array("tab@tab"));
-$action = GETPOST('action', 'aZ09');
+// fetch current bank account
+$object = new General($db);
+$ret = $object->getIdBankAccount();
 
-/**
- * DEFINE TIME FOR REQUEST
- */
+$datetime = dol_now();
+$year = dol_print_date($datetime, "%Y");
+$month = dol_print_date($datetime, "%m");
+$day = dol_print_date($datetime, "%d");
 
-$month = date('m');
-$year = date('Y');
-$day = date('Y-m-d');
+// Calcul for last day in current year according to the beginning of the fiscal year
+$duree = 1;
 
-// First day and last day of month on n years
+// Transform date in timestamp
+$TimestampCurrentYear = strtotime($startFiscalyear);
+$TimestampCurrentLastYear = strtotime($startFiscalLastyear);
+
+// calcul the end date for current and last year
+$endYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentYear));
+$endLastYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentLastYear));
+
+// First day and last day of current mounth
 $firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
 $lastDayCurrentMonth = date('Y-m-t', mktime(0, 0, 0, $month, 1, $year));
+
+// M - 1
+$firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
+$lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
 
 // First day and last day of current years
 $firstDayYear = date('Y-m-d', mktime(0, 0, 0, 1, 1, $year));
@@ -76,60 +95,122 @@ $lastDayYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year));
 $firstDayLastYear = date('Y-m-d', mktime(0, 0, 1, 1, 1, $year - 1));
 $lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
 
-// M - 1
-$firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
-$lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
+$nowyear = strftime("%Y", dol_now());
+$year = GETPOST('year') > 0 ? GETPOST('year', 'int') : $nowyear;
+$startyear = $year - (empty($conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS) ? 2 : max(1, min(10, $conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS)));
+$endyear = $year;
 
+
+if(!empty($conf->global->START_FISCAL_YEAR)){
+	$startMonthTimestamp = strtotime($startFiscalyear);
+	$duree = 12;
+	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
+	$monthFiscalyear = $startMonthFiscalYear;
+} else {
+	$monthFiscalyear = 1;
+}
 
 /**
  * PRODUCTION EN COURS
  */
 $titleItem1 = "Productions en cours";
 $object = new General($db);
-$result = $object->fetchValidatedOrderOnCurrentYears($firstDayYear, $lastDayYear);
-$dataItem1 = price($result). "\n€";
+$validated_order_fiscalYear = $object->fetchValidatedOrder($startFiscalyear, $endYear);
+$dataItem1 = price($validated_order_fiscalYear). "\n€";
 
+// total amount of delivery order on current month
+$deliveryOrderOnCurrentMonth = $object->fetchDeliveredOrder($firstDayCurrentMonth, $lastDayCurrentMonth);
+$total_deliveryOrderOnCurrentMonth = array_sum($deliveryOrderOnCurrentMonth);
 
-// commande m- 1
-$info1 = "Montant des commandes livrées du mois dernier";
-$deliveryOrderOnLastMonth = $object->fetchDeliveredOrderOnLastMonth($firstDayLastMonth, $lastDayLastMonth);
-$dataInfo1 = price($deliveryOrderOnLastMonth) . "\n€";
+// total amount of delivery order on last month
+$info1 = "Montant des productions M-1";
+$deliveryOrderOnLastMonth = $object->fetchDeliveredOrder($firstDayLastMonth, $lastDayLastMonth);
+$total_deliveryOrderOnLastMonth = array_sum($deliveryOrderOnLastMonth);
+$dataInfo1 = price($total_deliveryOrderOnLastMonth) . "\n€";
 
 // Progression
 $info2 = "Progression";
-$deliveryOrderOnCurrentMonth = $object->fetchDeliveredOrderOnCurrentMonth($firstDayCurrentMonth, $lastDayCurrentMonth);
 
-$result = $object->progress($deliveryOrderOnCurrentMonth, $deliveryOrderOnLastMonth);
+$result = $object->progress($total_deliveryOrderOnCurrentMonth, $total_deliveryOrderOnLastMonth);
 $dataInfo2 = $result  ."\n%";
-
 
 // Infos popup for production in progress
 $firstPop_info1 = $titleItem1;
 $firstPop_info2 = $info1;
 $firstPop_info3 = $info2;
 
-$firstPop_data1 = "Somme du montant (HT) des commandes clients validées sur l'année en cours";
-$firstPop_data2 = "Somme du montant (HT) des commandes clients validées du mois précédent";
-$firstPop_data3 = "Progression du montant des commandes clients validées du mois par rapport au mois dernier";
+$firstPop_data1 = "Somme du montant total (HT) des commandes clients validées sur l'exercice fiscal en cours : <strong>(".price($validated_order_fiscalYear)."\n€)</strong>";
+$firstPop_data2 = "Somme du montant total (HT) des commandes clients livrées du mois précédent";
+$firstPop_data3 = "Progression du montant des commandes clients livrées du mois(VA) par rapport au mois dernier(VD) </br>
+				  Formule : (( VA - VD ) / VD ) x 100 <br> Soit <strong>( ".price($total_deliveryOrderOnLastMonth)." - ".price($total_deliveryOrderOnCurrentMonth)." ) / ".price($total_deliveryOrderOnCurrentMonth).") x 100 </strong>";
 
 
 /**
  * NOMBRE DE PRODUCTION EN COURS
  */
 $titleItem2 = "Nb de productions en cours";
-$result1 = $object->fetchNbDeliveryOrderByYear($firstDayYear, $lastDayYear);
+$result1 = $object->fetchDeliveredOrder($startFiscalyear, $endYear);
 $nbDeliveryOrderByYear = count($result1);
 
 $dataItem2 = $nbDeliveryOrderByYear;
 
-// nb de commande livrées le mois dernier
+
+/**
+ * GRAPH 1
+ */
+
+$monthsArr = monthArray($langs, 1); // months
+
+$file = "evolutionValidatedCustomerOrder";
+$fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
+$commande = new Commande($db);
+
+for($i = $monthFiscalyear; $i <= 12 ; $i++){
+
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+
+	// Start and end of each month on current years
+	$date_start = $year.'-'.$i.'-01';
+	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
+
+	$total_customer_order_validated += $object->fetchValidatedOrder($date_start, $date_end); // current
+
+	if(date('n', $date_start) == $i){
+		$total_customer_order_validated += $commande->total_ht;
+	}
+
+	$data[] = [
+		html_entity_decode($monthsArr[$i]),
+		$total_customer_order_validated,
+	];
+}
+
+$px1 = new DolGraph();
+$mesg = $px1->isGraphKo();
+$legend = ['Année N'];
+
+if (!$mesg){
+	$px1->SetTitle("Evolution du montant des commandes clients validées");
+	$px1->datacolor = array(array(138,233,232));
+	$px1->SetData($data);
+	$px1->SetLegend($legend);
+	$px1->SetType(array('lines'));
+	$px1->setHeight('250');
+	$px1->SetWidth('500');
+	$amount_production_chart = $px1->draw($file, $fileurl);
+}
+$graphiqueA = $px1->show($amount_production_chart);
+
+
+// number of validated orders on last momnth
 $info3 = "Nb des productions du mois dernier";
-$result2 = $object->fetchNbDeliveryOrder($firstDayLastMonth, $lastDayLastMonth);
+$result2 = $object->fetchDeliveredOrder($firstDayLastMonth, $lastDayLastMonth);
 $nbDeliveryOrderByLastMonth = count($result2);
+
 $dataInfo3 = $nbDeliveryOrderByLastMonth;
 
 // sur le mois courant
-$result3 = $object->fetchNbDeliveryOrder($firstDayCurrentMonth, $lastDayCurrentMonth);
+$result3 = $object->fetchDeliveredOrder($firstDayCurrentMonth, $lastDayCurrentMonth);
 $nbDeliveryOrderByCurrentMonth = count($result3);
 $dataInfo4 = $nbDeliveryOrderByCurrentMonth;
 
@@ -138,16 +219,64 @@ $result = $object->progress($nbDeliveryOrderByCurrentMonth, $nbDeliveryOrderByLa
 $dataInfo4 = $result . "\n%";
 
 // Info popup for number of production in progress
-
 $secondPop_info1 = $titleItem2;
 $secondPop_info2 = $info3;
 $secondPop_info3 = $info4;
 
-$secondPop_data1 = "Somme du nombre (HT) des commandes clients validées sur l'année en cours";
-$secondPop_data2 = "Somme du nombre (HT) des commandes clients validées du mois précédent";
-$secondPop_data3 = "Progression du nombre de commandes clients validées du mois par rapport au mois dernier";
+$secondPop_data1 = "Nb de commandes clients validées sur l'exercice en cours <strong>(".$nbDeliveryOrderByYear.")</strong>";
+$secondPop_data2 = "Nb de commandes clients livrées du mois précédent <strong>(".$nbDeliveryOrderByLastMonth.")</strong>";
+$secondPop_data3 = "Progression du nombre de commandes clients livrées du mois courant par rapport au mois précédent : </br>
+					<strong> Formule : (( VA - VD ) / VD ) x 100 </strong> </br>
+					Où <strong> (( ".$nbDeliveryOrderByCurrentMonth." - ".$nbDeliveryOrderByLastMonth." ) / ".$nbDeliveryOrderByLastMonth." ) * 100 </strong>";
 
-// todo : creation d'une fonction javascript pour coloriser l'evolution (%)
+/**
+ * GRAPH 2
+ */
+
+$monthsArr = monthArray($langs, 1); // months
+
+$file = "evolutionNbValidatedCustomerOrder";
+$fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
+$commande = new Commande($db);
+$data = []; // reset datas
+for($i = $monthFiscalyear; $i <= 12 ; $i++){
+
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+
+	// Start and end of each month on current years
+	$date_start = $year.'-'.$i.'-01';
+	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
+
+	$array_delivery_customer_orders = $object->fetchDeliveredOrder($date_start, $date_end);
+	$nb_delivery_customer_orders = count($array_delivery_customer_orders);
+
+	if(date('n', $date_start) == $i){
+		$nb_delivery_customer_orders += $commande->total_ht;
+	}
+
+	$data[] = [
+		html_entity_decode($monthsArr[$i]),
+		$nb_delivery_customer_orders,
+	];
+}
+
+$px2 = new DolGraph();
+$mesg = $px2->isGraphKo();
+$legend = ['Année N'];
+
+if (!$mesg){
+	$px2->SetTitle("Evolution du nb de commandes clients validées");
+	$px2->datacolor = array(array(138,233,232));
+	$px2->SetData($data);
+	$px2->SetLegend($legend);
+	$px2->SetType(array('lines'));
+	$px2->setHeight('250');
+	$px2->SetWidth('500');
+	$nb_production_chart = $px2->draw($file, $fileurl);
+}
+
+$graphiqueB = $px2->show($nb_production_chart);
+
 
 /*
  * Actions
@@ -191,12 +320,9 @@ llxHeader($head, $langs->trans("Net à produire"));
 
 print load_fiche_titre($langs->trans("Net à produire"));
 
-// Chargement du template de navigation pour l'activité "Global"
-$currentPage = $_SERVER['PHP_SELF'];
-print $object->load_navbar($currentPage);
+print $object->load_navbar();
 
 include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
-
 
 // PRODUCTION LES + PROCHES
 $titleItem1 = "<h4>Productions les + proches</h4>";
@@ -324,7 +450,7 @@ $thirdPop_data2 = "Liste des tiers pour chaques commandes validées";
 							print '<li class="list-group-item d-flex justify-content-between align-items-center">';
 							print  '<i class="fas fa-address-card"></i><a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'">'.$societe->name.'</a>';
 							print '<span class="badge badge-pill badge-primary">';
-							print '<a href="'.DOL_URL_ROOT.'/commande/card.php?id='.$commande->id.'"><span>Réf. commande :  '.$commande->ref.'</span></li>';
+							print '<a href="'.DOL_URL_ROOT.'/commande/card.php?id='.$commande->id.'"><span>Réf. commande :  '.$commande->ref.'</span></a></li>';
 							print '</ul>';
 						}
 					}
