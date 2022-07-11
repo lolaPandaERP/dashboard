@@ -51,12 +51,92 @@ if (!$res) die("Include of main fails");
 
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT . '/custom/tab/class/commercial.class.php';
+require_once DOL_DOCUMENT_ROOT . '/custom/tab/class/commercial.class.php';
 require_once DOL_DOCUMENT_ROOT . '/custom/tab/class/general.class.php';
+require_once DOL_DOCUMENT_ROOT . '/compta/bank/class/account.class.php';
+require_once DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
+require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facture.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/stats.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/dolgraph.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/bank.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
+
+global $db, $conf;
+
+// Security check
+if (empty($conf->tab->enabled)) accessforbidden('Module not enabled');
+$socid = 0;
+
+if ($user->socid > 0) { // Protection if external user
+	accessforbidden();
+}
+
+if(empty($conf->global->START_FISCAL_YEAR) || empty($conf->global->START_FISCAL_LAST_YEAR) ){
+	accessforbidden('Vous devez obligatoirement renseigner la date de début de l\'exercice fiscal dans la configuration du module');
+} else {
+	$startFiscalyear = $conf->global->START_FISCAL_YEAR;
+	$startFiscalLastyear = $conf->global->START_FISCAL_LAST_YEAR;
+}
+
+
+// fetch current bank account
+$object = new General($db);
+$ret = $object->getIdBankAccount();
+
+$datetime = dol_now();
+$year = dol_print_date($datetime, "%Y");
+$month = dol_print_date($datetime, "%m");
+$day = dol_print_date($datetime, "%d");
+
+// Calcul for last day in current year according to the beginning of the fiscal year
+$duree = 1;
+
+// Transform date in timestamp
+$TimestampCurrentYear = strtotime($startFiscalyear);
+$TimestampCurrentLastYear = strtotime($startFiscalLastyear);
+
+// calcul the end date for current and last year
+$endYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentYear));
+$endLastYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentLastYear));
+
+// First day and last day of current mounth
+$firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
+$lastDayCurrentMonth = date('Y-m-t', mktime(0, 0, 0, $month, 1, $year));
+
+// M - 1
+$firstDayLastMonth = date('Y-m-d', mktime(0, 0, 1, $month - 1, 1, $year));
+$lastDayLastMonth = date('Y-m-t', mktime(0, 0, 1, $month - 1, 1, $year));
+
+// First day and last day of current years
+$firstDayYear = date('Y-m-d', mktime(0, 0, 0, 1, 1, $year));
+$lastDayYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year));
+
+// N - 1
+$firstDayLastYear = date('Y-m-d', mktime(0, 0, 1, 1, 1, $year - 1));
+$lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
+
+$nowyear = strftime("%Y", dol_now());
+$year = GETPOST('year') > 0 ? GETPOST('year', 'int') : $nowyear;
+$startyear = $year - (empty($conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS) ? 2 : max(1, min(10, $conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS)));
+$endyear = $year;
+
+
+if(!empty($conf->global->START_FISCAL_YEAR)){
+	$startMonthTimestamp = strtotime($startFiscalyear);
+	$duree = 12;
+	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
+	$monthFiscalyear = $startMonthFiscalYear;
+} else {
+	$monthFiscalyear = 1;
+}
 
 // Load translation files required by the page
 $langs->loadLangs(array("tab@tab"));
-
 $action = GETPOST('action', 'aZ09');
+$socid = GETPOST('socid', 'int');
+$action = GETPOST('action', 'aZ09');
+$userid = GETPOST('userid', 'int');
 
 /*
  * Actions
@@ -71,32 +151,53 @@ $action = GETPOST('action', 'aZ09');
 
 $form = new Form($db);
 $formfile = new FormFile($db);
-$object = new Commercial($db);
-$general = new General($db);
-
-$head = '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">';
-print '<link rel="stylesheet" href="' . DOL_DOCUMENT_ROOT . '/custom/tab/css/tab.css' . '">';
+$com = new Commercial($db);
 
 // Outstandings customer and
 llxHeader($head, $langs->trans("Commercial - Général"));
 
 print load_fiche_titre($langs->trans("Général"));
 
-// Chargement du template de navigation pour l'activité "Global"
-print $object->load_navbar();
+// Load Template
+print $com->load_navbar();
 
 // Title for item
-$titleItem1 = "Chiffre d'affaire de l'année en cours";
-$ordernextmounth = "Chiffre d'affaire N-1";
-$orderProgress = "Chiffres d'affaire du mois en cours";
+$titleItem1 = "Chiffre d'affaires";
+$info1 = "Chiffre d'affaire N-1";
+$info2 = "CA du mois en cours";
+$dataItem1 = price($total_CA)."\n€"; // display datas
+
+// Fiscal current years
+$total_standard_invoice = $object->turnover($startFiscalyear, $endYear); // paye + imp
+$total_avoir_invoice = $object->avoir($startFiscalyear, $endYear, $paye = ''); // paye + imp
+$total_avoir_invoice = abs($total_avoir_invoice);
+
+$total_CA = $total_standard_invoice + $total_avoir_invoice; // total
+$dataItem1 = price($total_CA)."\n€"; // display datas
+
+// Fiscal last years
+$total_standard_invoice_lastYear = $object->turnover($startFiscalLastyear, $endLastYear); // paye + imp
+$total_avoir_invoice_lastYear = $object->avoir($startFiscalLastyear, $endLastYear, $paye = ''); // paye + imp
+
+$total_CA_lastYear = $total_standard_invoice_lastYear + $total_avoir_invoice_lastYear; // total
+$dataInfo1 = price($total_CA_lastYear)."\n€"; // display data
+
+// On current Month
+$total_standard_invoice_currentMonth = $object->turnover($firstDayCurrentMonth, $lastDayLastMonth); // paye + imp
+$total_avoir_invoice_currentMonth = $object->allDeposit($firstDayLastMonth, $lastDayLastMonth, $paye); // paye + imp
+
+$total_CA_current_month = $total_standard_invoice_currentMonth + $total_avoir_invoice_currentMonth; // total
+$dataInfo2 = price($total_CA_current_month);
 
 $titleItem2 = "Devis signés";
-$titleItem3 = "Devis en cours";
-$titleItem4 = "Volume de devis";
-$titleItem5 = "Marge brut de l'année N";
 
+include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
 
-include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes4.php';
+$titleItem1 = "Devis en cours";
+$titleItem2 = "Volume de devis";
+$titleItem3 = "Marge brut de l'année N";
+include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes3.php';
+
 
 
 // End of page
