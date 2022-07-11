@@ -144,3 +144,6 @@ div.container-fluid-2{
   } 
 
 
+  .container-fluid-2 {
+	grid-column: span 4;
+  }

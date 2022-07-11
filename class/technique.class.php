@@ -326,28 +326,28 @@ class Technique extends CommonObject
 		}
 	}
 
-
+	/**
+	 * Loading NavBar Template
+	 */
 	public function load_navbar()
 	{
-		$html = '';
-		$tab1 = DOL_URL_ROOT.'/custom/tab/technical/order.php';
-		$tab2 = DOL_URL_ROOT.'/custom/tab/technical/production.php';
-		$tab3 = DOL_URL_ROOT.'/custom/tab/technical/sav.php';
+		$path = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+			$current = basename($path);
+		?>
+			<div class="navbar">
+				<li class="<?php if ($current == 'order.php'){ print 'current';} else{ echo'no_current';}?>">
+				<a href="order.php"><i class="fa fa-fw fa-home"></i> Commande</a>
+				</li>
+				<li class="<?php if ($current == 'production.php'){ echo 'current';} else{ echo'no_current';}?>">
+				<a href="production.php"><i class="fa fa-pie-chart"></i> Production</a>
+				</li>
+				<li class="<?php if ($current == 'sav.php'){ echo 'current';} else{ echo'no_current';}?>">
+				<a href="sav.php"><i class="fa fa-bank"></i> SAV</a>
+				</li>
+			</div>
+			<?php
 
-		$html .= "\n";
-		$html .= '<div class="container-fluid">';
-		$html .= '<nav class="navbar-brand">';
-		$html .= '<ul class="nav justify-content-end">';
-		$html .=' <img src="../img/icon/technical.png" alt="" class="d-inline-block align-text-top" width=50px>';
-		$html .= '<li class="nav"><a class="nav-link " href="'.$tab1.'">Commande</a></li>';
-		$html .= '<li class="nav"><a class="nav-link " href="'.$tab2.'">Production</a></li>';
-		$html .= '<li class="nav"><a class="nav-link " href="'.$tab3.'">SAV</a></li>';
-		$html .= '</ul></nav><br></div>';
-
-		$html .= '</tr>'."\n";
-		return $html;
-
-}
+	}
 
 	/**
 	 * Load object in memory from the database

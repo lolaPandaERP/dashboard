@@ -335,25 +335,29 @@ class Commercial extends CommonObject
 	 */
 	public function load_navbar()
 	{
-			$html = '';
-			$tab1 = DOL_URL_ROOT.'/custom/tab/trade/overview.php';
-			$tab2 = DOL_URL_ROOT.'/custom/tab/trade/salesLead.php';
-			$tab3 = DOL_URL_ROOT.'/custom/tab/trade/appointment.php';
-			$tab4 = DOL_URL_ROOT.'/custom/tab/trade/quoteProgress.php';
-			$tab5 = DOL_URL_ROOT.'/custom/tab/trade/goals.php';
 
-			$html .= "\n";
-			$html .= '
+		$path = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+		$current = basename($path);
+
+			?>
 			<div class="navbar">
-				<a class="active" href="'.$tab1.'"><i class="fa fa-fw fa-home"></i> Général</a>
-				<a href="'.$tab2.'"><i class="fa fa-pie-chart"></i> Prospects</a>
-				<a href="'.$tab3.'"><i class="fa fa-bank"></i> Rendez-vous</a>
-				<a href="'.$tab4.'"><i class="fa fa-briefcase"></i> Devis en cours</a>
-				<a href="'.$tab5.'"><i class="fa fa-briefcase"></i> Objectifs</a>
-			</div>';
-
-			return $html;
-
+				<li class="<?php if ($current == 'overview.php'){ print 'current';} else{ echo'no_current';}?>">
+					<a href="overview.php"><i class="fa fa-fw fa-home"></i> Général</a>
+				</li>
+				<li class="<?php if ($current == 'salesLead.php'){ echo 'current';} else{ echo'no_current';}?>">
+					<a href="salesLead.php"><i class="fa fa-pie-chart"></i> Prospects </a>
+				</li>
+				<li class="<?php if ($current == 'appointment.php'){ echo 'current';} else{ echo'no_current';}?>">
+					<a href="appointment.php"><i class="fa fa-bank"></i> Rendez-vous</a>
+				</li>
+				<li class="<?php if ($current == 'quoteProgress.php'){ echo 'current';} else{ echo'no_current';}?>">
+					<a href="quoteProgress.php"><i class="fa fa-briefcase"></i> Devis en cours</a>
+				</li>
+				<li class="<?php if ($current == 'goals.php'){ echo 'current';} else{ echo'no_current';}?>">
+					<a href="goals.php"><i class="fa fa-briefcase"></i> Objectifs</a>
+				</li>
+			</div>
+			<?php
 	}
 
 

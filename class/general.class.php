@@ -1319,7 +1319,7 @@ class General extends FactureStats
 		return $result;
 	 }
 
-	 //retourne toutes les factures standard impayée (hors brouillon) sur l'exercice fiscal
+	 //retourne toutes les factures standard (hors brouillon : payées + impayées) sur l'exercice fiscal
 	public function turnover($startfiscalyear, $lastDayYear){
 		global $db, $conf;
 
@@ -1572,7 +1572,7 @@ class General extends FactureStats
 	 }
 
 	 /**
-	  * Retourne le montant total des charges fixes :
+	  * Retourne le montant total des charges fixes
 	  */
 	  public function fetchStaticExpenses($firstDayYear, $lastDayYear){
 

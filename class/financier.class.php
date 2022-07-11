@@ -433,31 +433,29 @@ class Financier extends CommonObject
 	}
 
 
-
 	/**
-	 * Load navbar for financial activity
-	 *
+	 * Loading NavBar Template
 	 */
 	public function load_navbar()
 	{
-
-		$html = '';
-			$tab1 = DOL_URL_ROOT.'/custom/tab/financial/overview.php';
-			$tab2 = DOL_URL_ROOT.'/custom/tab/financial/billingStatus.php';
-			$tab3 = DOL_URL_ROOT.'/custom/tab/financial/personalCost.php';
-			$tab4 = DOL_URL_ROOT.'/custom/tab/financial/profi_margins.php';
-
-			$html .= "\n";
-
-			$html .= '
+		$path = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+		$current = basename($path);
+		?>
 			<div class="navbar">
-				<a< href="'.$tab1.'"><i class="fa fa-fw fa-home"></i> Général</a>
-				<a href="'.$tab2.'"><i class="fa fa-pie-chart"></i> Etat de facturation C/F</a>
-				<a href="'.$tab3.'"><i class="fa fa-bank"></i> Coût personnel</a>
-				<a href="'.$tab4.'"><i class="fa fa-briefcase"></i> Rentabilité / Marges</a>
-			</div>';
-
-			return $html;
+				<li class="<?php if ($current == 'overview.php'){ print 'current';} else{ echo'no_current';}?>">
+				<a href="overview.php"><i class="fa fa-fw fa-home"></i> Général</a>
+				</li>
+				<li class="<?php if ($current == 'billingStatus.php'){ echo 'current';} else{ echo'no_current';}?>">
+				<a href="billingStatus.php"><i class="fa fa-pie-chart"></i> Etat facturation</a>
+				</li>
+				<li class="<?php if ($current == 'personalCost.php'){ echo 'current';} else{ echo'no_current';}?>">
+				<a href="personalCost.php"><i class="fa fa-bank"></i> Coût personnel</a>
+				</li>
+				<li class="<?php if ($current == 'profi_margins.php'){ echo 'current';} else{ echo'no_current';}?>">
+				<a href="profi_margins.php"><i class="fa fa-bank"></i> Rentabilité / Marges</a>
+				</li>
+			</div>
+			<?php
 
 	}
 
