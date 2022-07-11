@@ -43,6 +43,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/tab/class/general.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/dolgraph.class.php';
+require_once DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
 
 // Security check
 if (empty($conf->tab->enabled)) accessforbidden('Module not enabled');
@@ -118,7 +119,7 @@ $idBankAccount = $object->getIdBankAccount();
 $array_tresury = $object->fetchSoldeOnYear($startFiscalyear, $endYear, 3);
 $total_tresury = array_sum($array_tresury);
 
-$dataItem1 = price($account) ."\n€";
+$dataItem1 = price($total_tresury) ."\n€";
 
 $info1 = "Trésorerie M-1";
 
@@ -152,51 +153,63 @@ $firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100) ";
 
 $monthsArr = monthArray($langs, 1); // months
 
+// Graph tresury
+$data = [];
 $file = "tresuryChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
-$acc = new Account($db);
 
-for($i = $monthFiscalyear; $i <= 12 ; $i++){
+if(!empty($conf->global->START_FISCAL_YEAR)){
+	$startMonthTimestamp = strtotime($startFiscalyear);
+	$duree = 12;
+	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
+	$i = $startMonthFiscalYear;
+} else {
+	$i = 1;
+}
 
- 	strtotime('Last Year');
-	$lastyear = date($year-1);
+for($i = $i; $i <= 12; $i++){
 
 	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
 
-	// Start and end of each month on current years
+	// Current Year
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-	$solde = $object->fetchSolde($acc->id, $date_start, $date_end); // current
-	$total_solde = array_sum($solde); // current
+	$solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
+	$total_solde = array_sum($solde);
+
+	$supplier_paid_invoice = $object->allSupplierPaidInvoices($date_start, $date_end, 1);
+	$supplier_paid_deposit = $object->allSupplierPaidDeposit($date_start, $date_end, 1);
+
+	$tresury = $total_solde - ($supplier_paid_invoice + $supplier_paid_deposit);
 
 	if(date('n', $date_start) == $i){
-		$total_solde += $acc->amount;
+		$tresury += $account->amount;
 	}
 
 	$data[] = [
-		html_entity_decode($monthsArr[$i]),
-		$total_solde
+		html_entity_decode($monthsArr[$i]), // month
+		$tresury,
 	];
 
 }
 
-$px = new DolGraph();
-$mesg = $px->isGraphKo();
-$legend = ['Année N-1', 'Année N'];
+$p1 = new DolGraph();
+$mesg = $p1->isGraphKo();
+$legend = ['Année N'];
 
 if (!$mesg){
-	$px->SetTitle("Evolution du chiffre d'affaires");
-	$px->datacolor = array(array(255,206,126), array(138,233,232));
-	$px->SetData($data);
-	$px->SetLegend($legend);
-	$px->SetType(array('lines'));
-	$px->setHeight('250');
-	$px->SetWidth('500');
-	$tresuryChart = $px->draw($file, $fileurl);
+	$p1->SetTitle("Evolution de la trésorerie nette");
+	$p1->datacolor = array(array(138,233,232));
+	$p1->SetData($data);
+	$p1->SetLegend($legend);
+	$p1->SetType(array('lines'));
+	$p1->setHeight('250');
+	$p1->SetWidth('500');
+	$tresuryChart = $p1->draw($file, $fileurl);
 }
-$graphiqueA = $px->show($tresuryChart);
 
+$graphiqueA = $p1->show($tresuryChart);
 
 
 // Total charge of current month
@@ -309,6 +322,66 @@ $dataItem3 = 100;
 $accounts = $object->fetchAllBankAccount();
 $nbAccount = count($accounts);
 
+
+// Graph
+$data = [];
+$file = "EvolutionAccountsChart";
+$fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
+
+$commande = new Commande($db);
+
+if(!empty($conf->global->START_FISCAL_YEAR)){
+	$startMonthTimestamp = strtotime($startFiscalyear);
+	$duree = 12;
+	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
+	$i = $startMonthFiscalYear;
+} else {
+	$i = 1;
+}
+
+for($i = $i; $i <= 12; $i++){
+
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+
+	$lastyear = strtotime('Last Year');
+	$lastyear = date($year-1);
+
+	// Current Year
+	$date_start = $year.'-'.$i.'-01';
+	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
+
+	$total_grossMargin_year += $object->grossMargin($date_start, $date_end);
+
+	if(date('n', $date_start) == $i ){
+		$total_grossMargin_year += $commande->total_ht;
+	}
+
+	$data[] = [
+		html_entity_decode($monthsArr[$i]), // month
+		$total_grossMargin_year
+	];
+
+}
+
+$px3 = new DolGraph();
+$mesg = $px3->isGraphKo();
+$legend = ['Année N'];
+
+if (!$mesg){
+	$px3->SetTitle("Evolution des comptes");
+	$px3->datacolor = array(array(255,206,126), array(138,233,232));
+	$px3->SetData($data);
+	$px3->SetLegend($legend);
+	$px3->SetType(array('lines')); // Array with type for each serie. Example: array('type1', 'type2', ...) where type can be: 'pie', 'piesemicircle', 'polar', 'lines', 'linesnopoint', 'bars', 'horizontalbars'...
+	$px3->setHeight('250');
+	$px3->SetWidth('500');
+	$customerToDaysChart = $px3->draw($file, $fileurl);
+}
+
+$graphiqueC = $px3->show($customerToDaysChart);
+
+
+
 /**
  * CUSTOMER TO CASH
  */
@@ -370,7 +443,7 @@ $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes
 ?>
 
 <!-- BOX FOR OUTSTANDING -->
-<div class=".table-responsive">
+
 <div class="container-fluid-2">
 	<div class="card bg-c-white order-card">
 		<div class="card-body">
@@ -415,13 +488,13 @@ $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes
 
 						print '<i class="bi bi-bank"></i>';
 						print '<button type="button" class="btn btn-success">
+						<a href="'.DOL_URL_ROOT.'/compta/bank/card.php?id='.$account->rowid.'">' . $account->label. '
 								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-bank">
 									<path d="m8 0 6.61 3h.89a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H15v7a.5.5 0 0 1 .485.38l.5 2a.498.498 0 0 1-.485.62H.5a.498.498 0 0 1-.485-.62l.5-2A.501.501 0 0 1 1 13V6H.5a.5.5 0 0 1-.5-.5v-2A.5.5 0 0 1 .5 3h.89L8 0ZM3.777 3h8.447L8 1 3.777 3ZM2 6v7h1V6H2Zm2 0v7h2.5V6H4Zm3.5 0v7h1V6h-1Zm2 0v7H12V6H9.5ZM13 6v7h1V6h-1Zm2-1V4H1v1h14Zm-.39 9H1.39l-.25 1h13.72l-.25-1Z"/>
 								</svg>
 								</button>';
 
-						print '<p class="center"><a href="'.DOL_URL_ROOT.'/compta/bank/card.php?id='.$account->rowid.'">' . $account->label . '</a>';
-						print '</br>'.price($solde) . "\n€" .'</p>';
+						print '<h3>'.price($solde) . "\n€" .'</h3></a>';
 
 					}
 
@@ -433,7 +506,9 @@ $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes
 						<?php print $info7 ?> : <h4 class="center"><?php print $dataInfo7 ?></h4><hr>
 						<?php print $info8 ?> : <h4 class="center"><?php print $dataInfo8 ?></h4>
 					</div>
-
+					<?php
+						print $graphiqueC
+					?>
 					<div class="pull-right">
 						<?php print $info9 ?> : <h4 class="center"><?php print $dataInfo9 ?></h4><hr>
 						<?php print $info10 ?> : <h4 class="center"><?php print $dataInfo10 ?></h4>
