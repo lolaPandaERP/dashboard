@@ -61,6 +61,7 @@ $type = 'myobject';
 
 $arrayofparameters = array(
 	'FORECAST_MARGIN'=>array('css'=>'minwidth200', 'enabled'=>1),
+	'RECURRING_MONTHLY'=>array('css'=>'minwidth200', 'enabled'=>1),
 	'START_FISCAL_YEAR'=>array('css'=>'minwidth200', 'enabled'=>1),
 	'START_FISCAL_LAST_YEAR'=>array('css'=>'minwidth200', 'enabled'=>1, 'help'=>'Format valide'),
 );
