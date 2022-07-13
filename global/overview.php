@@ -118,15 +118,9 @@ $year = GETPOST('year') > 0 ? GETPOST('year', 'int') : $nowyear;
 $startyear = $year - (empty($conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS) ? 2 : max(1, min(10, $conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS)));
 $endyear = $year;
 
-
-if(!empty($conf->global->START_FISCAL_YEAR)){
-	$startMonthTimestamp = strtotime($startFiscalyear);
-	$duree = 12;
-	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
-	$monthFiscalyear = $startMonthFiscalYear;
-} else {
-	$monthFiscalyear = 1;
-}
+// Load start month fiscal year for datas graph
+$startFiscalYear = $conf->global->START_FISCAL_YEAR;
+$startMonthFiscalYear = $object->startMonthForGraphLadder($startFiscalYear, 12);
 
 // Load translation files required by the page
 $langs->loadLangs(array("tab@tab"));
@@ -183,7 +177,7 @@ $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
 $total_CA = $total_standard_invoice + abs($total_avoir_invoice);
 
-for($i = $monthFiscalyear; $i <= 12 ; $i++){
+for($i = $startMonthFiscalYear; $i <= 12 ; $i++){
 
  	strtotime('Last Year');
 	$lastyear = date($year-1);
@@ -306,15 +300,7 @@ $file = "oustandingCustomerChartNumber";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
 $data = [];
-
-if(!empty($conf->global->START_FISCAL_YEAR)){
-	$startMonthTimestamp = strtotime($startFiscalyear);
-	$duree = 12;
-	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
-	$i = $startMonthFiscalYear;
-} else {
-	$i = 1;
-}
+$i = $startMonthFiscalYear;
 
 for($i; $i <= 12; $i++){
 
@@ -371,18 +357,8 @@ if (!$mesg){
 // Drawing the second  graph for amount of customer invoices by month
 $file = "OustandingSupplierChartAmount";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
-
 $data = []; // reset data
-
-
-if(!empty($conf->global->START_FISCAL_YEAR)){
-	$startMonthTimestamp = strtotime($startFiscalyear);
-	$duree = 12;
-	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
-	$i = $startMonthFiscalYear;
-} else {
-	$i = 1;
-}
+$i = $startMonthFiscalYear;
 
 for($i; $i <= 12; $i++){
 
@@ -443,15 +419,7 @@ $file = "oustandingCustomerChartNumber";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
 $data = [];
-
-if(!empty($conf->global->START_FISCAL_YEAR)){
-	$startMonthTimestamp = strtotime($startFiscalyear);
-	$duree = 12;
-	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
-	$i = $startMonthFiscalYear;
-} else {
-	$i = 1;
-}
+$i = $startMonthFiscalYear;
 
 for($i; $i <= 12; $i++){
 
@@ -510,15 +478,7 @@ $file = "oustandingSupplierChartAmount";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
 $data = [];
-
-if(!empty($conf->global->START_FISCAL_YEAR)){
-	$startMonthTimestamp = strtotime($startFiscalyear);
-	$duree = 12;
-	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
-	$i = $startMonthFiscalYear;
-} else {
-	$i = 1;
-}
+$i = $startMonthFiscalYear;
 
 for($i; $i <= 12; $i++){
 
@@ -637,15 +597,7 @@ $file = "marginChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $data = [];
 $commande = new Commande($db);
-
-if(!empty($conf->global->START_FISCAL_YEAR)){
-	$startMonthTimestamp = strtotime($startFiscalyear);
-	$duree = 12;
-	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
-	$i = $startMonthFiscalYear;
-} else {
-	$i = 1;
-}
+$i = $startMonthFiscalYear;
 
 for($i; $i <= 12; $i++){
 
@@ -676,7 +628,6 @@ for($i; $i <= 12; $i++){
 		$total_grossMargin_LastYear,
 		$total_grossMargin_year
 	];
-
 }
 
 $px6 = new DolGraph();
@@ -711,7 +662,7 @@ $thirdPop_data3 = "Définit dans la configuration du module : <strong>(".price($
  * ---- TREASURY BOX -------
  */
 
-$titleItem4 = "Trésorerie nette";
+$titleItem4 = "Trésorerie prévisionnelle";
 $idaccount = $object->getIdBankAccount();
 $account = new Account($db);
 $account->fetch($idaccount);
@@ -739,7 +690,8 @@ $result3 = intval( ($variablesExpenses + $staticExpenses) / 12);
 $dataInfo7 = price($result3) . "\n€"; // arrondi
 
 $info8 = "Recurrent mensuel";
-$dataInfo8 = price(1500) . "\n";
+$recurring_monthly = $conf->global->RECURRING_MONTHLY;
+$dataInfo8 = price($recurring_monthly) . "\n€";
 
 $bankAccount = $object->fetchSolde(5, $date_start, $date_end);
 
@@ -747,42 +699,39 @@ $bankAccount = $object->fetchSolde(5, $date_start, $date_end);
 $data = [];
 $file = "tresuryChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
+$i = $startMonthFiscalYear;
 
-if(!empty($conf->global->START_FISCAL_YEAR)){
-	$startMonthTimestamp = strtotime($startFiscalyear);
-	$duree = 12;
-	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
-	$i = $startMonthFiscalYear;
-} else {
-	$i = 1;
-}
+	for($i; $i <= 12; $i++){
 
+		$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
 
-for($i; $i <= 14; $i++){
+		// Current Year
+		$date_start = $year.'-'.$i.'-01'; // first day of month
+		$date_end = $year.'-'.$i.'-'.$lastDayMonth; // last day of montH
 
-	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+		// while ($i <= $endYear) {
+		// 	if ($startmonth != 1) {
+		// 		//
+		// 	} else {
+		// 		//
+		// 	}
+		// 	$i++;
+		// }
 
-	// Current Year
-	$date_start = $year.'-'.$i.'-01'; // first day of month
-	$date_end = $year.'-'.$i.'-'.$lastDayMonth; // last day of month
+		$solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
+		$total_solde = array_sum($solde);
 
-	// statistics according to the month of the beginning of the financial year
-	// boucle pour arriver sur 12 mois, selon mois choisi
+		$supplier_paid_invoice = $object->allSupplierPaidInvoices($date_start, $date_end, 1);
+		$supplier_paid_deposit = $object->allSupplierPaidDeposit($date_start, $date_end, 1);
 
-	$solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
-	$total_solde = array_sum($solde);
+		$tresury = ($total_solde - ($staticExpenses + $total_paid_supp_invoice_year + $total_paid_supp_desposit_year)); // calcul for net tresury
 
-	$supplier_paid_invoice = $object->allSupplierPaidInvoices($date_start, $date_end, 1);
-	$supplier_paid_deposit = $object->allSupplierPaidDeposit($date_start, $date_end, 1);
+		$data[] = [
+			html_entity_decode($monthsArr[$i]), // month
+			$tresury,
+		];
+	}
 
-	$tresury = ($total_solde - ($staticExpenses + $total_paid_supp_invoice_year + $total_paid_supp_desposit_year)); // calcul for net tresury
-
-	$data[] = [
-		html_entity_decode($monthsArr[$i]), // month
-		$tresury,
-	];
-
-}
 
 $px7 = new DolGraph();
 $mesg = $px7->isGraphKo();
@@ -812,10 +761,22 @@ $fourPop_info3 = $info8;
 $solde = $object->fetchSoldeOnYear($startFiscalyear, $endYear, $idaccount);
 $total_solde = array_sum($solde);
 
-$fourPop_data1 = "Correspond à l'argent en banque <strong>(".price($total_solde)."\n€)</strong> - (les charges fixes <strong>(".price($staticExpenses)."\n€)</strong> + factures fournisseurs réglées <strong>(".price($total_paid_supp_invoice_year)."\n€)</strong> + avoirs fournisseurs payés <strong>(".price($total_paid_supp_deposit_year).")</strong>)
-</br></br>* Calcul : <strong> Solde du compte courant </strong> - <strong>les sorties d'argent </strong>(à savoir : charges fixes, charges sociales et fiscales, factures et avoir fournisseurs réglées) + <strong> entrée d'argent </strong>(à savoir : paiments divers, aides, prélévements programmés, factures clients réglées) ";
+$fourPop_data1 = '<i>Solde du compte en banque - sorties d\'argent + entrée d\'argent </i>
+				  <br> <strong> SORTIE </strong> :
+				  <ul>
+				  	<li><strong>Charges fixes</strong> (salaires, emprunts, paiements divers, charge sociales et fiscales) : par mois </li>
+					<li><strong>Factures fournisseurs impayées </strong> : <i style="color:red;">Attention, elles doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
+					<li><strong>TVA (client et fournisseur)</strong> : par mois </li>
+					<li><strong>Notes de frais (approuvée)</strong> : par mois </li>
+				  </ul>
+				  <br> <strong> ENTREE </strong> :
+				  <ul>
+				  	<li><strong>Factures clients impayées </strong> : par mois </li>
+					<li><strong>Avoir fournisseurs impayées </strong> : <i style="color:red;">Attention, ils doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
+				  </ul>';
+
 $fourPop_data2 = "charges variables <strong>(".price($variablesExpenses)."\n€)</strong> + charges fixes <strong>(".price($staticExpenses)."\n€)</strong> / 12";
-$fourPop_data3 = "Le MMR (Monthly Recurring Revenue) est un terme désignant les revenus issus des clients réguliers";
+$fourPop_data3 = "Saisie manuelle - Configuration du module";
 
 
 /*

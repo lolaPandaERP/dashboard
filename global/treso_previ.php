@@ -99,15 +99,9 @@ $year = GETPOST('year') > 0 ? GETPOST('year', 'int') : $nowyear;
 $startyear = $year - (empty($conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS) ? 2 : max(1, min(10, $conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS)));
 $endyear = $year;
 
-
-if(!empty($conf->global->START_FISCAL_YEAR)){
-	$startMonthTimestamp = strtotime($startFiscalyear);
-	$duree = 12;
-	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
-	$monthFiscalyear = $startMonthFiscalYear;
-} else {
-	$monthFiscalyear = 1;
-}
+// Load start month fiscal year for datas graph
+$startFiscalYear = $conf->global->START_FISCAL_YEAR;
+$startMonthFiscalYear = $object->startMonthForGraphLadder($startFiscalYear, 12);
 
 
 /**
@@ -158,16 +152,7 @@ $data = [];
 $file = "tresuryChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 
-if(!empty($conf->global->START_FISCAL_YEAR)){
-	$startMonthTimestamp = strtotime($startFiscalyear);
-	$duree = 12;
-	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
-	$i = $startMonthFiscalYear;
-} else {
-	$i = 1;
-}
-
-for($i = $i; $i <= 12; $i++){
+for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
 	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
 
@@ -243,7 +228,7 @@ $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $data = [];
 $supplier_invoice = new FactureFournisseur($db);
 
-for($i = $monthFiscalyear; $i <= 12 ; $i++){
+for($i = $startMonthFiscalYear; $i <= 12 ; $i++){
 
  	strtotime('Last Year');
 	$lastyear = date($year-1);
@@ -257,7 +242,9 @@ for($i = $monthFiscalyear; $i <= 12 ; $i++){
 	$staticExpenses += $object->fetchStaticExpenses($date_start, $date_end); // static
 	$variableExpenses += $object->fetchVariablesExpenses($date_start, $date_end); // variables
 
-	$total_charges = $staticExpenses + $variableExpenses;
+	$total_charges = ($staticExpenses + $variableExpenses);
+
+	if(date('n', $date_start ))
 
 	$data[] = [
 		html_entity_decode($monthsArr[$i]),
@@ -302,9 +289,6 @@ llxHeader('', $langs->trans("Trésorerie et Prévisionnel"));
 
 print load_fiche_titre($langs->trans("Trésorerie et Prévisionnel"));
 
-// Include template
-$currentPage = $_SERVER['PHP_SELF'];
-
 print $object->load_navbar($currentPage);
 
 include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
@@ -327,19 +311,9 @@ $nbAccount = count($accounts);
 $data = [];
 $file = "EvolutionAccountsChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
-
 $commande = new Commande($db);
 
-if(!empty($conf->global->START_FISCAL_YEAR)){
-	$startMonthTimestamp = strtotime($startFiscalyear);
-	$duree = 12;
-	$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
-	$i = $startMonthFiscalYear;
-} else {
-	$i = 1;
-}
-
-for($i = $i; $i <= 12; $i++){
+for($i = $startMonthFiscalYeari; $i <= 12; $i++){
 
 	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
 
@@ -442,7 +416,7 @@ $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes
 
 ?>
 
-<!-- BOX FOR OUTSTANDING -->
+<!-- BOX FOR OUTSTANDING 30 DAYS -->
 
 <div class="container-fluid-2">
 	<div class="card bg-c-white order-card">
@@ -488,20 +462,19 @@ $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes
 
 						print '<i class="bi bi-bank"></i>';
 						print '<button type="button" class="btn btn-success">
-						<a href="'.DOL_URL_ROOT.'/compta/bank/card.php?id='.$account->rowid.'">' . $account->label. '
-								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-bank">
-									<path d="m8 0 6.61 3h.89a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H15v7a.5.5 0 0 1 .485.38l.5 2a.498.498 0 0 1-.485.62H.5a.498.498 0 0 1-.485-.62l.5-2A.501.501 0 0 1 1 13V6H.5a.5.5 0 0 1-.5-.5v-2A.5.5 0 0 1 .5 3h.89L8 0ZM3.777 3h8.447L8 1 3.777 3ZM2 6v7h1V6H2Zm2 0v7h2.5V6H4Zm3.5 0v7h1V6h-1Zm2 0v7H12V6H9.5ZM13 6v7h1V6h-1Zm2-1V4H1v1h14Zm-.39 9H1.39l-.25 1h13.72l-.25-1Z"/>
-								</svg>
+								<a href="'.DOL_URL_ROOT.'/compta/bank/bankentries_list.php?id='.$account->rowid.'">
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-bank">
+										<path d="m8 0 6.61 3h.89a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H15v7a.5.5 0 0 1 .485.38l.5 2a.498.498 0 0 1-.485.62H.5a.498.498 0 0 1-.485-.62l.5-2A.501.501 0 0 1 1 13V6H.5a.5.5 0 0 1-.5-.5v-2A.5.5 0 0 1 .5 3h.89L8 0ZM3.777 3h8.447L8 1 3.777 3ZM2 6v7h1V6H2Zm2 0v7h2.5V6H4Zm3.5 0v7h1V6h-1Zm2 0v7H12V6H9.5ZM13 6v7h1V6h-1Zm2-1V4H1v1h14Zm-.39 9H1.39l-.25 1h13.72l-.25-1Z"/>
+									</svg>
 								</button>';
-
-						print '<h3>'.price($solde) . "\n€" .'</h3></a>';
+						print '<h3>'."\n\n".price($solde) . "\n€" .'</h3></a>';
 
 					}
 
 					?>
           		</div>
 
-				<div class="center-block">
+				<!-- <div class="center-block"> -->
 					<div class="pull-left">
 						<?php print $info7 ?> : <h4 class="center"><?php print $dataInfo7 ?></h4><hr>
 						<?php print $info8 ?> : <h4 class="center"><?php print $dataInfo8 ?></h4>

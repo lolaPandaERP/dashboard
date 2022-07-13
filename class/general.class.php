@@ -1091,7 +1091,6 @@ class General extends FactureStats
 	/**
 	 * Loading NavBar Template
 	 */
-
 	public function load_navbar()
 	{
 			$path = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
@@ -1112,6 +1111,30 @@ class General extends FactureStats
 				</li>
 			</div>
 			<?php
+	}
+
+
+	/**
+	 * Determines the starting month (based on fiscal year - configuration)
+	 *  @param  string  $duree                  	Include picto in link (0=No picto, 1=Include picto into link, 2=Only picto)
+	 *  @param  string  $option                     On what the link point to ('nolink', ...)
+	 *  @param  int     $notooltip                  1=Disable tooltip
+	 *  @param  string  $morecss                    Add more css on link
+	 *  @param  int     $save_lastsearch_value      -1=Auto, 0=No save of lastsearch_values when clicking, 1=Save lastsearch_values whenclicking
+	 *  @return	string                              String with URL
+	 */
+	public function startMonthForGraphLadder($startFiscalyear, $duree) {
+		global $conf;
+
+		if(!empty($conf->global->START_FISCAL_YEAR)){
+			$startMonthTimestamp = strtotime($startFiscalyear);
+			$duree = 12;
+			$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
+			$i = $startMonthFiscalYear;
+		} else {
+			$i = 1;
+		}
+		return $startMonthFiscalYear;
 	}
 
 
@@ -1434,7 +1457,7 @@ class General extends FactureStats
 
 			global $db;
 
-		 	// Encours total sur l'annee
+		 	// Encours total sur l'exercice fiscal
 			$sql = "SELECT * ";
 			$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 			$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
@@ -1446,25 +1469,31 @@ class General extends FactureStats
 
 			if($resql){
 				while($obj = $this->db->fetch_object(($resql))){
-					$result[] = $obj->total_ht;
+					$result[] = $obj->total_ttc;
 				}
 			}
 			return $result;
 	 }
 
 
-	 // Fetch all unpaid customer invoices whose due date has passed
-	public function fetchCustomerBillExceed($date){
+	 /*
+	  Fetch all unpaid customer invoices whose due date has passed
+
+	  */
+	public function fetchCustomerBillExceed($date = '', $date_start, $date_end, $type=''){
 		global $db;
 
-		$sql = "SELECT * FROM ".MAIN_DB_PREFIX."facture";
-		$sql .= " WHERE date_lim_reglement < \"$date\" ";
-		$sql .= "AND paye = 0 ";
-		$sql .= "AND fk_statut != 0 ";
+	   $sql = "SELECT *";
+	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+	   $sql .= " WHERE date_lim_reglement <= ".dol_now();
+	   $sql .= " AND fk_statut != 0";
+	   $sql .= " AND paye = 0";
+	   $sql .= " AND type = ".$type;
+	   $sql .= " AND datec BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
 
-		$resql = $db->query($sql);
+	   $resql = $this->db->query($sql);
 
-		$result = [];
+	   $result = [];
 
 	   if($resql){
 		   while($obj = $this->db->fetch_object(($resql))){
@@ -1482,13 +1511,14 @@ class General extends FactureStats
 	 /**
 	  * Return all inpaid supplier invoice on period
 	  */
-	 public function outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth){
+	 public function outstandingSupplier($date_start, $date_end){
 
 		// Encours fournisseur du mois courant
 	   $sql = "SELECT * ";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-	   $sql .= " WHERE datef BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
-	   $sql .= " AND paye = 0 AND fk_statut != 0 ";
+	   $sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
+	   $sql .= " AND paye = 0";
+	   $sql .= " AND fk_statut != 0 ";
 
 	   $resql = $this->db->query($sql);
 	   $result = [];
@@ -1532,7 +1562,6 @@ class General extends FactureStats
 
 	 /**
 	  * Retourne le montant total des charges variables
-	  	- Montant total des factures fournisseurs et de la tva réglée sur l'année courante
 	  */
 	 public function fetchVariablesExpenses($firstDayYear, $lastDayYear){
 
