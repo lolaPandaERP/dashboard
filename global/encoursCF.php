@@ -499,7 +499,7 @@ $lastyear = date($year-1);
 						</div>
 						<div class="pull-right">
 								<h5><i>Filtre selon l'année</i></h5>
-								<a id='anneeN-1' href="./encoursCF.php?filter="$lastyear><?php print $lastyear ?></a>
+								<a id='anneeN-1' href="./encoursCF.php?filter=2021"><?php print $lastyear ?></a>
 								<a id='anneeN' href="./encoursCF.php?filter=2022"><?php print $year ?></a>
 							</div>
 						<script>
@@ -590,21 +590,25 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	$total_amount_exceed = array_sum($array_customer_exceed);
 	$total_amount_credit_deposit = array_sum($array_customer_credit_exceed);
 
-	$total_exceed = ($total_amount_exceed + $total_amount_credit_deposit);
+	$nb_customer_exceed = count($array_customer_exceed);
+	$nb_credit_deposit = count($array_customer_credit_exceed);
+
+	$total_nb_exceed = ($nb_customer_exceed + $nb_credit_deposit);
+	$total_amount_exceed = ($total_amount_exceed + $total_amount_credit_deposit);
 
 	$nb_outCustomerExceeded = count($array_customer_exceed + $array_customer_credit_exceed);
 
 	if(date('n', $date_start == $i)){
-		$total_exceed += $invoice->total_ttc;
-		$nb_outCustomerExceeded += $invoice->total_ttc;
+		$total_nb_exceed += $invoice->total_ttc;
+		$total_amount_exceed += $invoice->total_ttc;
 	}
 
 	$ladder = html_entity_decode($monthsArr[$i]);
 
 	$data[] = [
 		$ladder,
-		$nb_outCustomerExceeded,
-		$total_amount_customer_exceed,
+		$total_nb_exceed,
+		$total_amount_exceed,
 	];
 }
 
