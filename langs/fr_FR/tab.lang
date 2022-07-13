@@ -28,8 +28,8 @@ ModuleTabDesc = Tableau de bord interne pour visualiser rapidement ses chiffres 
 TabSetup = Configuration du module Dashboard
 Settings = Réglages
 TabSetupPage = Page de configuration du module Dashboard
-MARGIN_PRODUCED = Marge restant à produire
 FORECAST_MARGIN = Marge brut prévisionnelle
+RECURRING_MONTHLY = Récurrent mensuel
 START_FISCAL_YEAR = Début d'exercice (Année-Mois-Jour)
 START_FISCAL_LAST_YEAR = Début d'exercice (année précédente)
 
