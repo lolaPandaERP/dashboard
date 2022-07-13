@@ -499,7 +499,7 @@ $lastyear = date($year-1);
 						</div>
 						<div class="pull-right">
 								<h5><i>Filtre selon l'année</i></h5>
-								<a id='anneeN-1' href="./encoursCF.php?filter="$lastyear><?php print $lastyear ?></a>
+								<a id='anneeN-1' href="./encoursCF.php?filter=2021"><?php print $lastyear ?></a>
 								<a id='anneeN' href="./encoursCF.php?filter=2022"><?php print $year ?></a>
 							</div>
 						<script>
