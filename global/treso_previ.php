@@ -244,7 +244,7 @@ for($i = $startMonthFiscalYear; $i <= 12 ; $i++){
 
 	$total_charges = ($staticExpenses + $variableExpenses);
 
-	if(date('n', $date_start ))
+	// if(date('n', $date_start))
 
 	$data[] = [
 		html_entity_decode($monthsArr[$i]),
@@ -311,9 +311,10 @@ $nbAccount = count($accounts);
 $data = [];
 $file = "EvolutionAccountsChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
-$commande = new Commande($db);
+$account = new Account($db);
+$res = $account->fetch($account->id);
 
-for($i = $startMonthFiscalYeari; $i <= 12; $i++){
+for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
 	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
 
@@ -324,15 +325,22 @@ for($i = $startMonthFiscalYeari; $i <= 12; $i++){
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-	$total_grossMargin_year += $object->grossMargin($date_start, $date_end);
+	// Construire le tableau de tout les comptes en bq
+	$array_total_account = $object->fetchAllBankAccount();
+
+	foreach($array_total_account as $account){
+		if($res){
+			$account_amount = $account->amount;
+		}
+	}
 
 	if(date('n', $date_start) == $i ){
-		$total_grossMargin_year += $commande->total_ht;
+		$account_amount += $account->amount;
 	}
 
 	$data[] = [
 		html_entity_decode($monthsArr[$i]), // month
-		$total_grossMargin_year
+		$account_amount
 	];
 
 }
@@ -418,7 +426,7 @@ $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes
 
 <!-- BOX FOR OUTSTANDING 30 DAYS -->
 
-<div class="container-fluid-2">
+<div class="container-fluid-1">
 	<div class="card bg-c-white order-card">
 		<div class="card-body">
 			<div class="pull-left">
@@ -460,34 +468,40 @@ $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes
 						}
 						$solde = $acc->solde(1);
 
+						print '<div class="mainbq">';
+
 						print '<i class="bi bi-bank"></i>';
 						print '<button type="button" class="btn btn-success">
 								<a href="'.DOL_URL_ROOT.'/compta/bank/bankentries_list.php?id='.$account->rowid.'">
-									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-bank">
+									<svg xmlns="http://www.w3.org/2000/svg" width="20" height="16" fill="white" class="bi bi-bank">
 										<path d="m8 0 6.61 3h.89a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H15v7a.5.5 0 0 1 .485.38l.5 2a.498.498 0 0 1-.485.62H.5a.498.498 0 0 1-.485-.62l.5-2A.501.501 0 0 1 1 13V6H.5a.5.5 0 0 1-.5-.5v-2A.5.5 0 0 1 .5 3h.89L8 0ZM3.777 3h8.447L8 1 3.777 3ZM2 6v7h1V6H2Zm2 0v7h2.5V6H4Zm3.5 0v7h1V6h-1Zm2 0v7H12V6H9.5ZM13 6v7h1V6h-1Zm2-1V4H1v1h14Zm-.39 9H1.39l-.25 1h13.72l-.25-1Z"/>
 									</svg>
 								</button>';
-						print '<h3>'."\n\n".price($solde) . "\n€" .'</h3></a>';
 
+						print '<div></br><h3>'.$account->label;
+						print '</br>'.price($solde) . "\n€" .'</h3></div></a>';
+						print '</div>';
 					}
 
+
 					?>
-          		</div>
 
 				<!-- <div class="center-block"> -->
 					<div class="pull-left">
 						<?php print $info7 ?> : <h4 class="center"><?php print $dataInfo7 ?></h4><hr>
 						<?php print $info8 ?> : <h4 class="center"><?php print $dataInfo8 ?></h4>
 					</div>
-					<?php
-						print $graphiqueC
-					?>
+					<div>
+						<?php
+							print $graphiqueC;
+						?>
+					</div>
 					<div class="pull-right">
 						<?php print $info9 ?> : <h4 class="center"><?php print $dataInfo9 ?></h4><hr>
 						<?php print $info10 ?> : <h4 class="center"><?php print $dataInfo10 ?></h4>
 					</div>
-				</div>
-			</div>
+				 </div>
+			</div> -->
 
 
 <?php

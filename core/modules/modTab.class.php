@@ -371,7 +371,7 @@ class modTab extends DolibarrModules
             'titre'=>'1. Encours C/F',
             'mainmenu'=>'tab',
             'leftmenu'=>'tab_general',
-            'url'=>'/tab/global/encoursCF.php',
+            'url'=>'/tab/global/encoursCF.php?filter=2021',
             // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
             'langs'=>'tab@tab',
             'position'=>1100+$r,

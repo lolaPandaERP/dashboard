@@ -179,3 +179,9 @@ div.container-fluid-2{
 	border-color: white;
 	border-radius: 0.3em;
   }
+
+  div.mainbq{
+	display:block;
+	justify-content: space-between;
+	padding: 50px;
+  }

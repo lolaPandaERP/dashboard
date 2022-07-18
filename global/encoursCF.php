@@ -308,7 +308,6 @@ $secondPop_data3 = "Progression du nombre d'encours fournisseurs par rapport au 
  * CUSTOMER AND SUPPLIERS OUTSATNDING
  */
 $titleItem3 = "Encours C/F ";
-
 $dataItem3 = price($total_outstandingBillOnYear - $total_outstandingSupplierOnYear)."\n€"; // soustraction des encours client et encours fournisseur
 
 $info5 = "Encours total M-1" ;
@@ -534,19 +533,26 @@ $lastyear = date($year-1);
 <?php
 
 // Supplier outstandings exceeded
-$titleItem5 = "Encours fournisseurs dépassés";
-$outSupplierExceeded = $object->fetchSupplierBillExceed();
+$date = dol_now();
 
-if($outSupplierExceeded <= 0){
+$array_supplier_exceed = $object->fetchSupplierrBillExceed($date, $startFiscalLastyear, $endYear, 2);
+$array_supplier_credit_exceed = $object->fetchSupplierrBillExceed($date, $startFiscalLastyear, $endYear, 0);
+
+$total_amount_supplier_exceed = array_sum($array_supplier_exceed + $array_supplier_credit_exceed);
+$nb_total_supplier_exceed = count($array_supplier_exceed + $array_supplier_credit_exceed);
+
+
+$titleItem5 = "Encours fournisseur dépassé (".$nb_total_supplier_exceed.")";
+
+if($total_amount_supplier_exceed <= 0){
 	$dataItem5 = '<p class="badge badge-success" style="color:green;">Aucun encours fournisseurs dépassés</p>';
 } else {
-	$dataItem5 = '<i class="fas fa-exclamation-triangle"></i>'."\n".price($outCustomerExceeded) . "\n€";
+	$dataItem5 = '<p class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i>'."\n".price($total_amount_supplier_exceed) . "\n€";
 }
-
-
 // Load info for supplier exceed popupinfo
 $fivePop_info1 = $titleItem5;
 $fivePop_data1 = "Somme des factures fournisseurs impayées (TTC) dont la date d'échéance a été dépassée";
+
 
 // Customer outstandings exceeded
 $invoice = new Facture($db);
@@ -565,10 +571,14 @@ $titleItem4 = "Encours clients dépassés (".$nb_total_exceed.") ";
 if($total_amount_exceed <= 0){
 	$dataItem4 = '<p class="badge badge-success" style="color:green;">Aucun encours clients dépassés';
 } else {
-	$dataItem4 = '<p  class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i>'."\n".price($total_amount_exceed) . "\n€".'</p>';
+	$dataItem4 = '<p class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i>'."\n".price($total_amount_exceed) . "\n€".'</p>';
 }
 
-// Datas for exceed oustanding customer and suppliers
+// Load info for customer exceed popupinfo
+$fourPop_info1 = $titleItem4;
+$fourPop_data1 = "Somme des factures clients impayées (TTC) dont la date d'échéance a été dépassée";
+
+// Datas for exceed oustanding customer
 $file = "customerOutstandingExceed";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
@@ -630,11 +640,64 @@ if (!$mesg){
 $graphiqueD = $px4->show($total_customer_exceed);
 
 
+// Datas for exceed oustanding supplier
+$file = "supplierOutstandingExceed";
+$fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
+$invoice_supplier = new FactureFournisseur($db);
+$data =  [];
 
-// Load info for customer exceed popupinfo
-$fourPop_info1 = $titleItem4;
-$fourPop_data1 = "Somme des factures clients impayées (TTC) dont la date d'échéance a été dépassée";
+for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+
+	// Current Year
+	$date_start = $year.'-'.$i.'-01';
+	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
+	$date = date('Y-m-d');
+
+
+	$array_supplier_exceed = $object->fetchSupplierrBillExceed($date, $date_start, $date_end, 2);
+	$array_supplier_credit_exceed = $object->fetchSupplierrBillExceed($date, $date_start, $date_end, 0);
+
+	$total_amount_exceed = array_sum($array_supplier_exceed + $array_supplier_credit_exceed);
+	$nb_total_exceed = count($array_supplier_exceed + $array_supplier_credit_exceed);
+
+
+	$total_nb_exceed = ($nb_supplier_exceed + $nb_credit_deposit);
+	$total_amount_exceed = ($total_amount_exceed + $total_amount_credit_deposit);
+
+	$nb_outsupplierExceeded += count($array_supplier_exceed + $array_supplier_credit_exceed);
+
+	if(date('n', $date_start == $i)){
+		$total_nb_exceed += $invoice_supplier->total_ttc;
+		$total_amount_exceed += $invoice_supplier->total_ttc;
+	}
+
+	$ladder = html_entity_decode($monthsArr[$i]);
+
+	$data[] = [
+		$ladder,
+		$total_nb_exceed,
+		$total_amount_exceed,
+	];
+}
+
+$px5 = new DolGraph();
+$mesg = $px5->isGraphKo();
+$legend = ['Nombre', 'Montant'];
+
+if (!$mesg){
+	$px5->SetTitle("Evolution des encours fournisseurs dépassés");
+	$px5->datacolor = array(array(255,99,71), array(128, 187, 240));
+	$px5->SetData($data);
+	$px5->SetLegend($legend);
+	$px5->SetType(array('lines'));
+	$px5->setHeight('250');
+	$px5->SetWidth('500');
+	$total_supplier_exceed = $px5->draw($file, $fileurl);
+}
+
+$graphiqueE = $px5->show($total_supplier_exceed);
 
 
 ?>

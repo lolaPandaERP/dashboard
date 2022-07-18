@@ -1056,7 +1056,7 @@ class General extends FactureStats
 	}
 
 	public function fetchAllBankAccount(){
-		$sql = "SELECT rowid as rowid ";
+		$sql = "SELECT *";
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
 		$resql = $this->db->query($sql);
 
@@ -1100,8 +1100,8 @@ class General extends FactureStats
 				<li class="<?php if ($current == 'overview.php?mode=customer' || $current == 'overview.php?mode=supplier' ){ print 'current';} else{ echo'no_current';}?>">
 				<a href="overview.php?mode=customer"><i class="fa fa-fw fa-home"></i> Général</a>
 				</li>
-				<li class="<?php if ($current == 'encoursCF.php'){ echo 'current';} else{ echo'no_current';}?>">
-				<a href="encoursCF.php"><i class="fa fa-pie-chart"></i> Encours C/F</a>
+				<li class="<?php if ($current == './encoursCF.php?filter=2021'){ echo 'current';} else{ echo'no_current';}?>">
+				<a href="./encoursCF.php?filter=2021"><i class="fa fa-pie-chart"></i> Encours C/F</a>
 				</li>
 				<li class="<?php if ($current == 'treso_previ.php'){ echo 'current';} else{ echo'no_current';}?>">
 				<a href="treso_previ.php"><i class="fa fa-bank"></i> Trésorerie</a>
@@ -1478,7 +1478,6 @@ class General extends FactureStats
 
 	 /*
 	  Fetch all unpaid customer invoices whose due date has passed
-
 	  */
 	public function fetchCustomerBillExceed($date = '', $date_start, $date_end, $type=''){
 		global $db;
@@ -1531,26 +1530,29 @@ class General extends FactureStats
 	   return $result;
 	}
 
-	// Fetch all unpaid supplier invoices whose due date has passed
-	public function fetchSupplierBillExceed(){
+	 /*
+	  Fetch all unpaid customer invoices whose due date has passed
+	  */
+	  public function fetchSupplierrBillExceed($date = '', $date_start, $date_end, $type=''){
 		global $db;
 
-		$day = date('Y-m-d');
-		$sql = "SELECT SUM(total_ttc) as total_ttc FROM ".MAIN_DB_PREFIX."facture_fourn";
-		$sql .= " WHERE date_lim_reglement < \"$day\" ";
-		$sql .= "AND paye = 0 ";
-		$sql .= "AND fk_statut != 0 ";
+	   $sql = "SELECT *";
+	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+	   $sql .= " WHERE date_lim_reglement <= ".dol_now();
+	   $sql .= " AND fk_statut != 0";
+	   $sql .= " AND paye = 0";
+	   $sql .= " AND datec BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
+	   $sql .= " AND type = ".$type;
+	   $resql = $this->db->query($sql);
 
-		$resql = $db->query($sql);
+	   $result = [];
 
-		if ($resql) {
-			if ($db->num_rows($resql)) {
-				$obj = $db->fetch_object($resql);
-				$result = $obj->total_ttc;
-			}
-			$db->free($resql);
-		}
-		return $result;
+	   if($resql){
+		   while($obj = $this->db->fetch_object(($resql))){
+			   $result[] = $obj->total_ttc;
+		   }
+	   }
+	   return $result;
 	}
 
 

@@ -172,44 +172,68 @@ if($dataInfo2 < 0){
 
 $monthsArr = monthArray($langs, 1); // months
 
+if($startMonthFiscalYear != 1){
+	// while($i < 12){
+		$duree = 11;
+		$total = $startMonthFiscalYear + $duree; // mois de debut + le reste des mois
+		// if($total > 12){
+		// 	echo "retour a 1";
+		// }
+		var_dump($monthsArr[$i]);
+		// print "$startMonthFiscalYear + $duree";
+
+		// while($i <= count($monthsArr)) // tant que la duree à rajouter ne depasse pas 12
+		// {
+		// 	var_dump($monthsArr[$i]); // on peut incrémenter le mois
+		// }
+	// }
+
+} else {
+	echo "Janv";
+}
+
 $file = "evolutionCAchart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
 $total_CA = $total_standard_invoice + abs($total_avoir_invoice);
 
-for($i = $startMonthFiscalYear; $i <= 12 ; $i++){
+	for($i = $startMonthFiscalYear; $i <= 12 ; $i++){
 
- 	strtotime('Last Year');
-	$lastyear = date($year-1);
+		strtotime('Last Year');
+		$lastyear = date($year-1);
 
-	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
-	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
+		$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+		$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
 
-	// Start and end of each month on current years
-	$date_start = $year.'-'.$i.'-01';
-	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
+		// Start and end of each month on current years
+		$date_start = $year.'-'.$i.'-01';
+		$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-	// Start and end of each month on last year
-	$date_start_lastYear = $lastyear.'-'.$i.'-01';
-	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
+		// Start and end of each month on last year
+		$date_start_lastYear = $lastyear.'-'.$i.'-01';
+		$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
 
-	$total_standard_invoice_Year += $object->turnover($date_start, $date_end); // current
-	$total_standard_invoice_LastYear += $object->turnover($date_start_lastYear, $date_end_lastYear); // last year
+		$total_standard_invoice_Year += $object->turnover($date_start, $date_end); // current
+		$total_standard_invoice_LastYear += $object->turnover($date_start_lastYear, $date_end_lastYear); // last year
 
-	if(date('n', $date_start) == $i){
-		$total_standard_invoice_Year += $invoice->total_ht;
-		$total_standard_invoice_LastYear += $invoice->total_ht;
-	}
+		if(date('n', $date_start) == $i){
+			$total_standard_invoice_Year += $invoice->total_ht;
+			$total_standard_invoice_LastYear += $invoice->total_ht;
+		}
 
-	// doit cumuler les mois precedent
-	// ex : pour le mois d'avril = janvier+fevrier+mars
-	$data[] = [
-		html_entity_decode($monthsArr[$i]),
-		$total_standard_invoice_LastYear,
-		$total_standard_invoice_Year
-	];
+		// si le mois de debut est superieur à janvier
+		// on lui ajoute le(s) mois restant(s) pour boucler jusqu'12 mois
+		// Les mois ajoutés doivent recommencer à janvier (01)
 
-}
+		// Ex : mois de début = Février ("2" + 10) //
+
+			$data[] = [
+				html_entity_decode($monthsArr[$i]),
+				$total_standard_invoice_LastYear,
+				$total_standard_invoice_Year
+			];
+		}
+
 
 $px1 = new DolGraph();
 $mesg = $px1->isGraphKo();
