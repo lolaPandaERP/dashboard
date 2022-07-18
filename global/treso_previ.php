@@ -312,7 +312,10 @@ $data = [];
 $file = "EvolutionAccountsChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $account = new Account($db);
-$res = $account->fetch($account->id);
+// $res = $account->fetch($account->id);
+
+// Construire le tableau de tout les comptes en bq
+$array_total_account = $object->fetchAllBankAccount($date_start, $date_end);
 
 for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
@@ -325,33 +328,35 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-	// Construire le tableau de tout les comptes en bq
-	$array_total_account = $object->fetchAllBankAccount();
+	foreach($array_total_account as $acc){
+		$idaccount = $acc->id;
+		$solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
 
-	foreach($array_total_account as $account){
-		if($res){
-			$account_amount = $account->amount;
-		}
+		$total_solde = array_sum($solde);
+		$total_solde2 = array_sum($solde);
+		$total_solde3 = array_sum($solde);
 	}
 
 	if(date('n', $date_start) == $i ){
-		$account_amount += $account->amount;
+		$total_solde = $acc->amount;
 	}
 
 	$data[] = [
 		html_entity_decode($monthsArr[$i]), // month
-		$account_amount
+		$total_solde,
+		$total_solde2,
+		$total_solde3,
 	];
 
 }
 
 $px3 = new DolGraph();
 $mesg = $px3->isGraphKo();
-$legend = ['Année N'];
+$legend = ['Compte 1', 'Compte 2', 'Compte 3'];
 
 if (!$mesg){
 	$px3->SetTitle("Evolution des comptes");
-	$px3->datacolor = array(array(255,206,126), array(138,233,232));
+	$px3->datacolor = array(array(93, 173, 226), array(82, 190, 128), array(230, 126, 34 ));
 	$px3->SetData($data);
 	$px3->SetLegend($legend);
 	$px3->SetType(array('lines')); // Array with type for each serie. Example: array('type1', 'type2', ...) where type can be: 'pie', 'piesemicircle', 'polar', 'lines', 'linesnopoint', 'bars', 'horizontalbars'...
@@ -485,23 +490,20 @@ $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes
 
 
 					?>
-
-				<!-- <div class="center-block"> -->
-					<div class="pull-left">
+					</div>
+					<div class="pull-right">
 						<?php print $info7 ?> : <h4 class="center"><?php print $dataInfo7 ?></h4><hr>
 						<?php print $info8 ?> : <h4 class="center"><?php print $dataInfo8 ?></h4>
+						<?php print $info9 ?> : <h4 class="center"><?php print $dataInfo9 ?></h4><hr>
+						<?php print $info10 ?> : <h4 class="center"><?php print $dataInfo10 ?></h4>
 					</div>
 					<div>
 						<?php
 							print $graphiqueC;
 						?>
 					</div>
-					<div class="pull-right">
-						<?php print $info9 ?> : <h4 class="center"><?php print $dataInfo9 ?></h4><hr>
-						<?php print $info10 ?> : <h4 class="center"><?php print $dataInfo10 ?></h4>
-					</div>
-				 </div>
-			</div> -->
+				</div>
+			</div>
 
 
 <?php

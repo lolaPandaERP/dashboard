@@ -172,25 +172,15 @@ if($dataInfo2 < 0){
 
 $monthsArr = monthArray($langs, 1); // months
 
-if($startMonthFiscalYear != 1){
-	// while($i < 12){
-		$duree = 11;
-		$total = $startMonthFiscalYear + $duree; // mois de debut + le reste des mois
-		// if($total > 12){
-		// 	echo "retour a 1";
-		// }
-		var_dump($monthsArr[$i]);
-		// print "$startMonthFiscalYear + $duree";
+// if($startMonthFiscalYear > 1){
+// 	// while($i < 12){
+// 		$duree = 11;
+// 		$total = $startMonthFiscalYear + $duree; // mois de debut + le reste des mois
 
-		// while($i <= count($monthsArr)) // tant que la duree à rajouter ne depasse pas 12
-		// {
-		// 	var_dump($monthsArr[$i]); // on peut incrémenter le mois
-		// }
-	// }
 
-} else {
-	echo "Janv";
-}
+// } else {
+// 	echo "Janv";
+// }
 
 $file = "evolutionCAchart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
@@ -282,10 +272,7 @@ $firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100 ) </br> <strong> 
 $titleItem2 = "Encours C/F";
 
 // On N year
-$customerOutstandingYear = $object->outstandingBill($startFiscalyear, $endYear, 0);
-$total_customerOutstandingYear = array_sum($customerOutstandingYear);
-
-$supplierOutstandingYear = $object->outstandingSupplier($startFiscalyear, $endYear);
+$supplierOutstandingYear = $object->outstandingSupplier($startFiscalLastyear, $endYear); // supplier
 $total_supplierOutstandingYear = array_sum($supplierOutstandingYear);
 
 $totalOutstangdingCF = ($total_customerOutstandingYear - $total_supplierOutstandingYear); // total C/F
@@ -293,9 +280,12 @@ $dataItem2 = price($totalOutstangdingCF)  ."\n€";
 
 // On current year
 $info3 = '<a href="'.DOL_URL_ROOT.'/custom/tab/global/overview.php?mode=customer" id="customer">Encours C </a>';
-$array_customer_outstanding = $object->outstandingBill($startFiscalyear, $endYear); // current
-$total = array_sum($array_customer_outstanding);
+
+$customerOustandingYear = $object->outstandingBill($startFiscalLastyear, $endYear); // customer
+$total = array_sum($customerOustandingYear);
+
 $dataInfo3 = price($total) . "\n€";
+
 
 if($dataInfo3 > 0){
 	$dataInfo3 = '<p style=color:red>'.$dataInfo3.'</p>';
@@ -596,7 +586,7 @@ $secondPop_info1 = $titleItem2;
 $secondPop_info2 = $info3;
 $secondPop_info3 = $info4;
 
-$secondPop_data1 = " Factures clients impayées <strong>(".price($total_customerOutstandingYear)." €)</strong> - factures fournisseurs impayées <strong>(".price($total_supplierOutstandingYear)." €)</strong>";
+$secondPop_data1 = " Factures clients impayées <strong>(".price(array_sum($customerOustandingYear))." €)</strong> - factures fournisseurs impayées <strong>(".price($total_supplierOutstandingYear)." €)</strong>";
 $secondPop_data2 = " Somme de toutes les factures clients impayées sur l'exercice en cours (hors brouillon) : <strong>".price($total_customerOutstandingMonth)."\n€</strong>";
 $secondPop_data3 = "Somme du 'total_ht' de toutes les factures fournisseurs impayées sur l'exercice en cours (hors brouillon) : <strong>".price($total_supplierOutstandingMonth)."\n€</strong>";
 
@@ -605,8 +595,9 @@ $secondPop_data3 = "Somme du 'total_ht' de toutes les factures fournisseurs impa
  *  MARGIN BOXE
  */
 $titleItem3 = "Marge brute N";
-$grossMargin = $object->grossMargin($startFiscalyear, $endYear);
-$dataItem3 = price($grossMargin) . "\n€";
+$grossMargin = $object->outstandingBill($startFiscalyear, $endYear);
+$total_grossMargin = array_sum($grossMargin);
+$dataItem3 = price($total_grossMargin) . "\n€";
 
 $info6 = "Marge brut prévisionnelle";
 $forecastMargin = $conf->global->FORECAST_MARGIN; // manual entry
@@ -614,16 +605,15 @@ $dataInfo6 = $forecastMargin."\n€";
 
 // Margin To produce on current mounth
 $info5 = "Marge restant à produire";
-$dataInfo5 = price($grossMargin - $forecastMargin);
+$dataInfo5 = price($total_grossMargin - $forecastMargin);
 
 // Graph
 $file = "marginChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $data = [];
-$commande = new Commande($db);
-$i = $startMonthFiscalYear;
+$invoice = new Facture($db);
 
-for($i; $i <= 12; $i++){
+for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
 	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
 	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
@@ -639,12 +629,15 @@ for($i; $i <= 12; $i++){
 	$date_start_lastYear = $lastyear.'-'.$i.'-01';
 	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
 
-	$total_grossMargin_year += $object->grossMargin($date_start, $date_end);
-	$total_grossMargin_LastYear += $object->grossMargin($date_start_lastYear, $date_end_lastYear);
+	$total_grossMargin_year_array = $object->outstandingBill($date_start, $date_end);
+	$total_grossMargin_LastYear_array = $object->outstandingBill($date_start_lastYear, $date_end_lastYear);
+
+	$total_grossMargin_year += array_sum($total_grossMargin_year_array);
+	$total_grossMargin_LastYear += array_sum($total_grossMargin_LastYear_array);
 
 	if(date('n', $date_start) == $i ){
-		$total_grossMargin_year += $commande->total_ht;
-		$total_grossMargin_LastYear += $commande->total_ht;
+		$total_grossMargin_year += $invoice->total_ht;
+		$total_grossMargin_LastYear += $invoice->total_ht;
 	}
 
 	$data[] = [
@@ -677,8 +670,8 @@ $thirdPop_info1 = $titleItem3;
 $thirdPop_info2 = $info5;
 $thirdPop_info3 = $info6;
 
-$thirdPop_data1 = "Somme (HT) des commandes clients validées / encours / livrées <strong>(".price($grossMargin)."\n€)</strong> sur l'exercice fiscal en cours";
-$thirdPop_data2 = "Total de la marge des commandes validées <strong>(".price($grossMargin)."\n€)</strong> - la marge définit dans la configuration du module <strong>(".price($marginToBeProduced)."\n€)</strong>";
+$thirdPop_data1 = "Somme (HT) des factures clients impayées <strong>(".price($total_unpaid_invoice_year)."\n€)</strong> + payées <strong>(".price($total_paid_invoice_year)."\n€)</strong> sur l'exercice fiscal en cours";
+$thirdPop_data2 = "Total de la marge des factures <strong>(".price($grossMargin)."\n€)</strong> - la marge brute prévisionnelle <strong>(".price($forecastMargin)."\n€)</strong>";
 $thirdPop_data3 = "Définit dans la configuration du module : <strong>(".price($forecastMargin)."\n€)</strong>";
 
 
@@ -687,9 +680,7 @@ $thirdPop_data3 = "Définit dans la configuration du module : <strong>(".price($
  */
 
 $titleItem4 = "Trésorerie prévisionnelle";
-$idaccount = $object->getIdBankAccount();
-$account = new Account($db);
-$account->fetch($idaccount);
+$currentAccount = $object->getIdBankAccount();
 
 //datas calcul tresury
 
@@ -700,21 +691,21 @@ $total_paid_supp_invoice_year = $object->allSupplierPaidInvoices($startFiscalyea
 $total_paid_supp_desposit_year = $object->allSupplierPaidDeposit($startFiscalyear, $endYear, 1); // paid deposit supplier  invoices
 
 
-$staticExpenses = $object->fetchStaticExpenses($startFiscalyear, $endYear);
+$staticExpenses = $object->fetchStaticExpenses($startFiscalyear, $endYear, $currentAccount);
 
 $tresury = ($total_solde - ($staticExpenses + $total_paid_supp_invoice_year + $total_paid_supp_desposit_year)); // calcul for net tresury
 
 $dataItem4 = price($tresury) . "\n€";
 
 $info7 = "Charges mensuelles";
-$staticExpenses = $object->fetchStaticExpenses($startFiscalyear, $endYear); // static expenses
+$staticExpenses = $object->fetchStaticExpenses($startFiscalyear, $endYear, $currentAccount); // static expenses
 $variablesExpenses = $object->fetchVariablesExpenses($startFiscalyear, $endYear); // variable expenses
 
 $result3 = intval( ($variablesExpenses + $staticExpenses) / 12);
 $dataInfo7 = price($result3) . "\n€"; // arrondi
 
 $info8 = "Recurrent mensuel";
-$recurring_monthly = $conf->global->RECURRING_MONTHLY;
+$recurring_monthly = $object->monthly_recurring();
 $dataInfo8 = price($recurring_monthly) . "\n€";
 
 $bankAccount = $object->fetchSolde(5, $date_start, $date_end);
@@ -784,23 +775,43 @@ $fourPop_info3 = $info8;
 
 $solde = $object->fetchSoldeOnYear($startFiscalyear, $endYear, $idaccount);
 $total_solde = array_sum($solde);
+$detailsinfo = $object->fetchVariablesExpenses($startFiscalyear, $endYear);
+
+// details datas for popupinfo (variables charges)
+$date_now = date('Y-m-d', dol_now());
+$total_tva = $object->fetchTVA($startFiscalyear, $date_now); // TVA
+$supplier_invoice_total = $object->fetchSupplierInvoices($startFiscalyear, $endYear); // Suppliers Invoices
+
+// Details datas for static variable (on last month)
+
+$salarys = $object->fetchSalarys($firstDayLastMonth, $date_now, $currentAccount);
+
+$socialesTaxes_charges = $object->fetchSocialAndTaxesCharges($firstDayLastMonth, $date_now, $currentAccount);
+$emprunts = $object->fetchEmprunts($firstDayLastMonth, $date_now, $currentAccount);
+$variousPaiements = $object->fetchVariousPaiements($firstDayLastMonth, $date_now, $currentAccount);
 
 $fourPop_data1 = '<i>Solde du compte en banque - sorties d\'argent + entrée d\'argent </i>
 				  <br> <strong> SORTIE </strong> :
 				  <ul>
-				  	<li><strong>Charges fixes</strong> (salaires, emprunts, paiements divers, charge sociales et fiscales) : par mois </li>
-					<li><strong>Factures fournisseurs impayées </strong> : <i style="color:red;">Attention, elles doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
+				  	<li><strong>Charges fixes*</strong> (salaires, emprunts, paiements divers, charge sociales et fiscales) : par mois </li>
+					<li><strong>Factures fournisseurs impayées </strong> : <i style="color:red;"></br> Attention, elles doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
 					<li><strong>TVA (client et fournisseur)</strong> : par mois </li>
-					<li><strong>Notes de frais (approuvée)</strong> : par mois </li>
+					<li><strong>Notes de frais (validée et approuvée)</strong> : par mois </li>
 				  </ul>
 				  <br> <strong> ENTREE </strong> :
 				  <ul>
 				  	<li><strong>Factures clients impayées </strong> : par mois </li>
-					<li><strong>Avoir fournisseurs impayées </strong> : <i style="color:red;">Attention, ils doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
-				  </ul>';
+					<li><strong>Avoir fournisseurs impayées </strong> : <i style="color:red;"> <br> Attention, ils doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
+				  </ul></br>';
 
-$fourPop_data2 = "charges variables <strong>(".price($variablesExpenses)."\n€)</strong> + charges fixes <strong>(".price($staticExpenses)."\n€)</strong> / 12";
-$fourPop_data3 = "Saisie manuelle - Configuration du module";
+$fourPop_data2 = "<ul><li>charges variables (".price($variablesExpenses)."\n€)</strong> + charges fixes (du mois précédent) (".price($staticExpenses)."\n€)</strong> </li>
+
+<br> <strong> <li>Détail charges fixes </strong> :  Salaires (".price($salarys)."\n€) </strong> +  Paiements divers (".price($variousPaiements)."\n€) </strong> +  emprunts (".price($emprunts)."\n€) </strong> + charges sociales et fiscales (".price($emprunts)."\n€) </strong> </li>
+ <i style='color:blue;'> Les charges fixes sont calculées sur le mois précédent </i>
+<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs (".price($supplier_invoice_total)."\n€) </strong> +  TVA du mois courant(".intval($total_tva).") </strong> </li>
+</ul>";
+
+$fourPop_data3 = "Montant total (TTC) des modèles de factures client ".price($recurring_monthly)."\n€";
 
 
 /*

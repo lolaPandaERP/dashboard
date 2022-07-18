@@ -655,18 +655,20 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 	$date = date('Y-m-d');
 
-
+	// Array of standard invoices / credit note invoice
 	$array_supplier_exceed = $object->fetchSupplierrBillExceed($date, $date_start, $date_end, 2);
 	$array_supplier_credit_exceed = $object->fetchSupplierrBillExceed($date, $date_start, $date_end, 0);
 
-	$total_amount_exceed = array_sum($array_supplier_exceed + $array_supplier_credit_exceed);
-	$nb_total_exceed = count($array_supplier_exceed + $array_supplier_credit_exceed);
+	$total_amount_exceed = array_sum($array_supplier_exceed);
+	$total_amount_credit_deposit = array_sum($array_supplier_credit_exceed);
 
+	$nb_supplier_exceed = count($array_supplier_exceed);
+	$nb_credit_deposit = count($array_supplier_credit_exceed);
 
 	$total_nb_exceed = ($nb_supplier_exceed + $nb_credit_deposit);
 	$total_amount_exceed = ($total_amount_exceed + $total_amount_credit_deposit);
 
-	$nb_outsupplierExceeded += count($array_supplier_exceed + $array_supplier_credit_exceed);
+	$nb_outsupplierExceeded = count($array_supplier_exceed + $array_supplier_credit_exceed);
 
 	if(date('n', $date_start == $i)){
 		$total_nb_exceed += $invoice_supplier->total_ttc;

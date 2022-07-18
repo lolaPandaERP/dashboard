@@ -1058,6 +1058,7 @@ class General extends FactureStats
 	public function fetchAllBankAccount(){
 		$sql = "SELECT *";
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
+
 		$resql = $this->db->query($sql);
 
 		$result = [];
@@ -1068,6 +1069,24 @@ class General extends FactureStats
 		}
 		return $result;
 	}
+	// Detail et lié avec la table gérant les comptes et les ecritures bancaires pour retrouver le solde de chaque compte
+	public function fetchAllDetailBankAccount(){
+		$sql = "SELECT *";
+		$sql .= " FROM ".MAIN_DB_PREFIX."bank as b";
+		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."bank_account as ba";
+		$sql .= " WHERE b.fk_account = ba.rowid";
+
+		$resql = $this->db->query($sql);
+
+		$result = [];
+		if($resql){
+			while($obj = $this->db->fetch_object(($resql))){
+				$result[] = $obj;
+			}
+		}
+		return $result;
+	}
+
 
 	public function fetchSolde($account, $date_start, $date_end){
 
@@ -1453,14 +1472,14 @@ class General extends FactureStats
  	}
 
 
-	 public function outstandingBill($firstDayYear, $lastDayYear){
+	 public function outstandingBill($date_start, $date_end){
 
 			global $db;
 
-		 	// Encours total sur l'exercice fiscal
+		 	// Encours client total sur l'exercice fiscal
 			$sql = "SELECT * ";
 			$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-			$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
+			$sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
 			$sql .= " AND paye = 0";
 			$sql .= " AND fk_statut != 0 ";
 
@@ -1562,10 +1581,32 @@ class General extends FactureStats
 	 * ---------------- TRESURY ---------------------
 	 */
 
+	  /**
+	  * Retourne le montant total (TTC - hors brouillon) des listes de modeles de factures client
+	  *pour le recurrent mensuel
+	  */
+	  public function monthly_recurring(){
+
+		// TOTAL AMOUNT OFF ALL SUPPLIERS INVOICES TO THE CURRENT YEAR
+		$sql = "SELECT SUM(total_ttc) as total_ttc";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_rec";
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->total_ttc;
+			}
+			$this->db->free($resql);
+		}
+		return $result;
+	}
+
+
 	 /**
 	  * Retourne le montant total des charges variables
 	  */
-	 public function fetchVariablesExpenses($firstDayYear, $lastDayYear){
+	 public function fetchSupplierInvoices($firstDayYear, $lastDayYear){
 
 		// TOTAL AMOUNT OFF ALL SUPPLIERS INVOICES TO THE CURRENT YEAR
 		$sql = "SELECT SUM(total_ht) as total_ht";
@@ -1576,44 +1617,63 @@ class General extends FactureStats
 		if ($resql) {
 			if ($this->db->num_rows($resql)) {
 				$obj = $this->db->fetch_object($resql);
-				$result = $obj->total_ht;
+				$supplier_invoice = $obj->total_ht;
 			}
 			$this->db->free($resql);
 		}
 
+		return $supplier_invoice;
+
+	}
+
+	public function fetchTVA($firstDayCurrentMonth, $date_now = ''){
 
 		// VAT ADJUSTED TO THE CURRENT YEAR
+		$date_now = dol_now();
+
 		$sql = "SELECT SUM(amount) as amount";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "tva";
-		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "c_tva";
+		$sql .= " WHERE datec BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $date_now. "'";
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
 			if ($this->db->num_rows($resql)) {
 				$obj = $this->db->fetch_object($resql);
-				$result2 = $obj->amount;
+				$tva = $obj->amount;
 			}
 			$this->db->free($resql);
 		}
 
-		// CALCUL BETWWEN SUPPLIER INVOICE AND VAT ADJUSTED
-		$resultat = ($result + $result2);
+		return $tva;
+	}
 
+
+	 public function fetchVariablesExpenses($date_start, $date_end){
+
+		// CALCUL BETWWEN SUPPLIER INVOICE AND VAT ADJUSTED
+		$supplier_invoice = $this->fetchSupplierInvoices($date_start, $date_end);
+		$tva = $this->fetchTVA($date_start, $date_end);
+
+		$resultat = ($supplier_invoice + $tva);
 		return $resultat;
 	 }
 
-	 /**
-	  * Retourne le montant total des charges fixes
-	  */
-	  public function fetchStaticExpenses($firstDayYear, $lastDayYear){
 
-		$ret = $this->getIdBankAccount();
+
+
+
+
+	/**
+	 * Retourne le montant total des salaires
+	 */
+	 public function fetchSalarys($date_start, $date_end, $currentAccount){
 
 		// SALARY
 		$sql = "SELECT SUM(amount) as amount";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "salary";
-		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
-		$sql .= "AND fk_account = ".$ret->rowid;
+		$sql .= " WHERE datec BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
+		$sql .= "AND fk_account = ".$currentAccount;
+
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
@@ -1624,51 +1684,93 @@ class General extends FactureStats
 			$this->db->free($resql);
 		}
 
+		return $salarys;
+	 }
+
+
+	/**
+	 * Retourne le montant total des charges sociales et fiscales
+	 */
+		public function fetchSocialAndTaxesCharges($date_start, $date_end, $currentAccount){
+
 		// SOCIAL CHARGES AND TAX CHARGES
 		$sql = "SELECT SUM(amount) as amount";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "chargesociales";
-		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
-		$sql .= "AND fk_account = ".$ret->rowid;
+		$sql .= " WHERE datec BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
+		$sql .= "AND fk_account = ".$currentAccount;
 
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
 			if ($this->db->num_rows($resql)) {
 				$obj = $this->db->fetch_object($resql);
-				$socialesTaxes_charges = $obj->amount;
+				$socialAndTaxesCharges = $obj->amount;
 			}
 			$this->db->free($resql);
 		}
+		return $socialAndTaxesCharges;
+	}
 
+	/**
+	 * Retourne le montant total des emprunts
+	 */
+	public function fetchEmprunts($date_start, $date_end, $currentAccount){
 
 		// EMPRUNTS
-		$sql = "SELECT SUM(amount) as amount";
+		$sql = "SELECT SUM(capital) as capital";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "loan";
-		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
-		$sql .= "AND fk_bank = ".$ret->rowid;
+		$sql .= " WHERE datec BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
+		$sql .= "AND fk_account = ".$currentAccount;
+
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
 			if ($this->db->num_rows($resql)) {
 				$obj = $this->db->fetch_object($resql);
-				$emprunts = $obj->amount;
+				$emprunts = $obj->capital;
 			}
 			$this->db->free($resql);
 		}
+		return $emprunts;
+	}
 
-		// VARIOUS PAYMENTS
+	/**
+	 * Retourne le montant total des paiements divers
+	 */
+	public function fetchVariousPaiements($date_start, $date_end, $currentAccount){
+
+
 		$sql = "SELECT SUM(amount) as amount";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "payment_various";
-		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
+		$sql .= " FROM '. MAIN_DB_PREFIX . 'payment_various' as VP";
+		$sql .= " WHERE datec BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
+		$sql .= " AND sens = 0"; // debit
+		$sql .= " INNER JOIN ' . MAIN_DB_PREFIX . 'bank'  as B";
+		$sql .= " INNER JOIN ' . MAIN_DB_PREFIX . 'bank_account' as BA";
+		$sql .= " AND VP.fk_bank = B.rowid";
+		$sql .= " AND B.fk_account = BA.rowid";
+
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
 			if ($this->db->num_rows($resql)) {
 				$obj = $this->db->fetch_object($resql);
-				$variousPaiements = $obj->amount;
+				$variouspaiments = $obj->amount;
 			}
 			$this->db->free($resql);
 		}
+
+		return $variouspaiments;
+	}
+
+	 /**
+	  * Retourne le montant total des charges fixes
+	  */
+	  	public function fetchStaticExpenses($date_start, $date_end, $currentAccount){
+
+		$salarys = $this->fetchSalarys($date_start, $date_end, $currentAccount);
+		$socialesTaxes_charges = $this->fetchSocialAndTaxesCharges($date_start, $date_end, $currentAccount);
+		$emprunts = $this->fetchEmprunts($date_start, $date_end, $currentAccount);
+		$variousPaiements = $this->fetchVariousPaiements($date_start, $date_end, $currentAccount);
 
 		$resultat = ($salarys + $socialesTaxes_charges + $emprunts + $variousPaiements);
 
