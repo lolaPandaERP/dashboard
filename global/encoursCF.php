@@ -218,20 +218,20 @@ $graphiqueA = $px->show($customer_oustandingChart);
  */
 
 $titleItem2 = "Encours fournisseurs";
-$outstandingSupplierOnYear = $object->outstandingSupplier($startFiscalyear, $endYear);
+$outstandingSupplierOnYear = $object->outstandingSupplier($startFiscalyear, $endYear, 0);
 $total_outstandingSupplierOnYear = array_sum($outstandingSupplierOnYear); // fetch total in current year
 $dataItem2 = price($total_outstandingSupplierOnYear) . "\n€";
 
 $info3 = "Encours fournisseur M-1";
-$outstandingSupplierOnLastMonth = $object->outstandingSupplier($firstDayLastMonth, $lastDayLastMonth);
+$outstandingSupplierOnLastMonth = $object->outstandingSupplier($firstDayLastMonth, $lastDayLastMonth, 0);
 $total_outstandingSupplierOnLastMonth = array_sum($outstandingSupplierOnLastMonth); // fetch total in last month
 $dataInfo3 = price($total_outstandingSupplierOnLastMonth)."\n€";
 
 $info4 = "Progression";
-$OutSupplierCurrentMonth = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth);
+$OutSupplierCurrentMonth = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 0);
 $total_OutSupplierCurrentMonth = array_sum($OutSupplierCurrentMonth); // fetch total in current month
 
-$OutSupplierLastMonth = $object->outstandingSupplier($firstDayLastMonth, $lastDayLastMonth);
+$OutSupplierLastMonth = $object->outstandingSupplier($firstDayLastMonth, $lastDayLastMonth, 0);
 
 $nbOutSupplierCurrentMonth = count($OutSupplierCurrentMonth);
 $nbOutSupplierLastMonth = count($OutSupplierLastMonth);
@@ -259,7 +259,7 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-	$array_supplier_outstanding_year = $object->outstandingSupplier($date_start, $date_end);
+	$array_supplier_outstanding_year = $object->outstandingSupplier($date_start, $date_end, 0);
 
 	$nb_total_supplier_outstanding_year = count($array_supplier_outstanding_year); // number
 	$amount_total_supplier_outstanding_year += array_sum($array_supplier_outstanding_year); // amount
@@ -354,7 +354,7 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	/**
 	 * SUPPLIERS
 	*/
-	$total_supplier_outstanding_year = $object->outstandingSupplier($date_start, $date_end);
+	$total_supplier_outstanding_year = $object->outstandingSupplier($date_start, $date_end, 0);
 	$amount_total_supplier_outstanding_year = array_sum($total_supplier_outstanding_year);
 
 	if(date('n', $date_start) == $i){
@@ -410,7 +410,7 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	/**
 	 * SUPPLIERS
 	*/
-	$total_supplier_outstanding_Lastyear = $object->outstandingSupplier($date_start_lastYear, $date_end_lastYear);
+	$total_supplier_outstanding_Lastyear = $object->outstandingSupplier($date_start_lastYear, $date_end_lastYear, 0);
 	$amount_total_supplier_outstanding_Lastyear = array_sum($total_supplier_outstanding_Lastyear);
 
 	if(date('n', $date_start) == $i){
@@ -733,9 +733,11 @@ $graphiqueE = $px5->show($total_supplier_exceed);
 		<h4 class="text-center">
 			<?php print $dataItem4 ?>
 		</h4>
+		<div>
 			<?php print $graphiqueD ?>
 		</div>
-	</div>
+		</div>
+		</div>
 
 
   <div class="card">
@@ -765,6 +767,7 @@ $graphiqueE = $px5->show($total_supplier_exceed);
 		<h4 class="text-center">
 			<?php print $dataItem5 ?>
 		</h4>
+		<div>
 			<?php print $graphiqueE ?>
 		</div>
 	</div>

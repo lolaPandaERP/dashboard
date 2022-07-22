@@ -103,6 +103,8 @@ $endyear = $year;
 $startFiscalYear = $conf->global->START_FISCAL_YEAR;
 $startMonthFiscalYear = $object->startMonthForGraphLadder($startFiscalYear, 12);
 
+$currentAccount = $object->getIdBankAccount();
+$currentAccount = intval($currentAccount);
 
 /**
  * TRESURY
@@ -110,28 +112,15 @@ $startMonthFiscalYear = $object->startMonthForGraphLadder($startFiscalYear, 12);
 $titleItem1 = "Trésorerie";
 
 $idBankAccount = $object->getIdBankAccount();
-$array_tresury = $object->fetchSoldeOnYear($startFiscalyear, $endYear, 3);
+$array_tresury = $object->fetchSoldeOnYear($startFiscalyear, $endYear, $currentAccount);
 $total_tresury = array_sum($array_tresury);
 
 $dataItem1 = price($total_tresury) ."\n€";
 
 $info1 = "Trésorerie M-1";
 
-// $sql = "SELECT SUM(amount) as amount";
-// $sql .= " FROM ".MAIN_DB_PREFIX."bank";
-// $sql .= " WHERE dateo BETWEEN '".$firstDayLastMonth."' AND '".$lastDayLastMonth.'" ';
-// $resql = $db->query($sql);
-
-// if ($resql) {
-// 	if ($this->db->num_rows($resql)) {
-// 		$obj = $this->db->fetch_object($resql);
-// 		$result = $obj->amount;
-// 	}
-// 	$this->db->free($resql);
-// }
-// $account = $object->getIdBankAccount();
-// $soldeOnLastMonth = $object->fetchSolde($firstDayLastMonth, $lastDayLastMonth, 3);
-// $dataInfo1 = price($result) ."\n€";
+$soldeOnLastMonth = $object->fetchSoldeOnYear($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
+$dataInfo1 = price($soldeOnLastMonth) ."\n€";
 
 $info2 = "Progression";
 
@@ -163,8 +152,8 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	$solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
 	$total_solde = array_sum($solde);
 
-	$supplier_paid_invoice = $object->allSupplierPaidInvoices($date_start, $date_end, 1);
-	$supplier_paid_deposit = $object->allSupplierPaidDeposit($date_start, $date_end, 1);
+	// $supplier_paid_invoice = $object->allSupplierUnPaidInvoices($date_start, $date_end, 1);
+	// $supplier_paid_deposit = $object->allSupplierUnPaidDeposit($date_start, $date_end, 1);
 
 	$tresury = $total_solde - ($supplier_paid_invoice + $supplier_paid_deposit);
 
@@ -199,7 +188,7 @@ $graphiqueA = $p1->show($tresuryChart);
 
 // Total charge of current month
 $info3 = "Charges fixes";
-$staticExpenses = $object->fetchStaticExpenses($startFiscalyear, $endYear);
+$staticExpenses = $object->fetchStaticExpenses($startFiscalyear, $endYear, $currentAccount);
 $dataInfo3 = price($staticExpenses) . "\n€";
 
 $info4 = "Charges variables";
@@ -239,7 +228,7 @@ for($i = $startMonthFiscalYear; $i <= 12 ; $i++){
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-	$staticExpenses += $object->fetchStaticExpenses($date_start, $date_end); // static
+	$staticExpenses += $object->fetchStaticExpenses($date_start, $date_end, $currentAccount); // static
 	$variableExpenses += $object->fetchVariablesExpenses($date_start, $date_end); // variables
 
 	$total_charges = ($staticExpenses + $variableExpenses);
@@ -258,7 +247,7 @@ $mesg = $px2->isGraphKo();
 $legend = ['Année N'];
 
 if (!$mesg){
-	$px2->SetTitle("Evolution du chiffre d'affaires");
+	$px2->SetTitle("Evolution du montant des charges");
 	$px2->datacolor = array(array(255,206,126), array(138,233,232));
 	$px2->SetData($data);
 	$px2->SetLegend($legend);
@@ -293,19 +282,16 @@ print $object->load_navbar($currentPage);
 
 include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
 
-
 /**
  *  CUSTOMER OUTSTANDING AT 30 DAYS
  */
 
 
 $titleItem3 = "Encours clients à 30 jours";
-
 $dataItem3 = 100;
 
 $accounts = $object->fetchAllBankAccount();
 $nbAccount = count($accounts);
-
 
 // Graph
 $data = [];
@@ -329,12 +315,12 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
 	foreach($array_total_account as $acc){
-		$idaccount = $acc->id;
-		$solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
+		$idaccount = $acc->rowid;
 
-		$total_solde = array_sum($solde);
-		$total_solde2 = array_sum($solde);
-		$total_solde3 = array_sum($solde);
+		$solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
+		$total_solde =array_sum($solde);
+
+		// $solde = $acc->solde(1);
 	}
 
 	if(date('n', $date_start) == $i ){
@@ -343,11 +329,8 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
 	$data[] = [
 		html_entity_decode($monthsArr[$i]), // month
-		$total_solde,
-		$total_solde2,
-		$total_solde3,
+		$total_solde++
 	];
-
 }
 
 $px3 = new DolGraph();
@@ -364,7 +347,6 @@ if (!$mesg){
 	$px3->SetWidth('500');
 	$customerToDaysChart = $px3->draw($file, $fileurl);
 }
-
 $graphiqueC = $px3->show($customerToDaysChart);
 
 
@@ -380,7 +362,6 @@ $customer_validated_invoices = $object->outstandingBill($startFiscalyear, $endYe
 $total_customer_validated_invoices = array_sum($customer_validated_invoices);
 
 $customerToCash = ($total_customer_validated_invoices + $customer_validated_orders);
-
 $dataInfo7 = price($customerToCash) . "\n€";
 
 
@@ -393,18 +374,15 @@ $totalSoldesAccount = $object->totalSoldes();
 $stayBank = ($totalSoldesAccount + $customerToCash); // addition du solde des 3 comptes bq + "client a encaisser"
 $dataInfo8 = price($stayBank) . "\n€";
 
-
 /**
  * SUPPLIER TO PAID
  */
 $info10 = "Fournisseurs à payer"; // total factures F impayées et commandes fournisseurs validées
-$supplier_unpaid_invoices = $object->outstandingSupplier($startFiscalyear, $endYear);
+$supplier_unpaid_invoices = $object->outstandingSupplier($startFiscalyear, $endYear, 0);
 $total_supplier_unpaid_invoices = array_sum($supplier_unpaid_invoices);
 
 $supplier_ordered_order = $object->supplier_ordered_orders($startFiscalyear, $endYear);
-
 $supplierToPaid = $total_supplier_unpaid_invoices + $supplier_ordered_order;
-
 $dataInfo10 = price($supplierToPaid) . "\n€";
 
 /**
@@ -468,9 +446,6 @@ $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes
 						$acc = new Account($db);
 						$acc->fetch($account->rowid);
 
-						if($conf->multicurrency->enabled){
-
-						}
 						$solde = $acc->solde(1);
 
 						print '<div class="mainbq">';

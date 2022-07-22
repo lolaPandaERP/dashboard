@@ -382,7 +382,7 @@ $thirdPop_data2 = "Liste des tiers pour chaques commandes validées";
 											foreach ($result3 as $res)
 											{
 												$societe = new Societe($db);
-												$societe->fetch($res->fk_soc);
+												$res = $societe->fetch($res->fk_soc);
 
 												$commande = new Commande($db);
 												$commande->fetch($res->rowid);

@@ -1040,6 +1040,9 @@ class General extends FactureStats
 	 * ---- FUNCTIONS FOR DASHBOARD ----
 	*/
 
+	/**
+	 * Retourne le compte courant utilisé
+	 */
 	public function getIdBankAccount(){
 		$sql = "SELECT rowid";
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
@@ -1055,8 +1058,11 @@ class General extends FactureStats
 		return $result;
 	}
 
+	/**
+	 * Retourne tous les comptes en banque
+	 */
 	public function fetchAllBankAccount(){
-		$sql = "SELECT *";
+		$sql = "SELECT * ";
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
 
 		$resql = $this->db->query($sql);
@@ -1069,6 +1075,7 @@ class General extends FactureStats
 		}
 		return $result;
 	}
+
 	// Detail et lié avec la table gérant les comptes et les ecritures bancaires pour retrouver le solde de chaque compte
 	public function fetchAllDetailBankAccount(){
 		$sql = "SELECT *";
@@ -1189,7 +1196,7 @@ class General extends FactureStats
 		$sql = "SELECT * ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "bank";
 		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-		$sql .= "AND fk_account = 4";
+		$sql .= "AND fk_account = ".$account;
 		$resql = $this->db->query($sql);
 
 		$result = [];
@@ -1343,21 +1350,22 @@ class General extends FactureStats
 	 * INVOICES
 	 */
 
-	 function fetchInvoice($paye = ''){
+	 function fetchInvoice($date_start, $date_end){
+
 		global $db;
-
 		$sql = "SELECT * ";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-		$sql .= "WHERE paye = ".$paye;
-		$resql = $db->query($sql);
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture ";
+		$sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
+		$sql .= "AND fk_statut != 0";
 
+		$resql = $this->db->query($sql);
 		$result = [];
+
 		if($resql){
 			while($obj = $db->fetch_object(($resql))){
 				$result[] = $obj;
 			}
 		}
-
 		return $result;
 	 }
 
@@ -1414,7 +1422,7 @@ class General extends FactureStats
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $startfiscalyear . "' AND '" . $lastDayYear . "' ";
 		$sql .= "AND fk_statut != 0 "; // not draft
-		$sql .= "AND paye = ".$paye." AND type = 0"; // paid or unpaid
+		$sql .= "AND paye = ".$paye." AND type = 0";
 
 		$resql = $db->query($sql);
 
@@ -1428,6 +1436,7 @@ class General extends FactureStats
 		return $standard_invoices;
 	 }
 
+	 // Retourne le total du montant HT de tous les avoirs payés et impayés sur l'exercice en cours
 	 public function allDeposit($startfiscalyear, $lastDayYear, $paye = ''){
 		global $db;
 
@@ -1473,8 +1482,6 @@ class General extends FactureStats
 
 
 	 public function outstandingBill($date_start, $date_end){
-
-			global $db;
 
 		 	// Encours client total sur l'exercice fiscal
 			$sql = "SELECT * ";
@@ -1529,13 +1536,12 @@ class General extends FactureStats
 	 /**
 	  * Return all inpaid supplier invoice on period
 	  */
-	 public function outstandingSupplier($date_start, $date_end){
+	 public function outstandingSupplier($date_start, $date_end, $paye){
 
-		// Encours fournisseur du mois courant
 	   $sql = "SELECT * ";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
 	   $sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
-	   $sql .= " AND paye = 0";
+	   $sql .= " AND paye = ".$paye;
 	   $sql .= " AND fk_statut != 0 ";
 
 	   $resql = $this->db->query($sql);
@@ -1550,7 +1556,7 @@ class General extends FactureStats
 	}
 
 	 /*
-	  Fetch all unpaid customer invoices whose due date has passed
+	  Fetch all unpaid supplier invoices whose due date has passed
 	  */
 	  public function fetchSupplierrBillExceed($date = '', $date_start, $date_end, $type=''){
 		global $db;
@@ -1574,6 +1580,29 @@ class General extends FactureStats
 	   return $result;
 	}
 
+	 /*
+	  Retourne la somme total (TTC) des factures récurrentes
+	  */
+	  public function fetchModelInvoices($firstDayCurrentMonth, $lastDayCurrentMonth){
+		global $db;
+
+	   $sql = "SELECT SUM(total_ttc) as total_ttc";
+	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_rec";
+	   $sql .= " WHERE datec BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
+	   $sql .= " AND suspended = 0";
+
+	   $resql = $this->db->query($sql);
+
+	   $result = [];
+
+	   if($resql){
+		   while($obj = $this->db->fetch_object(($resql))){
+			   $result[] = $obj->total_ttc;
+		   }
+	   }
+	   return $result;
+	}
+
 
 
 
@@ -1581,34 +1610,11 @@ class General extends FactureStats
 	 * ---------------- TRESURY ---------------------
 	 */
 
-	  /**
-	  * Retourne le montant total (TTC - hors brouillon) des listes de modeles de factures client
-	  *pour le recurrent mensuel
-	  */
-	  public function monthly_recurring(){
-
-		// TOTAL AMOUNT OFF ALL SUPPLIERS INVOICES TO THE CURRENT YEAR
-		$sql = "SELECT SUM(total_ttc) as total_ttc";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_rec";
-		$resql = $this->db->query($sql);
-
-		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$result = $obj->total_ttc;
-			}
-			$this->db->free($resql);
-		}
-		return $result;
-	}
-
-
 	 /**
-	  * Retourne le montant total des charges variables
+	  * Retourne le montant total (HT) des factures fpurnisseurs sur une période donnée
 	  */
 	 public function fetchSupplierInvoices($firstDayYear, $lastDayYear){
 
-		// TOTAL AMOUNT OFF ALL SUPPLIERS INVOICES TO THE CURRENT YEAR
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
 		$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
@@ -1626,9 +1632,11 @@ class General extends FactureStats
 
 	}
 
+	/**
+	 * Retourne le montant total de la TVA
+	 */
 	public function fetchTVA($firstDayCurrentMonth, $date_now = ''){
 
-		// VAT ADJUSTED TO THE CURRENT YEAR
 		$date_now = dol_now();
 
 		$sql = "SELECT SUM(amount) as amount";
@@ -1647,10 +1655,36 @@ class General extends FactureStats
 		return $tva;
 	}
 
+	/**
+	 * Retourne le montant total des notes de frais sur une période donnée
+	 */
+	public function fetchExpenses($date_start, $date_end = ''){
 
+		$sql = "SELECT SUM(total_ttc) as total_ttc";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "expensereport";
+		$sql .= " WHERE date_debut >= '" . $date_start . "' AND date_fin <= '" . $date_end. "'";
+		$sql .= " AND fk_statut = 5";
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$tva = $obj->total_ttc;
+			}
+			$this->db->free($resql);
+		}
+
+		return $tva;
+	}
+
+	/**
+	 * Calcul pour le montant des charges variables
+	 * Doit prendre en compte :
+	 *		- factures fournisseurs impayées
+	 *		- le total de la TVA du mois en cours
+	 */
 	 public function fetchVariablesExpenses($date_start, $date_end){
 
-		// CALCUL BETWWEN SUPPLIER INVOICE AND VAT ADJUSTED
 		$supplier_invoice = $this->fetchSupplierInvoices($date_start, $date_end);
 		$tva = $this->fetchTVA($date_start, $date_end);
 
@@ -1658,20 +1692,16 @@ class General extends FactureStats
 		return $resultat;
 	 }
 
-
-
-
-
-
 	/**
-	 * Retourne le montant total des salaires
+	 * Retourne le montant total des salaires sur une période donnée
 	 */
-	 public function fetchSalarys($date_start, $date_end, $currentAccount){
+	 public function fetchSalarys($firstDayLastMonth, $lastDayLastMonth, $currentAccount){
 
 		// SALARY
 		$sql = "SELECT SUM(amount) as amount";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "salary";
-		$sql .= " WHERE datec BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
+		$sql .= " WHERE datesp = '" . $firstDayLastMonth . "' ";
+		$sql .= "AND dateep = '" . $lastDayLastMonth . "'";
 		$sql .= "AND fk_account = ".$currentAccount;
 
 		$resql = $this->db->query($sql);
@@ -1679,24 +1709,23 @@ class General extends FactureStats
 		if ($resql) {
 			if ($this->db->num_rows($resql)) {
 				$obj = $this->db->fetch_object($resql);
-				$salarys = $obj->amount;
+				$result = $obj->amount;
 			}
 			$this->db->free($resql);
 		}
 
-		return $salarys;
+		return $result;
 	 }
 
 
 	/**
-	 * Retourne le montant total des charges sociales et fiscales
+	 * Retourne le montant total des charges sociales et fiscales sur une période donnée
 	 */
 		public function fetchSocialAndTaxesCharges($date_start, $date_end, $currentAccount){
 
-		// SOCIAL CHARGES AND TAX CHARGES
 		$sql = "SELECT SUM(amount) as amount";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "chargesociales";
-		$sql .= " WHERE datec BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
+		$sql .= " WHERE date_ech BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
 		$sql .= "AND fk_account = ".$currentAccount;
 
 		$resql = $this->db->query($sql);
@@ -1712,15 +1741,15 @@ class General extends FactureStats
 	}
 
 	/**
-	 * Retourne le montant total des emprunts
+	 * Retourne le montant total (capital) des emprunts sur une période donnée
 	 */
 	public function fetchEmprunts($date_start, $date_end, $currentAccount){
 
 		// EMPRUNTS
 		$sql = "SELECT SUM(capital) as capital";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "loan";
-		$sql .= " WHERE datec BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
-		$sql .= "AND fk_account = ".$currentAccount;
+		$sql .= " WHERE datestart BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
+		$sql .= "AND fk_bank = ".$currentAccount;
 
 		$resql = $this->db->query($sql);
 
@@ -1735,19 +1764,20 @@ class General extends FactureStats
 	}
 
 	/**
-	 * Retourne le montant total des paiements divers
+	 * Retourne le montant total des paiements divers sur une période donnée
 	 */
 	public function fetchVariousPaiements($date_start, $date_end, $currentAccount){
 
-
 		$sql = "SELECT SUM(amount) as amount";
-		$sql .= " FROM '. MAIN_DB_PREFIX . 'payment_various' as VP";
-		$sql .= " WHERE datec BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
-		$sql .= " AND sens = 0"; // debit
-		$sql .= " INNER JOIN ' . MAIN_DB_PREFIX . 'bank'  as B";
-		$sql .= " INNER JOIN ' . MAIN_DB_PREFIX . 'bank_account' as BA";
-		$sql .= " AND VP.fk_bank = B.rowid";
-		$sql .= " AND B.fk_account = BA.rowid";
+		$sql .= " FROM ". MAIN_DB_PREFIX . "payment_various as vp" ;
+		// $sql .= " INNER JOIN ".MAIN_DB_PREFIX."bank as b";
+		// $sql .= "ON vp.fk_bank = b.rowid";
+		// $sql .= " INNER JOIN ".MAIN_DB_PREFIX."bank_account as ba";
+		$sql .= " WHERE vp.datep BETWEEN \"2022-06-01\" AND \"2022-06-30\" ";
+		$sql .= "AND vp.sens = 0 ";
+
+		// $sql .= "AND b.fk_account = ba.rowid";
+
 
 		$resql = $this->db->query($sql);
 
@@ -1763,7 +1793,12 @@ class General extends FactureStats
 	}
 
 	 /**
-	  * Retourne le montant total des charges fixes
+	  * Calcul pour retourner le montant total des charges fixes
+	  * Doit prendre en compte :
+	  *      - salaire
+	  *		 - Charges sociales et fiscales
+	  *		 - Emprunts
+	  *		 - Paiements divers
 	  */
 	  	public function fetchStaticExpenses($date_start, $date_end, $currentAccount){
 
@@ -1779,12 +1814,12 @@ class General extends FactureStats
 
 
 	// Retourne les factures fournisseurs réglées sur l'exercice fiscal
-	public function allSupplierPaidInvoices($firstDayYear, $lastDayYear, $paye=''){
+	public function allSupplierUnpaidInvoices($firstDayYear, $lastDayYear){
 
 	$sql = "SELECT SUM(total_ht) as total_ht";
 	$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
 	$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
-	$sql .= " AND fk_statut != 0 AND paye = ".$paye." AND type=0";
+	$sql .= " AND fk_statut != 0 AND paye = 0 AND type=0";
 
 	$resql = $this->db->query($sql);
 
@@ -1799,13 +1834,15 @@ class General extends FactureStats
 	return $result;
 }
 
-	// Retourne les factures fournisseurs réglées sur l'exercice fiscal
-	public function allSupplierPaidDeposit($firstDayYear, $lastDayYear){
+	/*
+	* Retourne les factures fournisseurs réglées sur l'exercice fiscal
+	*/
+	public function allSupplierUnpaidDeposit($firstDayYear, $lastDayYear){
 
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
 		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
-		$sql .= " AND fk_statut != 0 AND paye = 1 AND type=2";
+		$sql .= " AND fk_statut != 0 AND paye = 0 AND type = 2";
 
 		$resql = $this->db->query($sql);
 
@@ -1823,28 +1860,46 @@ class General extends FactureStats
 
 	/**
 	 * MARGIN REQUEST
+	 * Retourne le montant total de la marge (des factures clients validées)
 	 */
 
-	public function grossMargin($firstDayYear, $lastDayYear){
+	 /**
+	  * Retourne un tableau des prix de revient pour les facturs validée sur l'exercice en cours
+	  */
+	public function getBuyPriceHT(){
 
-		$sql = "SELECT SUM(total_ht) as total_ht";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
-		$sql .= " WHERE date_commande BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-		$sql .= " AND fk_statut !=0";
+		$sql = 'SELECT SUM(buy_price_ht) as buy_price_ht FROM '.MAIN_DB_PREFIX.'facturedet';
+
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
 			if ($this->db->num_rows($resql)) {
 				$obj = $this->db->fetch_object($resql);
-				$result = $obj->total_ht;
+				$buyPriceHT = $obj->buy_price_ht;
 			}
 			$this->db->free($resql);
 		}
-		return $result;
+
+		return $buyPriceHT;
 	}
 
-	 public function monthlyCharges($firstDayCurrentMonth, $lastDayCurrentMonth){
+	/**
+	 *  Calcul de la marge brute sur l'exercice en cours
+	 * */
+	// public function grossMargin($date_start, $date_end){
 
+	// 	$array_total_ht = $this->outstandingBill($date_start, $date_end);
+	// 	$result_total_ht = array_sum($array_total_ht);
+
+	// 	$array_buy_price_ht = $this->getBuyPriceHT($date_start, $date_end);
+	// 	$result_buy_price_ht = array_sum($array_buy_price_ht);
+
+	// 	$resultat = $result_total_ht - $result_buy_price_ht;
+	// 	return $resultat;
+
+	// }
+
+	 public function monthlyCharges($firstDayCurrentMonth, $lastDayCurrentMonth){
 
 			$sql = "SELECT SUM(total_ht) as total_ht";
 			$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";

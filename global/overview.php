@@ -58,6 +58,10 @@ require_once DOL_DOCUMENT_ROOT . '/core/class/dolgraph.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formmargin.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/tax.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/tva/class/tva.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/report.lib.php';
 
 global $db, $conf;
 
@@ -122,14 +126,6 @@ $endyear = $year;
 $startFiscalYear = $conf->global->START_FISCAL_YEAR;
 $startMonthFiscalYear = $object->startMonthForGraphLadder($startFiscalYear, 12);
 
-// Load translation files required by the page
-$langs->loadLangs(array("tab@tab"));
-$action = GETPOST('action', 'aZ09');
-$socid = GETPOST('socid', 'int');
-$action = GETPOST('action', 'aZ09');
-$userid = GETPOST('userid', 'int');
-
-
 /**
  * BOX 1
 */
@@ -172,16 +168,6 @@ if($dataInfo2 < 0){
 
 $monthsArr = monthArray($langs, 1); // months
 
-// if($startMonthFiscalYear > 1){
-// 	// while($i < 12){
-// 		$duree = 11;
-// 		$total = $startMonthFiscalYear + $duree; // mois de debut + le reste des mois
-
-
-// } else {
-// 	echo "Janv";
-// }
-
 $file = "evolutionCAchart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
@@ -210,10 +196,6 @@ $total_CA = $total_standard_invoice + abs($total_avoir_invoice);
 			$total_standard_invoice_Year += $invoice->total_ht;
 			$total_standard_invoice_LastYear += $invoice->total_ht;
 		}
-
-		// si le mois de debut est superieur à janvier
-		// on lui ajoute le(s) mois restant(s) pour boucler jusqu'12 mois
-		// Les mois ajoutés doivent recommencer à janvier (01)
 
 		// Ex : mois de début = Février ("2" + 10) //
 
@@ -271,39 +253,41 @@ $firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100 ) </br> <strong> 
 
 $titleItem2 = "Encours C/F";
 
-// On N year
-$supplierOutstandingYear = $object->outstandingSupplier($startFiscalLastyear, $endYear); // supplier
+// supplier unpaid invoices on last year
+$supplierOutstandingYear = $object->outstandingSupplier($startFiscalLastyear, $endYear, 0); // supplier
 $total_supplierOutstandingYear = array_sum($supplierOutstandingYear);
 
-$totalOutstangdingCF = ($total_customerOutstandingYear - $total_supplierOutstandingYear); // total C/F
-$dataItem2 = price($totalOutstangdingCF)  ."\n€";
-
-// On current year
 $info3 = '<a href="'.DOL_URL_ROOT.'/custom/tab/global/overview.php?mode=customer" id="customer">Encours C </a>';
 
-$customerOustandingYear = $object->outstandingBill($startFiscalLastyear, $endYear); // customer
-$total = array_sum($customerOustandingYear);
+// customer unpaid invoices on n fiscal year
+$customerOustandingYear = $object->outstandingBill($startFiscalYear, $endYear); // customer
+$total_customerOustandingYear = array_sum($customerOustandingYear);
 
-$dataInfo3 = price($total) . "\n€";
-
+$dataInfo3 = price($total_customerOustandingYear) . "\n€";
 
 if($dataInfo3 > 0){
 	$dataInfo3 = '<p style=color:red>'.$dataInfo3.'</p>';
 } else {
-	$dataInfo3 = '<p>Aucun encours client pour le mois de '.$object->returnMonth($month).'</p>';
+	$dataInfo3 = '<p style=color:green>Aucun encours client sur la période <strong>'.$startFiscalYear.' à '.$endYear.'</strong> </p>';
 }
 
-// On last month
+//  Supplier unpaid invoices on n fiscal year
 $info4 = '<a href="'.DOL_URL_ROOT.'/custom/tab/global/overview.php?mode=supplier" id="supplier">Encours F </a>';
-$supplierOutstandingMonth = $object->outstandingSupplier($$startFiscalyear, $endYear);
-$total_supplierOutstandingMonth = array_sum($supplierOutstandingMonth);
-$dataInfo4 = price($total_supplierOutstandingMonth) . "\n€";
+$supplierOustandingYear = $object->outstandingSupplier($startFiscalYear, $endYear, 0);
+$total_supplierOutstandingYear = array_sum($supplierOustandingYear);
+
+$dataInfo4 = price($total_supplierOutstandingYear) . "\n€";
 
 if($dataInfo4 > 0){
 	$dataInfo4 = '<p style=color:red>'.$dataInfo4.'</p>';
 } else {
 	$dataInfo4 = '<p>Aucun encours fournisseur</p>';
 }
+
+// Display total C/F
+$totalOutstangdingCF = $total_customerOustandingYear - $total_supplierOutstandingYear;
+$dataItem2 = price($totalOutstangdingCF)  ."\n€";
+
 
 /**
  * Customer chart
@@ -428,8 +412,9 @@ if (!$mesg){
 
 
 // SUPPLIER CHART
+
 // Drawing the first graph for nb of suppliers invoices by month
-$file = "oustandingCustomerChartNumber";
+$file = "oustandingSupplierChartNumber";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
 $data = [];
@@ -447,14 +432,14 @@ for($i; $i <= 12; $i++){
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-	$array_supplier_outstanding_year = $object->outstandingSupplier($date_start, $date_end);
+	$array_supplier_outstanding_year = $object->outstandingSupplier($date_start, $date_end, 0);
 	$nb_total_supplier_outstanding_year = count($array_supplier_outstanding_year);
 
 	//  Last year
 	$date_start_lastYear = $lastyear.'-'.$i.'-01';
 	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
 
-	$array_supplier_outstanding_LastYear = $object->outstandingSupplier($date_start_lastYear, $date_end_lastYear);
+	$array_supplier_outstanding_LastYear = $object->outstandingSupplier($date_start_lastYear, $date_end_lastYear, 0);
 	$nb_total_supplier_outstanding_LastYear = count($array_supplier_outstanding_LastYear);
 
 
@@ -506,14 +491,14 @@ for($i; $i <= 12; $i++){
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-	$array_supplier_outstanding_year = $object->outstandingSupplier($date_start, $date_end);
+	$array_supplier_outstanding_year = $object->outstandingSupplier($date_start, $date_end, 0);
 	$amount_total_supplier_outstanding_year = array_sum($array_supplier_outstanding_year);
 
 	//  Last year
 	$date_start_lastYear = $lastyear.'-'.$i.'-01';
 	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
 
-	$array_supplier_outstanding_LastYear = $object->outstandingSupplier($date_start_lastYear, $date_end_lastYear);
+	$array_supplier_outstanding_LastYear = $object->outstandingSupplier($date_start_lastYear, $date_end_lastYear, 0);
 	$amount_total_supplier_outstanding_LastYear = array_sum($array_supplier_outstanding_LastYear);
 
 
@@ -592,12 +577,34 @@ $secondPop_data3 = "Somme du 'total_ht' de toutes les factures fournisseurs impa
 
 
 /**
- *  MARGIN BOXE
+ *  MARGIN BOXE : total marge par facture (prix de vente - prix de revient total ( où PR = prix de revient * qty))
  */
 $titleItem3 = "Marge brute N";
-$grossMargin = $object->outstandingBill($startFiscalyear, $endYear);
-$total_grossMargin = array_sum($grossMargin);
-$dataItem3 = price($total_grossMargin) . "\n€";
+
+// For calcul gross Margin
+$total_standard_invoice = $object->turnover($startFiscalyear, $endYear); // paye + imp
+$total_avoir_invoice = $object->avoir($startFiscalyear, $endYear, $paye = ''); // paye + imp
+$total_avoir_invoice = abs($total_avoir_invoice);
+
+$total = $total_standard_invoice + $total_avoir_invoice; // total
+$total_invoices = $total;
+
+$invoicesArr = $object->fetchInvoice($startFiscalyear, $endYear);
+
+foreach($invoicesArr as $fac){
+
+	$res = $invoice->fetch($fac->rowid);
+	$linesArr = $invoice->lines;
+
+	foreach($linesArr as $line){
+		$costprice += $line->pa_ht * $line->qty;
+		$totalHT += $line->total_ht;
+	}
+
+	 $margin = $totalHT - $costprice;
+}
+
+$dataItem3 = price($margin) . "\n€";
 
 $info6 = "Marge brut prévisionnelle";
 $forecastMargin = $conf->global->FORECAST_MARGIN; // manual entry
@@ -605,13 +612,14 @@ $dataInfo6 = $forecastMargin."\n€";
 
 // Margin To produce on current mounth
 $info5 = "Marge restant à produire";
-$dataInfo5 = price($total_grossMargin - $forecastMargin);
+$dataInfo5 = price($margin - $forecastMargin);
 
 // Graph
 $file = "marginChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $data = [];
 $invoice = new Facture($db);
+$invoice->fetch($fac->rowid);
 
 for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
@@ -625,25 +633,19 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-	// Last Year
+	//  Last year
 	$date_start_lastYear = $lastyear.'-'.$i.'-01';
 	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
 
-	$total_grossMargin_year_array = $object->outstandingBill($date_start, $date_end);
-	$total_grossMargin_LastYear_array = $object->outstandingBill($date_start_lastYear, $date_end_lastYear);
+	$invoicesArr = $object->fetchInvoice($date_start, $date_end);
 
-	$total_grossMargin_year += array_sum($total_grossMargin_year_array);
-	$total_grossMargin_LastYear += array_sum($total_grossMargin_LastYear_array);
-
-	if(date('n', $date_start) == $i ){
-		$total_grossMargin_year += $invoice->total_ht;
-		$total_grossMargin_LastYear += $invoice->total_ht;
+	if(date('n', $date_start) == $i){
+		$grosMargin += $invoice->total_ht - $costprice;
 	}
 
 	$data[] = [
 		html_entity_decode($monthsArr[$i]), // month
-		$total_grossMargin_LastYear,
-		$total_grossMargin_year
+		$grosMargin,
 	];
 }
 
@@ -652,7 +654,7 @@ $mesg = $px6->isGraphKo();
 $legend = ['Année N-1', 'Année N'];
 
 if (!$mesg){
-	$px6->SetTitle("Evolution de la marge brute");
+	$px6->SetTitle("Evolution du montant de la marge brute");
 	$px6->datacolor = array(array(255,206,126), array(138,233,232));
 	$px6->SetData($data);
 	$px6->SetLegend($legend);
@@ -670,8 +672,8 @@ $thirdPop_info1 = $titleItem3;
 $thirdPop_info2 = $info5;
 $thirdPop_info3 = $info6;
 
-$thirdPop_data1 = "Somme (HT) des factures clients impayées <strong>(".price($total_unpaid_invoice_year)."\n€)</strong> + payées <strong>(".price($total_paid_invoice_year)."\n€)</strong> sur l'exercice fiscal en cours";
-$thirdPop_data2 = "Total de la marge des factures <strong>(".price($grossMargin)."\n€)</strong> - la marge brute prévisionnelle <strong>(".price($forecastMargin)."\n€)</strong>";
+$thirdPop_data1 = "Somme totale de la marge des factures client validées <strong>(".price($margin)."\n€)</strong> sur l'exercice fiscal en cours";
+$thirdPop_data2 = "Total de la marge des factures <strong>(".price($margin)."\n€)</strong> - la marge brute prévisionnelle <strong>(".price($forecastMargin)."\n€)</strong>";
 $thirdPop_data3 = "Définit dans la configuration du module : <strong>(".price($forecastMargin)."\n€)</strong>";
 
 
@@ -680,43 +682,80 @@ $thirdPop_data3 = "Définit dans la configuration du module : <strong>(".price($
  */
 
 $titleItem4 = "Trésorerie prévisionnelle";
+$info7 = "Charges mensuelles";
+$info8 = "Recurrent mensuel";
+
+// Fecth current bank account
 $currentAccount = $object->getIdBankAccount();
+$currentAccount = intval($currentAccount);
 
-//datas calcul tresury
+/**
+ * datas calcul tresury
+*/
 
-$solde = $object->fetchSoldeOnYear($startFiscalyear, $endYear, $idaccount); // current balance account
+// Current balance on n year
+$solde = $object->fetchSoldeOnYear($startFiscalyear, $endYear, $currentAccount);
 $total_solde = array_sum($solde);
 
-$total_paid_supp_invoice_year = $object->allSupplierPaidInvoices($startFiscalyear, $endYear, 1); // paid standard supplier invoices
-$total_paid_supp_desposit_year = $object->allSupplierPaidDeposit($startFiscalyear, $endYear, 1); // paid deposit supplier  invoices
+/**
+ *  Money flow out :
+ */
 
+// Static Expenses details (on prev month)
+$arr_salarys = $object->fetchSalarys($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
+$socialesTaxes_charges = $object->fetchSocialAndTaxesCharges($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
+$emprunts = $object->fetchEmprunts($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
+$variousPaiements = $object->fetchVariousPaiements($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
 
-$staticExpenses = $object->fetchStaticExpenses($startFiscalyear, $endYear, $currentAccount);
+$staticExpenses = ($arr_salarys + $socialesTaxes_charges + $emprunts + $variousPaiements); // static expenses total
 
-$tresury = ($total_solde - ($staticExpenses + $total_paid_supp_invoice_year + $total_paid_supp_desposit_year)); // calcul for net tresury
+// Others datas
+// $total_vat_by_month = $object->fetchTVA($firstDayLastMonth, $lastDayLastMonth); // VAT
 
-$dataItem4 = price($tresury) . "\n€";
+$total_expense = $object->fetchExpenses($firstDayLastMonth, $lastDayLastMonth); // expenses
 
-$info7 = "Charges mensuelles";
-$staticExpenses = $object->fetchStaticExpenses($startFiscalyear, $endYear, $currentAccount); // static expenses
-$variablesExpenses = $object->fetchVariablesExpenses($startFiscalyear, $endYear); // variable expenses
+// Total Money flow out
+$totalMoneyOut = ($staticExpenses + $total_vat_by_month + $total_expense + $total_supplierOutstandingYear);
 
-$result3 = intval( ($variablesExpenses + $staticExpenses) / 12);
-$dataInfo7 = price($result3) . "\n€"; // arrondi
+/**
+ *  Money flow in
+ */
 
-$info8 = "Recurrent mensuel";
-$recurring_monthly = $object->monthly_recurring();
-$dataInfo8 = price($recurring_monthly) . "\n€";
+// facture client impayes (todo : aire requete sql antoine)
+$array_modelInvoice = $object->fetchModelInvoices($firstDayCurrentMonth, $lastDayCurrentMonth);
+$total_modelInvoice = array_sum($array_modelInvoice);
 
-$bankAccount = $object->fetchSolde(5, $date_start, $date_end);
+// Monthly Charge
+$dataInfo8 = price($total_modelInvoice) . "\n€";
+
+// avoir fournisseur impayees
+$creditnote_unpaid_supplier_year = $object->allSupplierUnpaidDeposit($startFiscalYear, $endYear);
+$creditnote_unpaid_supplier_year = abs($creditnote_unpaid_supplier_year); //convert negative amount to positive for calculation
+
+$moneyFlowIn = $total_modelInvoice + $creditnote_unpaid_supplier_year;
+
+// Variable expenses
+$array_suppliers_invoice_paid = $object->outstandingSupplier($firstDayLastMonth, $lastDayLastMonth, 1);
+$total_suppliers_invoice_paid = array_sum($array_suppliers_invoice_paid);
+
+$array_suppliers_invoice_unpaid = $object->outstandingSupplier($firstDayLastMonth, $lastDayLastMonth, 0);
+$total_suppliers_invoice_unpaid = array_sum($array_suppliers_invoice_unpaid);
+
+$total_suppliers_invoice_paid_and_unpaid = $total_suppliers_invoice_unpaid + $total_suppliers_invoice_paid;
+$variablesExpenses = $total_suppliers_invoice_paid_and_unpaid + $total_vat_by_month ;
+
+// Monthly charge
+$totalMonthlyExpenses = floatval( ($variablesExpenses + $staticExpenses));
+$dataInfo7 = price($totalMonthlyExpenses) . "\n€";
+$tresury = ($total_solde - $totalMoneyOut + $moneyFlowIn); // calcul for net tresury
+$dataItem4 = price($tresury) . "\n€"; // Display tresury
 
 // Graph tresury
 $data = [];
 $file = "tresuryChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
-$i = $startMonthFiscalYear;
 
-	for($i; $i <= 12; $i++){
+	for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
 		$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
 
@@ -724,22 +763,10 @@ $i = $startMonthFiscalYear;
 		$date_start = $year.'-'.$i.'-01'; // first day of month
 		$date_end = $year.'-'.$i.'-'.$lastDayMonth; // last day of montH
 
-		// while ($i <= $endYear) {
-		// 	if ($startmonth != 1) {
-		// 		//
-		// 	} else {
-		// 		//
-		// 	}
-		// 	$i++;
-		// }
-
 		$solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
 		$total_solde = array_sum($solde);
 
-		$supplier_paid_invoice = $object->allSupplierPaidInvoices($date_start, $date_end, 1);
-		$supplier_paid_deposit = $object->allSupplierPaidDeposit($date_start, $date_end, 1);
-
-		$tresury = ($total_solde - ($staticExpenses + $total_paid_supp_invoice_year + $total_paid_supp_desposit_year)); // calcul for net tresury
+		$tresury = ($total_solde - $totalMoneyOut + $moneyFlowIn);
 
 		$data[] = [
 			html_entity_decode($monthsArr[$i]), // month
@@ -768,50 +795,267 @@ if (!$mesg){
 /**
  * For tresury info popup
  */
-
 $fourPop_info1 = $titleItem4;
 $fourPop_info2 = $info7;
 $fourPop_info3 = $info8;
 
-$solde = $object->fetchSoldeOnYear($startFiscalyear, $endYear, $idaccount);
+
+// Current balance on n year
+$solde = $object->fetchSoldeOnYear($startFiscalyear, $endYear, $currentAccount);
 $total_solde = array_sum($solde);
-$detailsinfo = $object->fetchVariablesExpenses($startFiscalyear, $endYear);
 
 // details datas for popupinfo (variables charges)
 $date_now = date('Y-m-d', dol_now());
-$total_tva = $object->fetchTVA($startFiscalyear, $date_now); // TVA
-$supplier_invoice_total = $object->fetchSupplierInvoices($startFiscalyear, $endYear); // Suppliers Invoices
 
-// Details datas for static variable (on last month)
+// include DOL_DOCUMENT_ROOT.'/compta/tva/initdatesforvat.inc.php';
+// $form = new Form($db);
+// $company_static = new Societe($db);
+// $tva = new Tva($db);
+// $period = $form->selectDate($firstDayCurrentMonth, 'date_start', 0, 0, 0, '', 1, 0).' - '.$form->selectDate($lastDayCurrentMonth, 'date_end', 0, 0, 0, '', 1, 0);
 
-$salarys = $object->fetchSalarys($firstDayLastMonth, $date_now, $currentAccount);
+// 	$tmp = dol_getdate($firstDayCurrentMonth);
+// 	var_dump($tmp);
+// 	$y = $tmp['year'];
+// 	$m = $tmp['mon'];
+// 	$tmp = dol_getdate($lastDayCurrentMonth);
+// 	$yend = $tmp['year'];
+// 	$mend = $tmp['mon'];
+// 	// var_dump($yend);
+// 	$total = 0;
+// 	$subtotalcoll = 0;
+// 	$subtotalpaye = 0;
+// 	$subtotal = 0;
+// 	$i = 0;
+// 	$mcursor = 0;
 
-$socialesTaxes_charges = $object->fetchSocialAndTaxesCharges($firstDayLastMonth, $date_now, $currentAccount);
-$emprunts = $object->fetchEmprunts($firstDayLastMonth, $date_now, $currentAccount);
-$variousPaiements = $object->fetchVariousPaiements($firstDayLastMonth, $date_now, $currentAccount);
+// 	while ((($y < $yend) || ($y == $yend && $m <= $mend)) && $mcursor < 1000) {    // $mcursor is to avoid too large loop
+// 		//$m = $conf->global->SOCIETE_FISCAL_MONTH_START + ($mcursor % 12);
+// 		if ($m == 13) {
+// 			$y++;
+// 		}
+// 		if ($m > 12) {
+// 			$m -= 12;
+// 		}
+// 		$mcursor++;
 
-$fourPop_data1 = '<i>Solde du compte en banque - sorties d\'argent + entrée d\'argent </i>
+// 		$x_coll = tax_by_rate('vat', $db, $y, 0, 0, 0, $modetax, 'sell', $m);
+// 		$x_paye = tax_by_rate('vat', $db, $y, 0, 0, 0, $modetax, 'buy', $m);
+
+// 		$x_both = array();
+// 		//now, from these two arrays, get another array with one rate per line
+// 		foreach (array_keys($x_coll) as $my_coll_rate) {
+// 			$x_both[$my_coll_rate]['coll']['totalht'] = $x_coll[$my_coll_rate]['totalht'];
+// 			$x_both[$my_coll_rate]['coll']['vat'] = $x_coll[$my_coll_rate]['vat'];
+// 			$x_both[$my_coll_rate]['paye']['totalht'] = 0;
+// 			$x_both[$my_coll_rate]['paye']['vat'] = 0;
+// 			$x_both[$my_coll_rate]['coll']['links'] = '';
+// 			$x_both[$my_coll_rate]['coll']['detail'] = array();
+// 			foreach ($x_coll[$my_coll_rate]['facid'] as $id => $dummy) {
+// 				//$invoice_customer->id=$x_coll[$my_coll_rate]['facid'][$id];
+// 				//$invoice_customer->ref=$x_coll[$my_coll_rate]['facnum'][$id];
+// 				//$invoice_customer->type=$x_coll[$my_coll_rate]['type'][$id];
+// 				//$company_static->fetch($x_coll[$my_coll_rate]['company_id'][$id]);
+// 				$x_both[$my_coll_rate]['coll']['detail'][] = array(
+// 					'id' => $x_coll[$my_coll_rate]['facid'][$id],
+// 					'descr' => $x_coll[$my_coll_rate]['descr'][$id],
+// 					'pid' => $x_coll[$my_coll_rate]['pid'][$id],
+// 					'pref' => $x_coll[$my_coll_rate]['pref'][$id],
+// 					'ptype' => $x_coll[$my_coll_rate]['ptype'][$id],
+// 					'payment_id' => $x_coll[$my_coll_rate]['payment_id'][$id],
+// 					'payment_amount' => $x_coll[$my_coll_rate]['payment_amount'][$id],
+// 					'ftotal_ttc' => $x_coll[$my_coll_rate]['ftotal_ttc'][$id],
+// 					'dtotal_ttc' => $x_coll[$my_coll_rate]['dtotal_ttc'][$id],
+// 					'dtype' => $x_coll[$my_coll_rate]['dtype'][$id],
+// 					'datef' => $x_coll[$my_coll_rate]['datef'][$id],
+// 					'datep' => $x_coll[$my_coll_rate]['datep'][$id],
+// 					//'company_link'=>$company_static->getNomUrl(1,'',20),
+// 					'ddate_start' => $x_coll[$my_coll_rate]['ddate_start'][$id],
+// 					'ddate_end' => $x_coll[$my_coll_rate]['ddate_end'][$id],
+// 					'totalht' => $x_coll[$my_coll_rate]['totalht_list'][$id],
+// 					'vat' => $x_coll[$my_coll_rate]['vat_list'][$id],
+// 					//'link'      =>$invoice_customer->getNomUrl(1,'',12)
+// 				);
+// 			}
+// 		}
+
+// 		// tva paid
+// 		foreach (array_keys($x_paye) as $my_paye_rate) {
+// 			$x_both[$my_paye_rate]['paye']['totalht'] = $x_paye[$my_paye_rate]['totalht'];
+// 			$x_both[$my_paye_rate]['paye']['vat'] = $x_paye[$my_paye_rate]['vat'];
+// 			if (!isset($x_both[$my_paye_rate]['coll']['totalht'])) {
+// 				$x_both[$my_paye_rate]['coll']['totalht'] = 0;
+// 				$x_both[$my_paye_rate]['coll']['vat'] = 0;
+// 			}
+// 			$x_both[$my_paye_rate]['paye']['links'] = '';
+// 			$x_both[$my_paye_rate]['paye']['detail'] = array();
+
+// 			foreach ($x_paye[$my_paye_rate]['facid'] as $id => $dummy) {
+// 				// ExpenseReport
+// 				if ($x_paye[$my_paye_rate]['ptype'][$id] == 'ExpenseReportPayment') {
+// 					//$expensereport->id=$x_paye[$my_paye_rate]['facid'][$id];
+// 					//$expensereport->ref=$x_paye[$my_paye_rate]['facnum'][$id];
+// 					//$expensereport->type=$x_paye[$my_paye_rate]['type'][$id];
+
+// 					$x_both[$my_paye_rate]['paye']['detail'][] = array(
+// 						'id' => $x_paye[$my_paye_rate]['facid'][$id],
+// 						'descr' => $x_paye[$my_paye_rate]['descr'][$id],
+// 						'pid' => $x_paye[$my_paye_rate]['pid'][$id],
+// 						'pref' => $x_paye[$my_paye_rate]['pref'][$id],
+// 						'ptype' => $x_paye[$my_paye_rate]['ptype'][$id],
+// 						'payment_id' => $x_paye[$my_paye_rate]['payment_id'][$id],
+// 						'payment_amount' => $x_paye[$my_paye_rate]['payment_amount'][$id],
+// 						'ftotal_ttc' => price2num($x_paye[$my_paye_rate]['ftotal_ttc'][$id]),
+// 						'dtotal_ttc' => price2num($x_paye[$my_paye_rate]['dtotal_ttc'][$id]),
+// 						'dtype' => $x_paye[$my_paye_rate]['dtype'][$id],
+// 						'ddate_start' => $x_paye[$my_paye_rate]['ddate_start'][$id],
+// 						'ddate_end' => $x_paye[$my_paye_rate]['ddate_end'][$id],
+// 						'totalht' => price2num($x_paye[$my_paye_rate]['totalht_list'][$id]),
+// 						'vat' => $x_paye[$my_paye_rate]['vat_list'][$id],
+// 						//'link'				=>$expensereport->getNomUrl(1)
+// 					);
+// 				} else {
+// 					//$invoice_supplier->id=$x_paye[$my_paye_rate]['facid'][$id];
+// 					//$invoice_supplier->ref=$x_paye[$my_paye_rate]['facnum'][$id];
+// 					//$invoice_supplier->type=$x_paye[$my_paye_rate]['type'][$id];
+// 					//$company_static->fetch($x_paye[$my_paye_rate]['company_id'][$id]);
+// 					$x_both[$my_paye_rate]['paye']['detail'][] = array(
+// 						'id' => $x_paye[$my_paye_rate]['facid'][$id],
+// 						'descr' => $x_paye[$my_paye_rate]['descr'][$id],
+// 						'pid' => $x_paye[$my_paye_rate]['pid'][$id],
+// 						'pref' => $x_paye[$my_paye_rate]['pref'][$id],
+// 						'ptype' => $x_paye[$my_paye_rate]['ptype'][$id],
+// 						'payment_id' => $x_paye[$my_paye_rate]['payment_id'][$id],
+// 						'payment_amount' => $x_paye[$my_paye_rate]['payment_amount'][$id],
+// 						'ftotal_ttc' => price2num($x_paye[$my_paye_rate]['ftotal_ttc'][$id]),
+// 						'dtotal_ttc' => price2num($x_paye[$my_paye_rate]['dtotal_ttc'][$id]),
+// 						'dtype' => $x_paye[$my_paye_rate]['dtype'][$id],
+// 						'datef' => $x_paye[$my_paye_rate]['datef'][$id],
+// 						'datep' => $x_paye[$my_paye_rate]['datep'][$id],
+// 						//'company_link'=>$company_static->getNomUrl(1,'',20),
+// 						'ddate_start' => $x_paye[$my_paye_rate]['ddate_start'][$id],
+// 						'ddate_end' => $x_paye[$my_paye_rate]['ddate_end'][$id],
+// 						'totalht' => price2num($x_paye[$my_paye_rate]['totalht_list'][$id]),
+// 						'vat' => $x_paye[$my_paye_rate]['vat_list'][$id],
+// 						//'link'      =>$invoice_supplier->getNomUrl(1,'',12)
+// 					);
+// 				}
+// 			}
+// 		}
+// 		//now we have an array (x_both) indexed by rates for coll and paye
+// 		$action = "tva";
+// 		$object = array(&$x_coll, &$x_paye, &$x_both);
+// 		$parameters["mode"] = $modetax;
+// 		$parameters["year"] = $y;
+// 		$parameters["month"] = $m;
+// 		$parameters["type"] = 'vat';
+
+// 		$x_coll_sum = 0;
+// 		foreach (array_keys($x_coll) as $rate) {
+// 			$subtot_coll_total_ht = 0;
+// 			$subtot_coll_vat = 0;
+
+// 			foreach ($x_both[$rate]['coll']['detail'] as $index => $fields) {
+// 				// Payment
+// 				$ratiopaymentinvoice = 1;
+// 				if ($modetax != 1) {
+// 					// Define type
+// 					// We MUST use dtype (type in line). We can use something else, only if dtype is really unknown.
+// 					$type = (isset($fields['dtype']) ? $fields['dtype'] : $fields['ptype']);
+// 					// Try to enhance type detection using date_start and date_end for free lines where type
+// 					// was not saved.
+// 					if (!empty($fields['ddate_start'])) {
+// 						$type = 1;
+// 					}
+// 					if (!empty($fields['ddate_end'])) {
+// 						$type = 1;
+// 					}
+
+// 					if (($type == 0 && $conf->global->TAX_MODE_SELL_PRODUCT == 'invoice')
+// 						|| ($type == 1 && $conf->global->TAX_MODE_SELL_SERVICE == 'invoice')) {
+// 						//print $langs->trans("NA");
+// 					} else {
+// 						if (isset($fields['payment_amount']) && price2num($fields['ftotal_ttc'])) {
+// 							$ratiopaymentinvoice = ($fields['payment_amount'] / $fields['ftotal_ttc']);
+// 						}
+// 					}
+// 				}
+// 				// var_dump('type='.$type.' '.$fields['totalht'].' '.$ratiopaymentinvoice);
+// 				$temp_ht = $fields['totalht'] * $ratiopaymentinvoice;
+// 				$temp_vat = $fields['vat'] * $ratiopaymentinvoice;
+// 				$subtot_coll_total_ht += $temp_ht;
+// 				$subtot_coll_vat += $temp_vat;
+// 				$x_coll_sum += $temp_vat;
+// 			}
+// 		}
+
+// 		$x_paye_sum = 0;
+// 		foreach (array_keys($x_paye) as $rate) {
+// 			$subtot_paye_total_ht = 0;
+// 			$subtot_paye_vat = 0;
+
+// 			foreach ($x_both[$rate]['paye']['detail'] as $index => $fields) {
+// 				// Payment
+// 				$ratiopaymentinvoice = 1;
+// 				if ($modetax != 1) {
+// 					// Define type
+// 					// We MUST use dtype (type in line). We can use something else, only if dtype is really unknown.
+// 					$type = (isset($fields['dtype']) ? $fields['dtype'] : $fields['ptype']);
+// 					// Try to enhance type detection using date_start and date_end for free lines where type
+// 					// was not saved.
+// 					if (!empty($fields['ddate_start'])) {
+// 						$type = 1;
+// 					}
+// 					if (!empty($fields['ddate_end'])) {
+// 						$type = 1;
+// 					}
+
+// 					if (($type == 0 && $conf->global->TAX_MODE_SELL_PRODUCT == 'invoice')
+// 						|| ($type == 1 && $conf->global->TAX_MODE_SELL_SERVICE == 'invoice')) {
+// 						//print $langs->trans("NA");
+// 					} else {
+// 						if (isset($fields['payment_amount']) && price2num($fields['ftotal_ttc'])) {
+// 							$ratiopaymentinvoice = ($fields['payment_amount'] / $fields['ftotal_ttc']);
+// 						}
+// 					}
+// 				}
+// 				//var_dump('type='.$type.' '.$fields['totalht'].' '.$ratiopaymentinvoice);
+// 				$temp_ht = $fields['totalht'] * $ratiopaymentinvoice;
+// 				$temp_vat = $fields['vat'] * $ratiopaymentinvoice;
+// 				$subtot_paye_total_ht += $temp_ht;
+// 				$subtot_paye_vat += $temp_vat;
+// 				$x_paye_sum += $temp_vat;
+// 			}
+// 		}
+
+// 		$subtotalcoll = $subtotalcoll + $x_coll_sum;
+// 		$subtotalpaye = $subtotalpaye + $x_paye_sum;
+
+// 		$diff = $x_coll_sum - $x_paye_sum;
+// 		$total_vat_by_month = $diff;
+// 	}
+
+$fourPop_data1 = '<i>Solde du compte en banque  ('.price($total_solde).'€) - sortie d\'argent ('.$totalMoneyOut.'€) + entrée d\'argent ('.$moneyFlowIn.'€)</i>
 				  <br> <strong> SORTIE </strong> :
 				  <ul>
-				  	<li><strong>Charges fixes*</strong> (salaires, emprunts, paiements divers, charge sociales et fiscales) : par mois </li>
-					<li><strong>Factures fournisseurs impayées </strong> : <i style="color:red;"></br> Attention, elles doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
-					<li><strong>TVA (client et fournisseur)</strong> : par mois </li>
-					<li><strong>Notes de frais (validée et approuvée)</strong> : par mois </li>
+				  	<li><strong>Charges fixes*</strong> ('.price($staticExpenses).' €) </li>
+					<li><strong>Factures fournisseurs impayées </strong> : ('.price($total_supplierOutstandingYear).' €) <i style="color:red;"></br> Attention, elles doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
+					<li><strong>TVA (client et fournisseur)</strong> : indisponible </li>
+					<li><strong>Notes de frais (validée et approuvée)</strong> ('.price($total_expense).'€)</li>
 				  </ul>
 				  <br> <strong> ENTREE </strong> :
 				  <ul>
-				  	<li><strong>Factures clients impayées </strong> : par mois </li>
-					<li><strong>Avoir fournisseurs impayées </strong> : <i style="color:red;"> <br> Attention, ils doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
+				  	<li><strong>Factures clients impayées </strong> ('.price($total_modelInvoice).'€)</li>
+					<li><strong>Avoir fournisseurs impayées </strong> : ('.price($creditnote_unpaid_supplier_year).'€) </br> <i style="color:red;"> Attention, ils doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
 				  </ul></br>';
 
-$fourPop_data2 = "<ul><li>charges variables (".price($variablesExpenses)."\n€)</strong> + charges fixes (du mois précédent) (".price($staticExpenses)."\n€)</strong> </li>
+$fourPop_data2 = "<ul><li>charges variables (".price($variablesExpenses)."\n€)</strong> + charges fixes (".price($staticExpenses)."\n€)</strong> </li>
 
-<br> <strong> <li>Détail charges fixes </strong> :  Salaires (".price($salarys)."\n€) </strong> +  Paiements divers (".price($variousPaiements)."\n€) </strong> +  emprunts (".price($emprunts)."\n€) </strong> + charges sociales et fiscales (".price($emprunts)."\n€) </strong> </li>
- <i style='color:blue;'> Les charges fixes sont calculées sur le mois précédent </i>
-<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs (".price($supplier_invoice_total)."\n€) </strong> +  TVA du mois courant(".intval($total_tva).") </strong> </li>
-</ul>";
+				<br> <strong> <li>Détail charges fixes </strong> : Salaires (".price($arr_salarys)."\n€) </strong> +  Paiements divers (".price($variousPaiements)."\n€) </strong> +  emprunts (".price($emprunts)."\n€) </strong> + charges sociales et fiscales (".price($socialesTaxes_charges)."\n€) </strong> </li>
+				<i style='color:blue;'>Les charges fixes sont calculées sur le mois précédent </i></br>
+				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs validées sur l'exercice courant (".price($total_suppliers_invoice_paid_and_unpaid)."\n€) </strong> + TVA du mois courant(".intval($total_tva).") </strong> </li>
+				</ul>";
 
-$fourPop_data3 = "Montant total (TTC) des modèles de factures client ".price($recurring_monthly)."\n€";
+$fourPop_data3 = "Montant total (TTC) des modèles de factures client ".price($total_modelInvoice)."\n€";
 
 
 /*
@@ -819,7 +1063,6 @@ $fourPop_data3 = "Montant total (TTC) des modèles de factures client ".price($r
  */
 
 // None
-
 
 /*
  * View
@@ -834,8 +1077,12 @@ llxHeader('', $langs->trans("Global - Général"));
 
 print load_fiche_titre($langs->trans("Général"));
 
+print $object->load_navbar();
 
-print $object->load_navbar($currentPage);
+// Load translation files required by the page
+$langs->loadLangs(array("other", "compta", "banks", "bills", "companies", "product", "trips", "admin"));
+
+
 
 
 include DOL_DOCUMENT_ROOT . '/custom/tab/template/template_boxes4.php';
