@@ -600,7 +600,6 @@ foreach($invoicesArr as $fac){
 		$costprice += $line->pa_ht * $line->qty;
 		$totalHT += $line->total_ht;
 	}
-
 	 $margin = $totalHT - $costprice;
 }
 
@@ -619,7 +618,6 @@ $file = "marginChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $data = [];
 $invoice = new Facture($db);
-$invoice->fetch($fac->rowid);
 
 for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
@@ -633,20 +631,29 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-	//  Last year
+	// Start and end of each month on last year
 	$date_start_lastYear = $lastyear.'-'.$i.'-01';
 	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
 
-	$invoicesArr = $object->fetchInvoice($date_start, $date_end);
+	foreach($invoicesArr as $fac){
 
-	if(date('n', $date_start) == $i){
-		$grosMargin += $invoice->total_ht - $costprice;
+		$res = $invoice->fetch($fac->rowid);
+		$linesArr = $invoice->lines;
+
+		foreach($linesArr as $line){
+			$costprice += $line->pa_ht * $line->qty;
+			$totalHT += $line->total_ht;
+		}
+		 $margin = $totalHT - $costprice;
 	}
 
 	$data[] = [
 		html_entity_decode($monthsArr[$i]), // month
-		$grosMargin,
+		$margin,
+
 	];
+
+
 }
 
 $px6 = new DolGraph();
@@ -764,9 +771,11 @@ $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 		$date_end = $year.'-'.$i.'-'.$lastDayMonth; // last day of montH
 
 		$solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
-		$total_solde = array_sum($solde);
+		$total_solde += array_sum($solde);
 
-		$tresury = ($total_solde - $totalMoneyOut + $moneyFlowIn);
+		// if(date('n', $date_start) == $i) {
+		// 	$tresury += ($total_solde - $totalMoneyOut + $moneyFlowIn);
+		// }
 
 		$data[] = [
 			html_entity_decode($monthsArr[$i]), // month
@@ -790,7 +799,7 @@ if (!$mesg){
 	$tresuryChart = $px7->draw($file, $fileurl);
 }
 
- $graphiqueD = $px7->show($tresuryChart);
+$graphiqueD = $px7->show($tresuryChart);
 
 /**
  * For tresury info popup
@@ -1081,9 +1090,6 @@ print $object->load_navbar();
 
 // Load translation files required by the page
 $langs->loadLangs(array("other", "compta", "banks", "bills", "companies", "product", "trips", "admin"));
-
-
-
 
 include DOL_DOCUMENT_ROOT . '/custom/tab/template/template_boxes4.php';
 
