@@ -571,9 +571,9 @@ $secondPop_info1 = $titleItem2;
 $secondPop_info2 = $info3;
 $secondPop_info3 = $info4;
 
-$secondPop_data1 = " Factures clients impayées <strong>(".price(array_sum($customerOustandingYear))." €)</strong> - factures fournisseurs impayées <strong>(".price($total_supplierOutstandingYear)." €)</strong>";
-$secondPop_data2 = " Somme de toutes les factures clients impayées sur l'exercice en cours (hors brouillon) : <strong>".price($total_customerOutstandingMonth)."\n€</strong>";
-$secondPop_data3 = "Somme du 'total_ht' de toutes les factures fournisseurs impayées sur l'exercice en cours (hors brouillon) : <strong>".price($total_supplierOutstandingMonth)."\n€</strong>";
+$secondPop_data1 = " Factures clients impayées <strong>(".price($total_customerOustandingYear)." €)</strong> - factures fournisseurs impayées <strong>(".price($total_supplierOutstandingYear)." €)</strong>";
+$secondPop_data2 = " Somme de toutes les factures clients impayées sur l'exercice en cours (Hors brouillon) : <strong>".price($total_customerOustandingYear)."\n€</strong>";
+$secondPop_data3 = "Somme de toutes les factures fournisseurs impayées sur l'exercice en cours (hors brouillon) : <strong>".price($total_supplierOutstandingYear)."\n€</strong>";
 
 
 /**
@@ -635,24 +635,23 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	$date_start_lastYear = $lastyear.'-'.$i.'-01';
 	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
 
-	foreach($invoicesArr as $fac){
+	// foreach($invoicesArr as $fac){
 
-		$res = $invoice->fetch($fac->rowid);
-		$linesArr = $invoice->lines;
+	// 	$res = $invoice->fetch($fac->rowid);
+	// 	$linesArr = $invoice->lines;
 
-		foreach($linesArr as $line){
-			$costprice += $line->pa_ht * $line->qty;
-			$totalHT += $line->total_ht;
-		}
-		 $margin = $totalHT - $costprice;
-	}
+	// 	foreach($linesArr as $line){
+	// 		$costprice += $line->pa_ht * $line->qty;
+	// 		$totalHT += $line->total_ht;
+	// 	}
+	// 	 $margin = $totalHT - $costprice;
+	// }
 
 	$data[] = [
 		html_entity_decode($monthsArr[$i]), // month
 		$margin,
 
 	];
-
 
 }
 
@@ -680,7 +679,7 @@ $thirdPop_info2 = $info5;
 $thirdPop_info3 = $info6;
 
 $thirdPop_data1 = "Somme totale de la marge des factures client validées <strong>(".price($margin)."\n€)</strong> sur l'exercice fiscal en cours";
-$thirdPop_data2 = "Total de la marge des factures <strong>(".price($margin)."\n€)</strong> - la marge brute prévisionnelle <strong>(".price($forecastMargin)."\n€)</strong>";
+$thirdPop_data2 = "La marge brute prévisionnelle <strong>(".price($forecastMargin)."\n€)</strong> - le total de la marge des factures <strong>(".price($margin)."\n€)</strong> ";
 $thirdPop_data3 = "Définit dans la configuration du module : <strong>(".price($forecastMargin)."\n€)</strong>";
 
 
@@ -717,8 +716,7 @@ $variousPaiements = $object->fetchVariousPaiements($firstDayLastMonth, $lastDayL
 $staticExpenses = ($arr_salarys + $socialesTaxes_charges + $emprunts + $variousPaiements); // static expenses total
 
 // Others datas
-// $total_vat_by_month = $object->fetchTVA($firstDayLastMonth, $lastDayLastMonth); // VAT
-
+// $total_vat_by_month = $object->fetchTVA($firstDayLastMonth, $lastDayLastMonth); // todo
 $total_expense = $object->fetchExpenses($firstDayLastMonth, $lastDayLastMonth); // expenses
 
 // Total Money flow out
@@ -733,7 +731,7 @@ $array_modelInvoice = $object->fetchModelInvoices($firstDayCurrentMonth, $lastDa
 $total_modelInvoice = array_sum($array_modelInvoice);
 
 // Monthly Charge
-$dataInfo8 = price($total_modelInvoice) . "\n€";
+$dataInfo8 = price($total_modelInvoice) . "\n€"; // TODO A MODIFIER
 
 // avoir fournisseur impayees
 $creditnote_unpaid_supplier_year = $object->allSupplierUnpaidDeposit($startFiscalYear, $endYear);
@@ -1061,7 +1059,7 @@ $fourPop_data2 = "<ul><li>charges variables (".price($variablesExpenses)."\n€)
 
 				<br> <strong> <li>Détail charges fixes </strong> : Salaires (".price($arr_salarys)."\n€) </strong> +  Paiements divers (".price($variousPaiements)."\n€) </strong> +  emprunts (".price($emprunts)."\n€) </strong> + charges sociales et fiscales (".price($socialesTaxes_charges)."\n€) </strong> </li>
 				<i style='color:blue;'>Les charges fixes sont calculées sur le mois précédent </i></br>
-				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs validées sur l'exercice courant (".price($total_suppliers_invoice_paid_and_unpaid)."\n€) </strong> + TVA du mois courant(".intval($total_tva).") </strong> </li>
+				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur l'exercice courant (".price($total_suppliers_invoice_paid_and_unpaid)."\n€) </strong> + TVA du mois courant(".intval($total_tva).") </strong> </li>
 				</ul>";
 
 $fourPop_data3 = "Montant total (TTC) des modèles de factures client ".price($total_modelInvoice)."\n€";
