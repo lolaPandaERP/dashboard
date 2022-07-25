@@ -1078,17 +1078,17 @@ class General extends FactureStats
 
 	// Detail et lié avec la table gérant les comptes et les ecritures bancaires pour retrouver le solde de chaque compte
 	public function fetchAllDetailBankAccount(){
-		$sql = "SELECT *";
+		$sql = "SELECT amount as amount ";
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank as b";
 		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql .= " WHERE b.fk_account = ba.rowid";
 
 		$resql = $this->db->query($sql);
 
-		$result = [];
+		// $result = [];
 		if($resql){
 			while($obj = $this->db->fetch_object(($resql))){
-				$result[] = $obj;
+				$result[] = $obj->amount;
 			}
 		}
 		return $result;
@@ -1663,7 +1663,7 @@ class General extends FactureStats
 		$sql = "SELECT SUM(total_ttc) as total_ttc";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "expensereport";
 		$sql .= " WHERE date_debut >= '" . $date_start . "' AND date_fin <= '" . $date_end. "'";
-		$sql .= " AND fk_statut = 5";
+		$sql .= " AND fk_statut != 0";
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
@@ -1700,7 +1700,7 @@ class General extends FactureStats
 		// SALARY
 		$sql = "SELECT SUM(amount) as amount";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "salary" ;
-		$sql .= " WHERE datesp BETWEEN '" . $firstDayLastMonth .  "' AND '" . $lastDayLastMonth . "'";
+		$sql .= " WHERE datesp and dateep BETWEEN '" . $firstDayLastMonth .  "' AND '" . $lastDayLastMonth . "'";
 		$sql .= "AND fk_account = ".$currentAccount;
 
 		$resql = $this->db->query($sql);
