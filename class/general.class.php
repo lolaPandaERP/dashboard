@@ -1749,7 +1749,7 @@ class General extends FactureStats
 		$sql = "SELECT SUM(capital) as capital";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "loan";
 		$sql .= " WHERE datestart BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
-		$sql .= "AND fk_bank = ".$currentAccount;
+// 		$sql .= "AND fk_bank = ".$currentAccount;
 
 		$resql = $this->db->query($sql);
 
