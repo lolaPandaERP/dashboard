@@ -1583,7 +1583,7 @@ class General extends FactureStats
 	 /*
 	  Retourne la somme total (TTC) des factures récurrentes
 	  */
-	  public function fetchModelInvoices($firstDayLastMonth, $lastDayLastMonth, $firstDayCurrentMonth, $lastDayCurrentMonth){
+	  public function fetchModelInvoices($firstDayCurrentMonth, $lastDayCurrentMonth){
 		global $db;
 
 	   $sql = "SELECT SUM(total_ttc) as total_ttc";
@@ -1749,7 +1749,7 @@ class General extends FactureStats
 		$sql = "SELECT SUM(capital) as capital";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "loan";
 		$sql .= " WHERE datestart BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
-		$sql .= "AND fk_bank = ".$currentAccount;
+		// $sql .= "AND fk_bank = ".$currentAccount;
 
 		$resql = $this->db->query($sql);
 

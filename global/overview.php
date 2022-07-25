@@ -632,21 +632,22 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	$date_start_lastYear = $lastyear.'-'.$i.'-01';
 	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
 
-	// foreach($invoicesArr as $fac){
+	$total_standard_invoice_Year += $object->turnover($date_start, $date_end); // current
+	$total_standard_invoice_LastYear += $object->turnover($date_start_lastYear, $date_end_lastYear); // last year
 
-	// 	$res = $invoice->fetch($fac->rowid);
-	// 	$linesArr = $invoice->lines;
+		if(date('n', $date_start) == $i){
+			$total_standard_invoice_Year += $invoice->total_ht;
+			$total_standard_invoice_LastYear += $invoice->total_ht;
+		}
 
-	// 	foreach($linesArr as $line){
-	// 		$costprice += $line->pa_ht * $line->qty;
-	// 		$totalHT += $line->total_ht;
-	// 	}
-	// 	 $margin = $totalHT - $costprice;
+	// foreach($invoicesArr as $acc){
+	// 	$idinvoice = $invoice->fetch($acc->rowid);
+	// 	$total_marg += $invoice->total_ht;
 	// }
 
 	$data[] = [
 		html_entity_decode($monthsArr[$i]), // month
-		$margin,
+		$total_standard_invoice_Year,
 
 	];
 
@@ -679,7 +680,6 @@ $thirdPop_data1 = "Somme totale de la marge des factures client validées <stron
 $thirdPop_data2 = "La marge brute prévisionnelle <strong>(".price($forecastMargin)."\n€)</strong> - le total de la marge des factures <strong>(".price($margin)."\n€)</strong> ";
 $thirdPop_data3 = "Définit dans la configuration du module : <strong>(".price($forecastMargin)."\n€)</strong>";
 
-
 /**
  * ---- TREASURY BOX -------
  */
@@ -690,7 +690,6 @@ $total_solde = array_sum($solde);
 
 // details datas for popupinfo (variables charges)
 $date_now = date('Y-m-d', dol_now());
-
 
 $titleItem4 = "Trésorerie prévisionnelle";
 $info7 = "Charges mensuelles";
@@ -732,11 +731,11 @@ $totalMoneyOut = ($staticExpenses + $total_vat_by_month + $total_expense + $tota
  */
 
 // facture client impayes (todo : aire requete sql antoine)
-$array_modelInvoice = $object->fetchModelInvoices($firstDayLastMonth, $lastDayLastMonth, $firstDayCurrentMonth, $lastDayCurrentMonth);
+$array_modelInvoice = $object->fetchModelInvoices($firstDayCurrentMonth, $lastDayCurrentMonth);
 $total_modelInvoice = array_sum($array_modelInvoice);
 
 // Monthly Charge
-$dataInfo8 = price($total_modelInvoice) . "\n€"; // TODO A MODIFIER
+$dataInfo8 = price($total_modelInvoice) . "\n€";
 
 // avoir fournisseur impayees
 $creditnote_unpaid_supplier_year = $object->allSupplierUnpaidDeposit($startFiscalYear, $endYear);
@@ -834,233 +833,6 @@ $fourPop_data2 = "<ul><li>charges variables (".price($variablesExpenses)."\n€)
 				</ul>";
 
 $fourPop_data3 = "Montant total (TTC) des modèles de factures client ".price($total_modelInvoice)."\n€";
-
-// include DOL_DOCUMENT_ROOT.'/compta/tva/initdatesforvat.inc.php';
-// $form = new Form($db);
-// $company_static = new Societe($db);
-// $tva = new Tva($db);
-// $period = $form->selectDate($firstDayCurrentMonth, 'date_start', 0, 0, 0, '', 1, 0).' - '.$form->selectDate($lastDayCurrentMonth, 'date_end', 0, 0, 0, '', 1, 0);
-
-// 	$tmp = dol_getdate($firstDayCurrentMonth);
-// 	var_dump($tmp);
-// 	$y = $tmp['year'];
-// 	$m = $tmp['mon'];
-// 	$tmp = dol_getdate($lastDayCurrentMonth);
-// 	$yend = $tmp['year'];
-// 	$mend = $tmp['mon'];
-// 	// var_dump($yend);
-// 	$total = 0;
-// 	$subtotalcoll = 0;
-// 	$subtotalpaye = 0;
-// 	$subtotal = 0;
-// 	$i = 0;
-// 	$mcursor = 0;
-
-// 	while ((($y < $yend) || ($y == $yend && $m <= $mend)) && $mcursor < 1000) {    // $mcursor is to avoid too large loop
-// 		//$m = $conf->global->SOCIETE_FISCAL_MONTH_START + ($mcursor % 12);
-// 		if ($m == 13) {
-// 			$y++;
-// 		}
-// 		if ($m > 12) {
-// 			$m -= 12;
-// 		}
-// 		$mcursor++;
-
-// 		$x_coll = tax_by_rate('vat', $db, $y, 0, 0, 0, $modetax, 'sell', $m);
-// 		$x_paye = tax_by_rate('vat', $db, $y, 0, 0, 0, $modetax, 'buy', $m);
-
-// 		$x_both = array();
-// 		//now, from these two arrays, get another array with one rate per line
-// 		foreach (array_keys($x_coll) as $my_coll_rate) {
-// 			$x_both[$my_coll_rate]['coll']['totalht'] = $x_coll[$my_coll_rate]['totalht'];
-// 			$x_both[$my_coll_rate]['coll']['vat'] = $x_coll[$my_coll_rate]['vat'];
-// 			$x_both[$my_coll_rate]['paye']['totalht'] = 0;
-// 			$x_both[$my_coll_rate]['paye']['vat'] = 0;
-// 			$x_both[$my_coll_rate]['coll']['links'] = '';
-// 			$x_both[$my_coll_rate]['coll']['detail'] = array();
-// 			foreach ($x_coll[$my_coll_rate]['facid'] as $id => $dummy) {
-// 				//$invoice_customer->id=$x_coll[$my_coll_rate]['facid'][$id];
-// 				//$invoice_customer->ref=$x_coll[$my_coll_rate]['facnum'][$id];
-// 				//$invoice_customer->type=$x_coll[$my_coll_rate]['type'][$id];
-// 				//$company_static->fetch($x_coll[$my_coll_rate]['company_id'][$id]);
-// 				$x_both[$my_coll_rate]['coll']['detail'][] = array(
-// 					'id' => $x_coll[$my_coll_rate]['facid'][$id],
-// 					'descr' => $x_coll[$my_coll_rate]['descr'][$id],
-// 					'pid' => $x_coll[$my_coll_rate]['pid'][$id],
-// 					'pref' => $x_coll[$my_coll_rate]['pref'][$id],
-// 					'ptype' => $x_coll[$my_coll_rate]['ptype'][$id],
-// 					'payment_id' => $x_coll[$my_coll_rate]['payment_id'][$id],
-// 					'payment_amount' => $x_coll[$my_coll_rate]['payment_amount'][$id],
-// 					'ftotal_ttc' => $x_coll[$my_coll_rate]['ftotal_ttc'][$id],
-// 					'dtotal_ttc' => $x_coll[$my_coll_rate]['dtotal_ttc'][$id],
-// 					'dtype' => $x_coll[$my_coll_rate]['dtype'][$id],
-// 					'datef' => $x_coll[$my_coll_rate]['datef'][$id],
-// 					'datep' => $x_coll[$my_coll_rate]['datep'][$id],
-// 					//'company_link'=>$company_static->getNomUrl(1,'',20),
-// 					'ddate_start' => $x_coll[$my_coll_rate]['ddate_start'][$id],
-// 					'ddate_end' => $x_coll[$my_coll_rate]['ddate_end'][$id],
-// 					'totalht' => $x_coll[$my_coll_rate]['totalht_list'][$id],
-// 					'vat' => $x_coll[$my_coll_rate]['vat_list'][$id],
-// 					//'link'      =>$invoice_customer->getNomUrl(1,'',12)
-// 				);
-// 			}
-// 		}
-
-// 		// tva paid
-// 		foreach (array_keys($x_paye) as $my_paye_rate) {
-// 			$x_both[$my_paye_rate]['paye']['totalht'] = $x_paye[$my_paye_rate]['totalht'];
-// 			$x_both[$my_paye_rate]['paye']['vat'] = $x_paye[$my_paye_rate]['vat'];
-// 			if (!isset($x_both[$my_paye_rate]['coll']['totalht'])) {
-// 				$x_both[$my_paye_rate]['coll']['totalht'] = 0;
-// 				$x_both[$my_paye_rate]['coll']['vat'] = 0;
-// 			}
-// 			$x_both[$my_paye_rate]['paye']['links'] = '';
-// 			$x_both[$my_paye_rate]['paye']['detail'] = array();
-
-// 			foreach ($x_paye[$my_paye_rate]['facid'] as $id => $dummy) {
-// 				// ExpenseReport
-// 				if ($x_paye[$my_paye_rate]['ptype'][$id] == 'ExpenseReportPayment') {
-// 					//$expensereport->id=$x_paye[$my_paye_rate]['facid'][$id];
-// 					//$expensereport->ref=$x_paye[$my_paye_rate]['facnum'][$id];
-// 					//$expensereport->type=$x_paye[$my_paye_rate]['type'][$id];
-
-// 					$x_both[$my_paye_rate]['paye']['detail'][] = array(
-// 						'id' => $x_paye[$my_paye_rate]['facid'][$id],
-// 						'descr' => $x_paye[$my_paye_rate]['descr'][$id],
-// 						'pid' => $x_paye[$my_paye_rate]['pid'][$id],
-// 						'pref' => $x_paye[$my_paye_rate]['pref'][$id],
-// 						'ptype' => $x_paye[$my_paye_rate]['ptype'][$id],
-// 						'payment_id' => $x_paye[$my_paye_rate]['payment_id'][$id],
-// 						'payment_amount' => $x_paye[$my_paye_rate]['payment_amount'][$id],
-// 						'ftotal_ttc' => price2num($x_paye[$my_paye_rate]['ftotal_ttc'][$id]),
-// 						'dtotal_ttc' => price2num($x_paye[$my_paye_rate]['dtotal_ttc'][$id]),
-// 						'dtype' => $x_paye[$my_paye_rate]['dtype'][$id],
-// 						'ddate_start' => $x_paye[$my_paye_rate]['ddate_start'][$id],
-// 						'ddate_end' => $x_paye[$my_paye_rate]['ddate_end'][$id],
-// 						'totalht' => price2num($x_paye[$my_paye_rate]['totalht_list'][$id]),
-// 						'vat' => $x_paye[$my_paye_rate]['vat_list'][$id],
-// 						//'link'				=>$expensereport->getNomUrl(1)
-// 					);
-// 				} else {
-// 					//$invoice_supplier->id=$x_paye[$my_paye_rate]['facid'][$id];
-// 					//$invoice_supplier->ref=$x_paye[$my_paye_rate]['facnum'][$id];
-// 					//$invoice_supplier->type=$x_paye[$my_paye_rate]['type'][$id];
-// 					//$company_static->fetch($x_paye[$my_paye_rate]['company_id'][$id]);
-// 					$x_both[$my_paye_rate]['paye']['detail'][] = array(
-// 						'id' => $x_paye[$my_paye_rate]['facid'][$id],
-// 						'descr' => $x_paye[$my_paye_rate]['descr'][$id],
-// 						'pid' => $x_paye[$my_paye_rate]['pid'][$id],
-// 						'pref' => $x_paye[$my_paye_rate]['pref'][$id],
-// 						'ptype' => $x_paye[$my_paye_rate]['ptype'][$id],
-// 						'payment_id' => $x_paye[$my_paye_rate]['payment_id'][$id],
-// 						'payment_amount' => $x_paye[$my_paye_rate]['payment_amount'][$id],
-// 						'ftotal_ttc' => price2num($x_paye[$my_paye_rate]['ftotal_ttc'][$id]),
-// 						'dtotal_ttc' => price2num($x_paye[$my_paye_rate]['dtotal_ttc'][$id]),
-// 						'dtype' => $x_paye[$my_paye_rate]['dtype'][$id],
-// 						'datef' => $x_paye[$my_paye_rate]['datef'][$id],
-// 						'datep' => $x_paye[$my_paye_rate]['datep'][$id],
-// 						//'company_link'=>$company_static->getNomUrl(1,'',20),
-// 						'ddate_start' => $x_paye[$my_paye_rate]['ddate_start'][$id],
-// 						'ddate_end' => $x_paye[$my_paye_rate]['ddate_end'][$id],
-// 						'totalht' => price2num($x_paye[$my_paye_rate]['totalht_list'][$id]),
-// 						'vat' => $x_paye[$my_paye_rate]['vat_list'][$id],
-// 						//'link'      =>$invoice_supplier->getNomUrl(1,'',12)
-// 					);
-// 				}
-// 			}
-// 		}
-// 		//now we have an array (x_both) indexed by rates for coll and paye
-// 		$action = "tva";
-// 		$object = array(&$x_coll, &$x_paye, &$x_both);
-// 		$parameters["mode"] = $modetax;
-// 		$parameters["year"] = $y;
-// 		$parameters["month"] = $m;
-// 		$parameters["type"] = 'vat';
-
-// 		$x_coll_sum = 0;
-// 		foreach (array_keys($x_coll) as $rate) {
-// 			$subtot_coll_total_ht = 0;
-// 			$subtot_coll_vat = 0;
-
-// 			foreach ($x_both[$rate]['coll']['detail'] as $index => $fields) {
-// 				// Payment
-// 				$ratiopaymentinvoice = 1;
-// 				if ($modetax != 1) {
-// 					// Define type
-// 					// We MUST use dtype (type in line). We can use something else, only if dtype is really unknown.
-// 					$type = (isset($fields['dtype']) ? $fields['dtype'] : $fields['ptype']);
-// 					// Try to enhance type detection using date_start and date_end for free lines where type
-// 					// was not saved.
-// 					if (!empty($fields['ddate_start'])) {
-// 						$type = 1;
-// 					}
-// 					if (!empty($fields['ddate_end'])) {
-// 						$type = 1;
-// 					}
-
-// 					if (($type == 0 && $conf->global->TAX_MODE_SELL_PRODUCT == 'invoice')
-// 						|| ($type == 1 && $conf->global->TAX_MODE_SELL_SERVICE == 'invoice')) {
-// 						//print $langs->trans("NA");
-// 					} else {
-// 						if (isset($fields['payment_amount']) && price2num($fields['ftotal_ttc'])) {
-// 							$ratiopaymentinvoice = ($fields['payment_amount'] / $fields['ftotal_ttc']);
-// 						}
-// 					}
-// 				}
-// 				// var_dump('type='.$type.' '.$fields['totalht'].' '.$ratiopaymentinvoice);
-// 				$temp_ht = $fields['totalht'] * $ratiopaymentinvoice;
-// 				$temp_vat = $fields['vat'] * $ratiopaymentinvoice;
-// 				$subtot_coll_total_ht += $temp_ht;
-// 				$subtot_coll_vat += $temp_vat;
-// 				$x_coll_sum += $temp_vat;
-// 			}
-// 		}
-
-// 		$x_paye_sum = 0;
-// 		foreach (array_keys($x_paye) as $rate) {
-// 			$subtot_paye_total_ht = 0;
-// 			$subtot_paye_vat = 0;
-
-// 			foreach ($x_both[$rate]['paye']['detail'] as $index => $fields) {
-// 				// Payment
-// 				$ratiopaymentinvoice = 1;
-// 				if ($modetax != 1) {
-// 					// Define type
-// 					// We MUST use dtype (type in line). We can use something else, only if dtype is really unknown.
-// 					$type = (isset($fields['dtype']) ? $fields['dtype'] : $fields['ptype']);
-// 					// Try to enhance type detection using date_start and date_end for free lines where type
-// 					// was not saved.
-// 					if (!empty($fields['ddate_start'])) {
-// 						$type = 1;
-// 					}
-// 					if (!empty($fields['ddate_end'])) {
-// 						$type = 1;
-// 					}
-
-// 					if (($type == 0 && $conf->global->TAX_MODE_SELL_PRODUCT == 'invoice')
-// 						|| ($type == 1 && $conf->global->TAX_MODE_SELL_SERVICE == 'invoice')) {
-// 						//print $langs->trans("NA");
-// 					} else {
-// 						if (isset($fields['payment_amount']) && price2num($fields['ftotal_ttc'])) {
-// 							$ratiopaymentinvoice = ($fields['payment_amount'] / $fields['ftotal_ttc']);
-// 						}
-// 					}
-// 				}
-// 				//var_dump('type='.$type.' '.$fields['totalht'].' '.$ratiopaymentinvoice);
-// 				$temp_ht = $fields['totalht'] * $ratiopaymentinvoice;
-// 				$temp_vat = $fields['vat'] * $ratiopaymentinvoice;
-// 				$subtot_paye_total_ht += $temp_ht;
-// 				$subtot_paye_vat += $temp_vat;
-// 				$x_paye_sum += $temp_vat;
-// 			}
-// 		}
-
-// 		$subtotalcoll = $subtotalcoll + $x_coll_sum;
-// 		$subtotalpaye = $subtotalpaye + $x_paye_sum;
-
-// 		$diff = $x_coll_sum - $x_paye_sum;
-// 		$total_vat_by_month = $diff;
-// 	}
 
 /*
  * Actions
