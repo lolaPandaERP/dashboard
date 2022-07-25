@@ -24,9 +24,6 @@
  *	\brief      Home page of tab top menu
  */
 
-ob_start();
-ob_clean();
-
 // Load Dolibarr environment
 $res = 0;
 // Try main.inc.php into web root known defined into CONTEXT_DOCUMENT_ROOT (not always defined)
@@ -74,7 +71,7 @@ if ($user->socid > 0) { // Protection if external user
 }
 
 if(empty($conf->global->START_FISCAL_YEAR) || empty($conf->global->START_FISCAL_LAST_YEAR) ){
-	accessforbidden('Vous devez obligatoirement renseigner la date de début de l\'exercice fiscal dans la configuration du module');
+	accessforbidden('Vous devez obligatoirement renseigner la date de début et de fin de l\'exercice fiscal dans la configuration du module');
 } else {
 	$startFiscalyear = $conf->global->START_FISCAL_YEAR;
 	$startFiscalLastyear = $conf->global->START_FISCAL_LAST_YEAR;
@@ -687,6 +684,14 @@ $thirdPop_data3 = "Définit dans la configuration du module : <strong>(".price($
  * ---- TREASURY BOX -------
  */
 
+ // Current balance on n year
+$solde = $object->fetchSoldeOnYear($startFiscalyear, $endYear, $currentAccount);
+$total_solde = array_sum($solde);
+
+// details datas for popupinfo (variables charges)
+$date_now = date('Y-m-d', dol_now());
+
+
 $titleItem4 = "Trésorerie prévisionnelle";
 $info7 = "Charges mensuelles";
 $info8 = "Recurrent mensuel";
@@ -727,7 +732,7 @@ $totalMoneyOut = ($staticExpenses + $total_vat_by_month + $total_expense + $tota
  */
 
 // facture client impayes (todo : aire requete sql antoine)
-$array_modelInvoice = $object->fetchModelInvoices($firstDayCurrentMonth, $lastDayCurrentMonth);
+$array_modelInvoice = $object->fetchModelInvoices($firstDayLastMonth, $lastDayLastMonth, $firstDayCurrentMonth, $lastDayCurrentMonth);
 $total_modelInvoice = array_sum($array_modelInvoice);
 
 // Monthly Charge
@@ -771,9 +776,9 @@ $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 		$solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
 		$total_solde += array_sum($solde);
 
-		// if(date('n', $date_start) == $i) {
-		// 	$tresury += ($total_solde - $totalMoneyOut + $moneyFlowIn);
-		// }
+		if(date('n', $date_start) == $i) {
+			$tresury += ($total_solde - $totalMoneyOut + $moneyFlowIn);
+		}
 
 		$data[] = [
 			html_entity_decode($monthsArr[$i]), // month
@@ -807,12 +812,28 @@ $fourPop_info2 = $info7;
 $fourPop_info3 = $info8;
 
 
-// Current balance on n year
-$solde = $object->fetchSoldeOnYear($startFiscalyear, $endYear, $currentAccount);
-$total_solde = array_sum($solde);
+$fourPop_data1 = '<i>Solde du compte en banque  ('.price($total_solde).'€) - sortie d\'argent ('.$totalMoneyOut.'€) + entrée d\'argent ('.$moneyFlowIn.'€)</i>
+				  <br> <strong> SORTIE </strong> :
+				  <ul>
+				  	<li><strong>Charges fixes*</strong> ('.price($staticExpenses).' €) </li>
+					<li><strong>Factures fournisseurs impayées </strong> : ('.price($total_supplierOutstandingYear).' €) <i style="color:red;"></br> Attention, elles doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
+					<li><strong>TVA (client et fournisseur)</strong> : indisponible </li>
+					<li><strong>Notes de frais (validée et approuvée)</strong> ('.price($total_expense).'€)</li>
+				  </ul>
+				  <br> <strong> ENTREE </strong> :
+				  <ul>
+				  	<li><strong>Factures clients impayées </strong> ('.price($total_modelInvoice).'€)</li>
+					<li><strong>Avoir fournisseurs impayées </strong> : ('.price($creditnote_unpaid_supplier_year).'€) </br> <i style="color:red;"> Attention, ils doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
+				  </ul></br>';
 
-// details datas for popupinfo (variables charges)
-$date_now = date('Y-m-d', dol_now());
+$fourPop_data2 = "<ul><li>charges variables (".price($variablesExpenses)."\n€)</strong> + charges fixes (".price($staticExpenses)."\n€)</strong> </li>
+
+				<br> <strong> <li>Détail charges fixes </strong> : Salaires (".price($arr_salarys)."\n€) </strong> +  Paiements divers (".price($variousPaiements)."\n€) </strong> +  emprunts (".price($emprunts)."\n€) </strong> + charges sociales et fiscales (".price($socialesTaxes_charges)."\n€) </strong> </li>
+				<i style='color:blue;'>Les charges fixes sont calculées sur le mois précédent </i></br>
+				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur l'exercice courant (".price($total_suppliers_invoice_paid_and_unpaid)."\n€) </strong> + TVA du mois courant(".intval($total_tva).") </strong> </li>
+				</ul>";
+
+$fourPop_data3 = "Montant total (TTC) des modèles de factures client ".price($total_modelInvoice)."\n€";
 
 // include DOL_DOCUMENT_ROOT.'/compta/tva/initdatesforvat.inc.php';
 // $form = new Form($db);
@@ -1040,30 +1061,6 @@ $date_now = date('Y-m-d', dol_now());
 // 		$diff = $x_coll_sum - $x_paye_sum;
 // 		$total_vat_by_month = $diff;
 // 	}
-
-$fourPop_data1 = '<i>Solde du compte en banque  ('.price($total_solde).'€) - sortie d\'argent ('.$totalMoneyOut.'€) + entrée d\'argent ('.$moneyFlowIn.'€)</i>
-				  <br> <strong> SORTIE </strong> :
-				  <ul>
-				  	<li><strong>Charges fixes*</strong> ('.price($staticExpenses).' €) </li>
-					<li><strong>Factures fournisseurs impayées </strong> : ('.price($total_supplierOutstandingYear).' €) <i style="color:red;"></br> Attention, elles doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
-					<li><strong>TVA (client et fournisseur)</strong> : indisponible </li>
-					<li><strong>Notes de frais (validée et approuvée)</strong> ('.price($total_expense).'€)</li>
-				  </ul>
-				  <br> <strong> ENTREE </strong> :
-				  <ul>
-				  	<li><strong>Factures clients impayées </strong> ('.price($total_modelInvoice).'€)</li>
-					<li><strong>Avoir fournisseurs impayées </strong> : ('.price($creditnote_unpaid_supplier_year).'€) </br> <i style="color:red;"> Attention, ils doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
-				  </ul></br>';
-
-$fourPop_data2 = "<ul><li>charges variables (".price($variablesExpenses)."\n€)</strong> + charges fixes (".price($staticExpenses)."\n€)</strong> </li>
-
-				<br> <strong> <li>Détail charges fixes </strong> : Salaires (".price($arr_salarys)."\n€) </strong> +  Paiements divers (".price($variousPaiements)."\n€) </strong> +  emprunts (".price($emprunts)."\n€) </strong> + charges sociales et fiscales (".price($socialesTaxes_charges)."\n€) </strong> </li>
-				<i style='color:blue;'>Les charges fixes sont calculées sur le mois précédent </i></br>
-				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur l'exercice courant (".price($total_suppliers_invoice_paid_and_unpaid)."\n€) </strong> + TVA du mois courant(".intval($total_tva).") </strong> </li>
-				</ul>";
-
-$fourPop_data3 = "Montant total (TTC) des modèles de factures client ".price($total_modelInvoice)."\n€";
-
 
 /*
  * Actions

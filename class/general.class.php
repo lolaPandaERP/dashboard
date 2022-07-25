@@ -1583,12 +1583,13 @@ class General extends FactureStats
 	 /*
 	  Retourne la somme total (TTC) des factures récurrentes
 	  */
-	  public function fetchModelInvoices($firstDayCurrentMonth, $lastDayCurrentMonth){
+	  public function fetchModelInvoices($firstDayLastMonth, $lastDayLastMonth, $firstDayCurrentMonth, $lastDayCurrentMonth){
 		global $db;
 
 	   $sql = "SELECT SUM(total_ttc) as total_ttc";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_rec";
-	   $sql .= " WHERE datec BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
+	   $sql .= " WHERE date_last_gen BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
+	//    $sql .= " AND date_when BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
 	   $sql .= " AND suspended = 0";
 
 	   $resql = $this->db->query($sql);
@@ -1701,7 +1702,7 @@ class General extends FactureStats
 		$sql = "SELECT SUM(amount) as amount";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "salary" ;
 		$sql .= " WHERE datesp and dateep BETWEEN '" . $firstDayLastMonth .  "' AND '" . $lastDayLastMonth . "'";
-		$sql .= "AND fk_account = ".$currentAccount;
+		// $sql .= "AND fk_account = ".$currentAccount;
 
 		$resql = $this->db->query($sql);
 
