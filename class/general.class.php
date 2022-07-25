@@ -1699,9 +1699,8 @@ class General extends FactureStats
 
 		// SALARY
 		$sql = "SELECT SUM(amount) as amount";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "salary";
-		$sql .= " WHERE datesp = '" . $firstDayLastMonth . "' ";
-		$sql .= "AND dateep = '" . $lastDayLastMonth . "'";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "salary" ;
+		$sql .= " WHERE datesp BETWEEN '" . $firstDayLastMonth .  "' AND '" . $lastDayLastMonth . "'";
 		$sql .= "AND fk_account = ".$currentAccount;
 
 		$resql = $this->db->query($sql);
