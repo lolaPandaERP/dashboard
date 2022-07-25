@@ -723,7 +723,6 @@ $staticExpenses = ($arr_salarys + $socialesTaxes_charges + $emprunts + $variousP
 // Others datas
 // $total_vat_by_month = $object->fetchTVA($firstDayLastMonth, $lastDayLastMonth); // todo
 $total_expense = $object->fetchExpenses($firstDayLastMonth, $lastDayLastMonth); // expenses
-var_dump($currentAccount);
 
 // Total Money flow out
 $totalMoneyOut = ($staticExpenses + $total_vat_by_month + $total_expense + $total_supplierOutstandingYear);

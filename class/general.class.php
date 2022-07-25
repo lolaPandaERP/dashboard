@@ -1589,7 +1589,7 @@ class General extends FactureStats
 	   $sql = "SELECT SUM(total_ttc) as total_ttc";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_rec";
 	   $sql .= " WHERE date_last_gen BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
-		//    $sql .= " AND date_when BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
+	//    $sql .= " AND date_when BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
 	   $sql .= " AND suspended = 0";
 
 	   $resql = $this->db->query($sql);
@@ -1702,11 +1702,7 @@ class General extends FactureStats
 		$sql = "SELECT SUM(amount) as amount";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "salary" ;
 		$sql .= " WHERE datesp and dateep BETWEEN '" . $firstDayLastMonth .  "' AND '" . $lastDayLastMonth . "'";
-<<<<<<< HEAD
 		// $sql .= "AND fk_account = ".$currentAccount;
-=======
-// 		$sql .= "AND fk_account = ".$currentAccount;
->>>>>>> f935adde968e2cc194fc9f57bd24521451ba75ff
 
 		$resql = $this->db->query($sql);
 
