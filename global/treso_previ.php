@@ -298,7 +298,6 @@ $data = [];
 $file = "EvolutionAccountsChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $account = new Account($db);
-// $res = $account->fetch($account->id);
 
 // Construire le tableau de tout les comptes en bq
 $array_total_account = $object->fetchAllBankAccount($date_start, $date_end);
@@ -314,23 +313,23 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-	foreach($array_total_account as $acc){
-		$idaccount = $acc->rowid;
+		foreach($array_total_account as $acc){
+			$idaccount = $acc->rowid;
 
-		$solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
-		$total_solde =array_sum($solde);
+			$solde = $object->fetchAllDetailBankAccount($date_start, $date_end, $idaccount);
+			$amount_treso_by_account = array_sum($solde);
 
-		// $solde = $acc->solde(1);
-	}
 
-	if(date('n', $date_start) == $i ){
-		$total_solde = $acc->amount;
-	}
+			if(date('n', $date_start) == $i){
+				$amount_treso_by_account += $acc->amount;
+			}
+		}
 
-	$data[] = [
-		html_entity_decode($monthsArr[$i]), // month
-		$total_solde++
-	];
+		$data[] = [
+			html_entity_decode($monthsArr[$i]), // month
+			$amount_treso_by_account,
+		];
+
 }
 
 $px3 = new DolGraph();
