@@ -475,9 +475,6 @@ $lastyear = date($year-1);
 
 ?>
 
-
-
-
 <!-- CUSTOMER OUTSTANDING -->
 <div class="grid-container-4">
 			<div class="grid-1">
@@ -496,11 +493,6 @@ $lastyear = date($year-1);
 								</span>
 						</div>
 						</div>
-						<div class="pull-right">
-								<h5><i>Filtre selon l'année</i></h5>
-								<a id='anneeN-1' href="./encoursCF.php?filter=2021"><?php print $lastyear ?></a>
-								<a id='anneeN' href="./encoursCF.php?filter=2022"><?php print $year ?></a>
-							</div>
 						<script>
 							// When the user clicks on div, open the popup
 							function showGraph3() {
@@ -508,7 +500,6 @@ $lastyear = date($year-1);
 								firstPopup.classList.toggle("show");
 							}
 						</script>
-
 						<h4 class="text-center">
 							<?php print $titleItem3 ?>
 						</h4>
@@ -527,9 +518,23 @@ $lastyear = date($year-1);
 								print $graphiqueC;
 								print $graphiqueC1
 							?>
+							<div class="center">
+								<h5>Filtre selon l'année</h5>
+								<?php
+									if($_GET['filter'] == '2021') {
+										?> <a id='anneeN-1' href="./encoursCF.php?filter=2021" style="color:red"><?php print $lastyear ?></a></hr>
+										<a id='anneeN' href="./encoursCF.php?filter=2022"><?php print $year ?></a>
+										<?php
+									} elseif($_GET['filter'] == '2022') {
+										?> <a id='anneeN-1' href="./encoursCF.php?filter=2022"><?php print $lastyear ?></a></hr>
+										<a id='anneeN' href="./encoursCF.php?filter=2022" style="color:red"><?php print $year ?></a>
+										<?php
+									}
+								?>
+								</div>
+							</div>
+						</div>
 					</div>
-				</div>
-			</div>
 <?php
 
 // Supplier outstandings exceeded
@@ -631,7 +636,7 @@ if (!$mesg){
 	$px4->datacolor = array(array(255,99,71), array(128, 187, 240));
 	$px4->SetData($data);
 	$px4->SetLegend($legend);
-	$px4->SetType(array('lines'));
+	$px4->SetType(array('bar'));
 	$px4->setHeight('250');
 	$px4->SetWidth('500');
 	$total_customer_exceed = $px4->draw($file, $fileurl);
@@ -693,7 +698,7 @@ if (!$mesg){
 	$px5->datacolor = array(array(255,99,71), array(128, 187, 240));
 	$px5->SetData($data);
 	$px5->SetLegend($legend);
-	$px5->SetType(array('lines'));
+	$px5->SetType(array('bar'));
 	$px5->setHeight('250');
 	$px5->SetWidth('500');
 	$total_supplier_exceed = $px5->draw($file, $fileurl);

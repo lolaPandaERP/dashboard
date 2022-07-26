@@ -169,19 +169,15 @@ div.container-fluid-2{
   }
 
   a#anneeN-1 {
-	background-color: rgb(255,206,126);
-	border-color: white;
-	border-radius: 0.3em;
+	color:rgb(39, 39, 39);
+	margin-left: 15px;
   }
 
   #anneeN {
-	background-color: #29a3a3;
-	border-color: white;
-	border-radius: 0.3em;
+	color:rgb(39, 39, 39);
   }
 
   div.mainbq{
 	display:block;
-	justify-content: space-between;
-	padding: 50px;
+	justify-content:flex-end;
   }

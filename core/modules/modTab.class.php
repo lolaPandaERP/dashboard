@@ -284,6 +284,10 @@ class modTab extends DolibarrModules
 		$this->menu = array();
 		$r = 0;
 
+		$datetime = dol_now();
+		$year = dol_print_date($datetime, "%Y");
+		$lastyear = date($year-1);
+
 		// TOP MENU
 		$this->menu[$r++] = array(
 			'fk_menu'=>'', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
@@ -291,7 +295,7 @@ class modTab extends DolibarrModules
 			'titre'=>'Dashboard',
 			'mainmenu'=>'tab',
 			'leftmenu'=>'',
-			'url'=>'/tab/global/overview.php?mode=customer',
+			'url'=>'/tab/global/overview.php?mode=customer&filter='.$year.'',
 			'langs'=>'tab@tab', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position'=>1000 + $r,
 			'enabled'=>'$conf->tab->enabled', // Define condition to show or hide menu entry. Use '$conf->sav->enabled' if entry must be visible if module is enabled.
@@ -349,13 +353,14 @@ class modTab extends DolibarrModules
 			'target'=>'',
 			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
 		);
+
 		$this->menu[$r++]=array(
 			'fk_menu'=>'fk_mainmenu=tab,fk_leftmenu=general',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'left',                          // This is a Top menu entry
 			'titre'=>'Général',
 			'mainmenu'=>'tab',
 			'leftmenu'=>'general',
-			'url'=>'/tab/global/overview.php?mode=customer',
+			'url'=>'/tab/global/overview.php?mode=customer&filter='.$year.'',
 			'langs'=>'tab@tab',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position'=>1000+$r,
 			'enabled'=>'$conf->tab->enabled',  // Define condition to show or hide menu entry. Use '$conf->tab->enabled' if entry must be visible if module is enabled.
@@ -371,7 +376,7 @@ class modTab extends DolibarrModules
             'titre'=>'1. Encours C/F',
             'mainmenu'=>'tab',
             'leftmenu'=>'tab_general',
-            'url'=>'/tab/global/encoursCF.php?filter=2021',
+            'url'=>'/tab/global/encoursCF.php?filter='.$year.'',
             // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
             'langs'=>'tab@tab',
             'position'=>1100+$r,

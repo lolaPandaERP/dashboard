@@ -1121,13 +1121,16 @@ class General extends FactureStats
 	{
 			$path = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 			$current = basename($path);
+			$datetime = dol_now();
+			$year = dol_print_date($datetime, "%Y");
+
 		?>
 			<div class="navbar">
-				<li class="<?php if ($current == 'overview.php?mode=customer' || $current == 'overview.php?mode=supplier' ){ print 'current';} else{ echo'no_current';}?>">
-				<a href="overview.php?mode=customer"><i class="fa fa-fw fa-home"></i> Général</a>
+				<li class="<?php if ($current == "overview.php?mode=customer&filter=".$year || $current == 'overview.php?mode=supplier' ){ print 'current';} else{ echo'no_current';}?>">
+				<a href="overview.php?mode=customer&filter=2022"><i class="fa fa-fw fa-home"></i> Général</a>
 				</li>
-				<li class="<?php if ($current == './encoursCF.php?filter=2021'){ echo 'current';} else{ echo'no_current';}?>">
-				<a href="./encoursCF.php?filter=2021"><i class="fa fa-pie-chart"></i> Encours C/F</a>
+				<li class="<?php if ($current == "./encoursCF.php?filter=".$year){ echo 'current';} else{ echo'no_current';}?>">
+				<a href="./encoursCF.php?filter=2022"><i class="fa fa-pie-chart"></i> Encours C/F</a>
 				</li>
 				<li class="<?php if ($current == 'treso_previ.php'){ echo 'current';} else{ echo'no_current';}?>">
 				<a href="treso_previ.php"><i class="fa fa-bank"></i> Trésorerie</a>

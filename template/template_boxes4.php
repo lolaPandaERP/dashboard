@@ -4,6 +4,7 @@ include('../template/template_admin.php');
 
 <!-- GRILLE STRUCTURE HTML -->
 	<section class="page-content">
+
 		<div class="grid-container-4">
 			<div class="grid-1">
 				<div class="card bg-c-blue order-card">
@@ -85,15 +86,50 @@ include('../template/template_admin.php');
 							</div>
 						</div>
 						<div class="customerGraph" id="d1">
-								<div class="pull-left"><?php print $graphiqueB ?></div>
-								<div class="pull-right"><?php print $graphiqueB1 ?></div>
+							<?php
+								print $graphiqueB;
+								print $graphiqueB1;
+							 ?>
+							  Année :
+							<?php
+								if($_GET['mode'] == 'customer'){
+
+									if($_GET['filter'] == '2021') {
+										?><a id='anneeN-1' href="./overview.php?mode=customer&filter=2021" style="border-bottom :2px solid #29a3a3; background-color: #29a3a3; color: white;">
+										<?php print $lastyear ?></a>
+										 <a id='anneeN' href="./overview.php?mode=customer&filter=2022">
+											<?php print $year ?></a>
+										<?php
+									} elseif($_GET['filter'] == '2022') {
+										?> <a id='anneeN-1' href="./overview.php?mode=customer&filter=2021"><?php print $lastyear ?></a>
+										<a id='anneeN' href="./overview.php?mode=customer&filter=2022" style="border-bottom :2px solid #29a3a3; background-color: #29a3a3; color: white;"><?php print $year ?></a>
+										<?php
+									}
+								}
+								?>
+							</h7>
 						</div>
 						<div class="graphGraph" id="d2">
-								<div class="pull-left"><?php print $graphiqueB2 ?></div>
-								<div class="pull-right"><?php print $graphiqueB3 ?></div>
+							 <?php print $graphiqueB2 ?>
+							 <?php print $graphiqueB3 ?>
+							 <?php
+							 if($_GET['mode'] == 'supplier'){
+
+									if($_GET['filter'] == '2021') {
+										?> <a id='anneeN-1' href="./overview.php?mode=supplier&filter=2021" style="border-bottom :2px solid #29a3a3; border-top :2px solid #29a3a3;background-color: #29a3a3; color: white;"><?php print $lastyear ?></a></hr>
+										<a id='anneeN' href="./overview.php?mode=supplier&filter=2022"><?php print $year ?></a>
+										<?php
+									} elseif($_GET['filter'] == '2022') {
+										?> <a id='anneeN-1' href="./overview.php?mode=supplier&filter=2021"><?php print $lastyear ?></a></hr>
+										<a id='anneeN' href="./overview.php?mode=supplier&filter=2022" style="border-bottom :2px solid #29a3a3; background-color: #29a3a3; color: white;"><?php print $year ?></a>
+										<?php
+									}
+								}
+								?>
+								</h7>
+							</div>
 						</div>
 					</div>
-				</div>
 
 
 			<!-- end bloc 1 -->

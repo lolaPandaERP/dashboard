@@ -253,13 +253,11 @@ $titleItem2 = "Encours C/F";
 // supplier unpaid invoices on last year
 $supplierOutstandingYear = $object->outstandingSupplier($startFiscalLastyear, $endYear, 0); // supplier
 $total_supplierOutstandingYear = array_sum($supplierOutstandingYear);
-
-$info3 = '<a href="'.DOL_URL_ROOT.'/custom/tab/global/overview.php?mode=customer" id="customer">Encours C </a>';
+$info3 = '<a href="'.DOL_URL_ROOT.'/custom/tab/global/overview.php?mode=customer&filter=2022" id="customer">Encours C </a>';
 
 // customer unpaid invoices on n fiscal year
 $customerOustandingYear = $object->outstandingBill($startFiscalYear, $endYear); // customer
 $total_customerOustandingYear = array_sum($customerOustandingYear);
-
 $dataInfo3 = price($total_customerOustandingYear) . "\n€";
 
 if($dataInfo3 > 0){
@@ -269,7 +267,7 @@ if($dataInfo3 > 0){
 }
 
 //  Supplier unpaid invoices on n fiscal year
-$info4 = '<a href="'.DOL_URL_ROOT.'/custom/tab/global/overview.php?mode=supplier" id="supplier">Encours F </a>';
+$info4 = '<a href="'.DOL_URL_ROOT.'/custom/tab/global/overview.php?mode=supplier&filter=2022" id="supplier">Encours F </a>';
 $supplierOustandingYear = $object->outstandingSupplier($startFiscalYear, $endYear, 0);
 $total_supplierOutstandingYear = array_sum($supplierOustandingYear);
 
@@ -285,77 +283,63 @@ if($dataInfo4 > 0){
 $totalOutstangdingCF = $total_customerOustandingYear - $total_supplierOutstandingYear;
 $dataItem2 = price($totalOutstangdingCF)  ."\n€";
 
-
 /**
  * Customer chart
  */
 
-// Drawing the first graph for nb of customer invoices by month
-$file = "oustandingCustomerChartNumber";
+// Current Year | CUSTOMER
+$file = "oustandingCustomerChartNumberAndAmount";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
 $data = [];
 $i = $startMonthFiscalYear;
 
-for($i; $i <= 12; $i++){
-
-	$lastyear = strtotime('Last Year');
-	$lastyear = date($year-1);
-
-	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
-	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
+for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
 	// Current Year
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
 	$array_customer_outstanding_year = $object->outstandingBill($date_start, $date_end);
-	$nb_total_customer_outstanding_year = count($array_customer_outstanding_year);
 
-	//  Last year
-	$date_start_lastYear = $lastyear.'-'.$i.'-01';
-	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
-
-	$array_customer_outstanding_LastYear = $object->outstandingBill($date_start_lastYear, $date_end_lastYear);
-	$nb_total_customer_outstanding_LastYear = count($array_customer_outstanding_LastYear);
-
+	$nb_total_customer_outstanding_year = count($array_customer_outstanding_year); // number
+	$amount_total_customer_outstanding_year += array_sum($array_customer_outstanding_year); // amount
 
 	if(date('n', $date_start) == $i ){
 		$nb_total_customer_outstanding_year += $invoice->total_ttc;
-		$nb_total_customer_outstanding_LastYear += $invoice->total_ttc;
+		$amount_total_customer_outstanding_year += $invoice->total_ttc;
 	}
 
-	$ladder = html_entity_decode($monthsArr[$i]);
-
 	$data[] = [
-		$ladder, // months
-		$nb_total_customer_outstanding_LastYear, // last Year
-		$nb_total_customer_outstanding_year // Current Year
+		$ladder = html_entity_decode($monthsArr[$i]), // months
+		$nb_total_customer_outstanding_year, // nb
+		$amount_total_customer_outstanding_year, // amount
 	];
 }
-
 $px2 = new DolGraph();
 $mesg = $px2->isGraphKo();
-$legend = ['Année N-1', 'Année N'];
+$legend = ['Nombre', 'Montant'];
 
 if (!$mesg){
-	$px2->SetTitle("Nb d'encours clients par mois - TTC");
-	$px2->datacolor = array(array(255,206,126), array(138,233,232));
+	$px2->SetTitle("Evolution des encours clients - ".$year);
+	$px2->datacolor = array(array(255,99,71), array(128, 187, 240));
 	$px2->SetData($data);
 	$px2->SetLegend($legend);
 	$px2->SetType(array('bar'));
 	$px2->setHeight('250');
 	$px2->SetWidth('500');
-	$customer_oustanding_number_chart = $px2->draw($file, $fileurl);
+	$total_supplier_outstanding_year = $px2->draw($file, $fileurl);
 }
 
-// Drawing the second  graph for amount of customer invoices by month
-$file = "OustandingSupplierChartAmount";
+
+// Last Year | CUSTOMER
+$file = "oustandingCustomerChartNumberAndAmount";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
-$data = []; // reset data
+$invoice = new Facture($db);
+$data = [];
 $i = $startMonthFiscalYear;
 
-for($i; $i <= 12; $i++){
+for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
 	$lastyear = strtotime('Last Year');
 	$lastyear = date($year-1);
@@ -363,120 +347,101 @@ for($i; $i <= 12; $i++){
 	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
 	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
 
-	// Current Year
-	$date_start = $year.'-'.$i.'-01';
-	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
-
-	$array_customer_outstanding_year = $object->outstandingBill($date_start, $date_end);
-	$amount_total_customer_outstanding_year = array_sum($array_customer_outstanding_year); // amount
-
-	// Last year
+	// Last Year
 	$date_start_lastYear = $lastyear.'-'.$i.'-01';
 	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
 
-
 	$array_customer_outstanding_LastYear = $object->outstandingBill($date_start_lastYear, $date_end_lastYear);
-	$amount_total_customer_outstanding_LastYear = array_sum($array_customer_outstanding_LastYear); // amount
+
+	$nb_total_customer_outstanding_LastYear = count($array_customer_outstanding_LastYear); // number
+	$amount_total_customer_outstanding_LastYear += array_sum($array_customer_outstanding_LastYear); // amount
 
 	if(date('n', $date_start) == $i ){
-		$amount_total_customer_outstanding_year += $invoice_customer->total_ttc;
-		$amount_total_customer_outstanding_LastYear += $invoice_customer->total_ttc;
+		$nb_total_customer_outstanding_LastYear += $invoice->total_ttc;
+		$amount_total_customer_outstanding_LastYear += $invoice->total_ttc;
 	}
 
-	$ladder = html_entity_decode($monthsArr[$i]);
-
 	$data[] = [
-		$ladder, // months
-		$amount_total_customer_outstanding_LastYear,
-		$amount_total_customer_outstanding_year
+		$ladder = html_entity_decode($monthsArr[$i]), // months
+		$nb_total_customer_outstanding_LastYear, // nb
+		$amount_total_customer_outstanding_LastYear, // amount
 	];
+
 }
 
 $px3 = new DolGraph();
 $mesg = $px3->isGraphKo();
-$legend = ['Année N-1', 'Année N'];
+$legend = ['Nombre', 'Montant'];
 
 if (!$mesg){
-	$px3->SetTitle("Montant des encours clients - TTC");
-	$px3->datacolor = array(array(255,206,126), array(138,233,232));
+	$px3->SetTitle("Evolution des encours clients - ".$lastyear);
+	$px3->datacolor = array(array(255,99,71), array(128, 187, 240));
 	$px3->SetData($data);
 	$px3->SetLegend($legend);
 	$px3->SetType(array('bar'));
 	$px3->setHeight('250');
 	$px3->SetWidth('500');
-	$customer_outstanding_amount_chart = $px3->draw($file, $fileurl);
+	$total_customer_outstanding_LastYear = $px3->draw($file, $fileurl);
 }
 
 
-// SUPPLIER CHART
+/**
+ * Supplier chart
+ */
 
-// Drawing the first graph for nb of suppliers invoices by month
-$file = "oustandingSupplierChartNumber";
+ // Current Year | supplier
+$file = "supplierChartNumberAndAmountofYear";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
-$invoice = new Facture($db);
+$invoice_supplier = new FactureFournisseur($db);
 $data = [];
 $i = $startMonthFiscalYear;
 
-for($i; $i <= 12; $i++){
-
-	$lastyear = strtotime('Last Year');
-	$lastyear = date($year-1);
-
-	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
-	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
+for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
 	// Current Year
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
 	$array_supplier_outstanding_year = $object->outstandingSupplier($date_start, $date_end, 0);
-	$nb_total_supplier_outstanding_year = count($array_supplier_outstanding_year);
 
-	//  Last year
-	$date_start_lastYear = $lastyear.'-'.$i.'-01';
-	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
-
-	$array_supplier_outstanding_LastYear = $object->outstandingSupplier($date_start_lastYear, $date_end_lastYear, 0);
-	$nb_total_supplier_outstanding_LastYear = count($array_supplier_outstanding_LastYear);
-
+	$nb_total_supplier_outstanding_year = count($array_supplier_outstanding_year); // number
+	$amount_total_supplier_outstanding_year += array_sum($array_supplier_outstanding_year); // amount
 
 	if(date('n', $date_start) == $i ){
-		$nb_total_supplier_outstanding_year += $invoice->total_ttc;
-		$nb_total_supplier_outstanding_LastYear += $invoice->total_ttc;
+		$nb_total_supplier_outstanding_year += $invoice_supplier->total_ttc;
+		$amount_total_supplier_outstanding_year += $invoice_supplier->total_ttc;
 	}
 
-	$ladder = html_entity_decode($monthsArr[$i]);
-
 	$data[] = [
-		$ladder, // months
-		$nb_total_supplier_outstanding_LastYear, // last Year
-		$nb_total_supplier_outstanding_year // Current Year
+		$ladder = html_entity_decode($monthsArr[$i]), // months
+		$nb_total_supplier_outstanding_year, // nb
+		$amount_total_supplier_outstanding_year, // amount
 	];
 }
 
 $px4 = new DolGraph();
 $mesg = $px4->isGraphKo();
-$legend = ['Année N-1', 'Année N'];
+$legend = ['Nombre', 'Montant'];
 
 if (!$mesg){
-	$px4->SetTitle("Nb d'encours fournisseurs par mois - TTC");
-	$px4->datacolor = array(array(255,206,126), array(138,233,232));
+	$px4->SetTitle("Evolution des encours fournisseurs - ".$year);
+	$px4->datacolor = array(array(255,99,71), array(128, 187, 240));
 	$px4->SetData($data);
 	$px4->SetLegend($legend);
 	$px4->SetType(array('bar'));
 	$px4->setHeight('250');
 	$px4->SetWidth('500');
-	$supplier_oustanding_number_chart = $px4->draw($file, $fileurl);
+	$total_customer_outstanding_year = $px4->draw($file, $fileurl);
 }
 
-// Drawing the second graph for amount of supplier invoices by month
-$file = "oustandingSupplierChartAmount";
+
+// Last Year | CUSTOMER
+$file = "supplierChartNumberAndAmountLastyear";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
-$invoice = new Facture($db);
 $data = [];
 $i = $startMonthFiscalYear;
 
-for($i; $i <= 12; $i++){
+for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
 	$lastyear = strtotime('Last Year');
 	$lastyear = date($year-1);
@@ -484,67 +449,68 @@ for($i; $i <= 12; $i++){
 	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
 	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
 
-	// Current Year
-	$date_start = $year.'-'.$i.'-01';
-	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
-
-	$array_supplier_outstanding_year = $object->outstandingSupplier($date_start, $date_end, 0);
-	$amount_total_supplier_outstanding_year = array_sum($array_supplier_outstanding_year);
-
-	//  Last year
+	// Last Year
 	$date_start_lastYear = $lastyear.'-'.$i.'-01';
 	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
 
-	$array_supplier_outstanding_LastYear = $object->outstandingSupplier($date_start_lastYear, $date_end_lastYear, 0);
-	$amount_total_supplier_outstanding_LastYear = array_sum($array_supplier_outstanding_LastYear);
+	$array_customer_outstanding_LastYear = $object->outstandingSupplier($date_start_lastYear, $date_end_lastYear, 0);
 
+	$nb_total_customer_outstanding_LastYear = count($array_customer_outstanding_LastYear); // number
+	$amount_total_customer_outstanding_LastYear += array_sum($array_customer_outstanding_LastYear); // amount
 
 	if(date('n', $date_start) == $i ){
-		$amount_total_supplier_outstanding_year += $invoice->total_ttc;
-		$amount_total_supplier_outstanding_LastYear += $invoice->total_ttc;
+		$nb_total_customer_outstanding_LastYear += $invoice_supplier->total_ttc;
+		$amount_total_customer_outstanding_LastYear += $invoice_supplier->total_ttc;
 	}
 
-	$ladder = html_entity_decode($monthsArr[$i]);
-
 	$data[] = [
-		$ladder, // months
-		$amount_total_supplier_outstanding_LastYear, // last Year
-		$amount_total_supplier_outstanding_year // Current Year
+		$ladder = html_entity_decode($monthsArr[$i]), // months
+		$nb_total_customer_outstanding_LastYear, // nb
+		$amount_total_customer_outstanding_LastYear, // amount
 	];
+
 }
 
 $px5 = new DolGraph();
 $mesg = $px5->isGraphKo();
-$legend = ['Année N-1', 'Année N'];
+$legend = ['Nombre', 'Montant'];
 
 if (!$mesg){
-	$px5->SetTitle("Montant des encours fournisseurs par mois - TTC");
-	$px5->datacolor = array(array(255,206,126), array(138,233,232));
+	$px5->SetTitle("Evolution des encours fournisseurs - ".$lastyear);
+	$px5->datacolor = array(array(255,99,71), array(128, 187, 240));
 	$px5->SetData($data);
 	$px5->SetLegend($legend);
 	$px5->SetType(array('bar'));
 	$px5->setHeight('250');
 	$px5->SetWidth('500');
-	$supplier_outstanding_amount_chart = $px5->draw($file, $fileurl);
+	$total_supplier_outstanding_LastYear = $px5->draw($file, $fileurl);
 }
 
 
 
 // Display type of graph (customer or supplier)
 $mode = $_GET['mode'];
+$filter = $_GET['filter'];
+$lastyear = strtotime('Last Year');
+$lastyear = date($year-1);
+
 
 if($mode == 'customer'){
  	?>
 	<style>
- 	a#customer
-	{
- 		border-bottom: 1px solid #29a3a3;
-		color: #29a3a3;
-	}
-		</style>
+		a#customer
+		{
+			border-bottom: 1px solid #29a3a3;
+			color: #29a3a3;
+		}
+	</style>
 		<?php
-			$graphiqueB = $px2->show($customer_oustanding_number_chart);
-			$graphiqueB1 = $px3->show($customer_outstanding_amount_chart);
+		if($filter == $year){
+			$graphiqueB = $px2->show($total_customer_outstanding_year);
+		} elseif($filter == $lastyear){
+			$graphiqueB1 = $px3->show($total_customer_outstanding_LastYear);
+		}
+
 
 	}
 	elseif($mode == 'supplier')
@@ -555,12 +521,15 @@ if($mode == 'customer'){
 		{
 			border-bottom: 1px solid #29a3a3;
 			color: #29a3a3;
-			}
+		}
 
 		</style>
 		<?php
-		$graphiqueB2 = $px4->show($supplier_outsanding_number_chart);
-		$graphiqueB3 = $px5->show($supplier_outstanding_amount_chart);
+		if($filter == $year){
+			$graphiqueB2 = $px4->show($total_supplier_outstanding_year);
+		} elseif($filter == $lastyear){
+			$graphiqueB3 = $px5->show($total_supplier_outstanding_Lastyear);
+		}
 }
 
 // For second popup info
