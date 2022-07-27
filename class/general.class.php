@@ -1513,6 +1513,7 @@ class General extends FactureStats
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 	   $sql .= " WHERE paye = 0";
 	   $sql .= " AND fk_statut != 0 ";
+	   $sql .= " AND type = 0 ";
 
 	   $resql = $this->db->query($sql);
 	   $result = [];

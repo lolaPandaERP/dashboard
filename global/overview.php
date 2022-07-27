@@ -170,7 +170,14 @@ $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
 $total_CA = $total_standard_invoice + abs($total_avoir_invoice);
 
+$m = 12 + $startMonthFiscalYear;
+
 	for($i = $startMonthFiscalYear; $i <= 12 ; $i++){
+
+		// if($m > 12){
+		// 	$nextYear = $year+1;
+		// 	$m = 0 + $startMonthFiscalYear;
+		// }
 
 		strtotime('Last Year');
 		$lastyear = date($year-1);
@@ -193,8 +200,6 @@ $total_CA = $total_standard_invoice + abs($total_avoir_invoice);
 			$total_standard_invoice_Year += $invoice->total_ht;
 			$total_standard_invoice_LastYear += $invoice->total_ht;
 		}
-
-		// Ex : mois de début = Février ("2" + 10) //
 
 			$data[] = [
 				html_entity_decode($monthsArr[$i]),
