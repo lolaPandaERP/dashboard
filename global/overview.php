@@ -147,8 +147,22 @@ $total_CA_lastYear = $total_standard_invoice_lastYear + $total_avoir_invoice_las
 
 $dataInfo1 = price($total_CA_lastYear)."\n€"; // display data
 
-// progression turnover
-$result = $object->progress($total_CA, $total_CA_lastYear);
+/**
+* Dats infos for turnover's progress
+*/
+
+// CA by current month
+$total_standard_invoice_currentMonth = $object->turnover($firstDayCurrentMonth, $lastDayCurrentMonth); // paye + imp
+$total_avoir_invoice_currentMonth = $object->avoir($firstDayCurrentMonth, $lastDayCurrentMonth, $paye = ''); // paye + imp
+$total_CA_currentMonth = $total_standard_invoice_currentMonth + $total_avoir_invoice_lastYear; // total
+
+// CA by last month
+$total_standard_invoice_lastMonth = $object->turnover($firstDayLastMonth, $lastDayLastMonth); // paye + imp
+$total_avoir_invoice_lastMonth = $object->avoir($firstDayLastMonth, $lastDayLastMonth, $paye = ''); // paye + imp
+$total_CA_lastMonth = $total_standard_invoice_lastMonth + $total_avoir_invoice_lastMonth; // total
+
+
+$result = $object->progress($total_CA_currentMonth, $total_CA_lastMonth);
 $dataInfo2 = intval($result)  . "\n%";
 
 // Display increase/decrease
