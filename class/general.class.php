@@ -1417,15 +1417,16 @@ class General extends FactureStats
 	 }
 
 
-	 // retourne les factures standard impayées ou payées
+	 // retourne les factures standard impayées ou payées (standard)
 	 public function allInvoice($startfiscalyear, $lastDayYear, $paye = ''){
 		global $db;
 
 		$sql = "SELECT SUM(total_ht) as total_ht ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $startfiscalyear . "' AND '" . $lastDayYear . "' ";
-		$sql .= "AND fk_statut != 0 "; // not draft
-		$sql .= "AND paye = ".$paye." AND type = 0";
+		$sql .= "AND fk_statut != 0 ";
+		$sql .= "AND type = 0 "; // standard
+		$sql .= "AND paye = ".$paye;
 
 		$resql = $db->query($sql);
 
@@ -1439,7 +1440,7 @@ class General extends FactureStats
 		return $standard_invoices;
 	 }
 
-	 // Retourne le total du montant HT de tous les avoirs payés et impayés sur l'exercice en cours
+	 // Retourne le total du montant HT de tous les avoirs payés et/ou impayés sur une periode donnée
 	 public function allDeposit($startfiscalyear, $lastDayYear, $paye = ''){
 		global $db;
 
