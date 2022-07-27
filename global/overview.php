@@ -134,7 +134,6 @@ $info2 = "Progression ";
 // Fiscal current years
 $total_standard_invoice = $object->turnover($startFiscalyear, $endYear); // paye + imp
 $total_avoir_invoice = $object->avoir($startFiscalyear, $endYear, $paye = ''); // paye + imp
-$total_avoir_invoice = abs($total_avoir_invoice);
 
 $total_CA = $total_standard_invoice + $total_avoir_invoice; // total
 
