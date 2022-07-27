@@ -152,10 +152,9 @@ $total_standard_invoice_lastYear = $total_unpaid_invoice_lastyear + $total_paid_
 // credit note
 $total_unpaid_deposit_lastYear = $object->allDeposit($startFiscalLastyear, $endLastYear, $paye = 0);
 $total_paid_deposit_lastYear = $object->allDeposit($startFiscalLastyear, $endLastYear, $paye = 1);
-$total_creditnote_lastYear = $total_standard_invoice_lastYear + $total_paid_deposit_lastYear;
+$total_creditnote_lastYear = $total_unpaid_deposit_lastYear + $total_paid_deposit_lastYear;
 
-$total_CA_lastYear = $total_standard_invoice + $total_creditnote_lastYear; // total CA last year
-
+$total_CA_lastYear = $total_standard_invoice_lastYear + $total_creditnote_lastYear; // total CA last year
 
 $dataInfo1 = price($total_CA_lastYear)."\n€"; // display data
 
