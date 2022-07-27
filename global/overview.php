@@ -94,9 +94,14 @@ $duree = 1;
 $TimestampCurrentYear = strtotime($startFiscalyear);
 $TimestampCurrentLastYear = strtotime($startFiscalLastyear);
 
-// calcul the end date for current and last year
-$endYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentYear));
-$endLastYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentLastYear));
+// calcul the end date automatically for current and last year
+$dateEndYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentYear));
+$TimestampendYear = strtotime($dateEndYear);
+$endYear = date('Y-m-d', strtotime('-'.$duree.'day', $TimestampendYear));
+
+$dateEndLastYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentLastYear));
+$TimestampendLastYear = strtotime($dateEndLastYear);
+$endLastYear = date('Y-m-d', strtotime('-'.$duree.'day', $TimestampendLastYear));
 
 // First day and last day of current mounth
 $firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
@@ -133,16 +138,14 @@ $info2 = "Progression ";
 
 // Fiscal current years
 $total_standard_invoice = $object->turnover($startFiscalyear, $endYear); // paye + imp
-$total_avoir_invoice = $object->avoir($startFiscalyear, $endYear, $paye = ''); // paye + imp
-
+$total_avoir_invoice = $object->avoir($startFiscalyear, $endYear, ''); // paye
 $total_CA = $total_standard_invoice + $total_avoir_invoice; // total
 
 $dataItem1 = price($total_CA)."\n€"; // display datas
 
 // Fiscal last years
 $total_standard_invoice_lastYear = $object->turnover($startFiscalLastyear, $endLastYear); // paye + imp
-$total_avoir_invoice_lastYear = $object->avoir($startFiscalLastyear, $endLastYear, $paye = ''); // paye + imp
-
+$total_avoir_invoice_lastYear = $object->avoir($startFiscalLastyear, $endLastYear, ''); // paye + imp
 $total_CA_lastYear = $total_standard_invoice_lastYear + $total_avoir_invoice_lastYear; // total
 
 $dataInfo1 = price($total_CA_lastYear)."\n€"; // display data
@@ -153,12 +156,12 @@ $dataInfo1 = price($total_CA_lastYear)."\n€"; // display data
 
 // CA by current month
 $total_standard_invoice_currentMonth = $object->turnover($firstDayCurrentMonth, $lastDayCurrentMonth); // paye + imp
-$total_avoir_invoice_currentMonth = $object->avoir($firstDayCurrentMonth, $lastDayCurrentMonth, $paye = ''); // paye + imp
-$total_CA_currentMonth = $total_standard_invoice_currentMonth + $total_avoir_invoice_lastYear; // total
+$total_avoir_invoice_currentMonth = $object->avoir($firstDayCurrentMonth, $lastDayCurrentMonth, ''); // paye + imp
+$total_CA_currentMonth = $total_standard_invoice_currentMonth + $total_avoir_invoice_currentMonth; // total
 
 // CA by last month
 $total_standard_invoice_lastMonth = $object->turnover($firstDayLastMonth, $lastDayLastMonth); // paye + imp
-$total_avoir_invoice_lastMonth = $object->avoir($firstDayLastMonth, $lastDayLastMonth, $paye = ''); // paye + imp
+$total_avoir_invoice_lastMonth = $object->avoir($firstDayLastMonth, $lastDayLastMonth, ''); // paye + imp
 $total_CA_lastMonth = $total_standard_invoice_lastMonth + $total_avoir_invoice_lastMonth; // total
 
 
@@ -259,7 +262,7 @@ $total_paid_deposit_lastYear = $object->allDeposit($startFiscalLastyear, $endLas
 
 $firstPop_data1 = 'Factures clients impayées <strong>('.price($total_unpaid_invoice_year).' €)</strong> + payées <strong>('.price($total_paid_invoice_year).' €)</strong> + Avoirs clients impayés <strong>('.price(abs($total_unpaid_deposit_year)).' €)</strong> + payés <strong>('.price(abs($total_paid_deposit_year)).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
 $firstPop_data2 = 'Factures clients impayées <strong>('.price($total_unpaid_invoice_lastyear).' €)</strong> + payées <strong>('.price($total_paid_invoice_lastYear).' €)</strong> + Avoirs clients impayés <strong>('.price($total_unpaid_deposit_lastYear).' €)</strong> + payés <strong>('.price($total_paid_deposit_lastYear).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
-$firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100 ) </br> <strong> ( (".$total_CA." - ".$total_CA_lastYear.") / ".$total_CA.") x 100 </strong>";
+$firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100 ) </br> <strong> ( (".$total_CA_currentMonth." - ".$total_CA_lastMonth.") / ".$total_CA_currentMonth.") x 100 </strong>";
 
 
 /**
