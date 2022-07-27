@@ -1331,7 +1331,7 @@ class General extends FactureStats
 	function fetchDeliveredOrder($firstDayLastMonth, $lastDayLastMonth){
 
 		global $db;
-		// request
+
 		$sql = "SELECT * ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "commande";
 		$sql .= " WHERE date_commande BETWEEN '" . $firstDayLastMonth . "' AND '" . $lastDayLastMonth . "' ";
@@ -1355,17 +1355,17 @@ class General extends FactureStats
 
 	 function fetchInvoice($date_start, $date_end){
 
-		global $db;
 		$sql = "SELECT * ";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "facture ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
-		$sql .= "AND fk_statut != 0";
+		$sql .= " AND fk_statut != 0 ";
+		$sql .= "AND type = 0";
 
 		$resql = $this->db->query($sql);
 		$result = [];
 
 		if($resql){
-			while($obj = $db->fetch_object(($resql))){
+			while($obj = $this->db->fetch_object(($resql))){
 				$result[] = $obj;
 			}
 		}
@@ -1484,6 +1484,7 @@ class General extends FactureStats
  	}
 
 
+	// Retourne un tableau de toutes les factures (hors brouillon) impayées sur une période donnée
 	 public function outstandingBill($date_start, $date_end){
 
 		 	// Encours client total sur l'exercice fiscal
@@ -1504,6 +1505,25 @@ class General extends FactureStats
 			return $result;
 	 }
 
+
+	// Retourne un tableau de toutes les factures (hors brouillon) impayées (hors period)
+	public function fetchCustomerInvoices(){
+
+	   $sql = "SELECT SUM(total_ttc) as total_ttc";
+	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+	   $sql .= " WHERE paye = 0";
+	   $sql .= " AND fk_statut != 0 ";
+
+	   $resql = $this->db->query($sql);
+	   $result = [];
+
+	   if($resql){
+		   while($obj = $this->db->fetch_object(($resql))){
+			   $result[] = $obj->total_ttc;
+		   }
+	   }
+	   return $result;
+	}
 
 	 /*
 	  Fetch all unpaid customer invoices whose due date has passed
@@ -1536,8 +1556,29 @@ class General extends FactureStats
 	 * -------- SUPPLIER INVOICE ----------
 	 */
 
+
+	 	// Retourne un tableau de toutes les factures fournisseurs (hors brouillon) impayées (hors period)
+	public function fetchSupplierInvoices(){
+
+		$sql = "SELECT SUM(total_ttc) as total_ttc";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+		$sql .= " WHERE paye = 0";
+		$sql .= " AND fk_statut != 0 ";
+
+		$resql = $this->db->query($sql);
+		$result = [];
+
+		if($resql){
+			while($obj = $this->db->fetch_object(($resql))){
+				$result[] = $obj->total_ttc;
+			}
+		}
+		return $result;
+	 }
+
+
 	 /**
-	  * Return all inpaid supplier invoice on period
+	  * Return all unpaid supplier invoice on period
 	  */
 	 public function outstandingSupplier($date_start, $date_end, $paye){
 
@@ -1614,31 +1655,11 @@ class General extends FactureStats
 	 * ---------------- TRESURY ---------------------
 	 */
 
-	 /**
-	  * Retourne le montant total (HT) des factures fpurnisseurs sur une période donnée
-	  */
-	 public function fetchSupplierInvoices($firstDayYear, $lastDayYear){
-
-		$sql = "SELECT SUM(total_ht) as total_ht";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-		$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
-		$resql = $this->db->query($sql);
-
-		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$supplier_invoice = $obj->total_ht;
-			}
-			$this->db->free($resql);
-		}
-
-		return $supplier_invoice;
-
-	}
 
 	/**
 	 * Retourne le montant total de la TVA
 	 */
+
 	public function fetchTVA($firstDayCurrentMonth, $date_now = ''){
 
 		$date_now = dol_now();
@@ -1689,7 +1710,7 @@ class General extends FactureStats
 	 */
 	 public function fetchVariablesExpenses($date_start, $date_end){
 
-		$supplier_invoice = $this->fetchSupplierInvoices($date_start, $date_end);
+		$supplier_invoice = $this->outstandingSupplier($date_start, $date_end, 0);
 		$tva = $this->fetchTVA($date_start, $date_end);
 
 		$resultat = ($supplier_invoice + $tva);

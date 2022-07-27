@@ -86,47 +86,10 @@ include('../template/template_admin.php');
 							</div>
 						</div>
 						<div class="customerGraph" id="d1">
-							<?php
-								print $graphiqueB;
-								print $graphiqueB1;
-							 ?>
-							  Année :
-							<?php
-								if($_GET['mode'] == 'customer'){
-
-									if($_GET['filter'] == '2021') {
-										?><a id='anneeN-1' href="./overview.php?mode=customer&filter=2021" style="border-bottom :2px solid #29a3a3; background-color: #29a3a3; color: white;">
-										<?php print $lastyear ?></a>
-										 <a id='anneeN' href="./overview.php?mode=customer&filter=2022">
-											<?php print $year ?></a>
-										<?php
-									} elseif($_GET['filter'] == '2022') {
-										?> <a id='anneeN-1' href="./overview.php?mode=customer&filter=2021"><?php print $lastyear ?></a>
-										<a id='anneeN' href="./overview.php?mode=customer&filter=2022" style="border-bottom :2px solid #29a3a3; background-color: #29a3a3; color: white;"><?php print $year ?></a>
-										<?php
-									}
-								}
-								?>
-							</h7>
+							<?php print $graphiqueB;?>
 						</div>
 						<div class="graphGraph" id="d2">
-							 <?php print $graphiqueB2 ?>
-							 <?php print $graphiqueB3 ?>
-							 <?php
-							 if($_GET['mode'] == 'supplier'){
-
-									if($_GET['filter'] == '2021') {
-										?> <a id='anneeN-1' href="./overview.php?mode=supplier&filter=2021" style="border-bottom :2px solid #29a3a3; border-top :2px solid #29a3a3;background-color: #29a3a3; color: white;"><?php print $lastyear ?></a></hr>
-										<a id='anneeN' href="./overview.php?mode=supplier&filter=2022"><?php print $year ?></a>
-										<?php
-									} elseif($_GET['filter'] == '2022') {
-										?> <a id='anneeN-1' href="./overview.php?mode=supplier&filter=2021"><?php print $lastyear ?></a></hr>
-										<a id='anneeN' href="./overview.php?mode=supplier&filter=2022" style="border-bottom :2px solid #29a3a3; background-color: #29a3a3; color: white;"><?php print $year ?></a>
-										<?php
-									}
-								}
-								?>
-								</h7>
+							 <?php print $graphiqueB2;?>
 							</div>
 						</div>
 					</div>
