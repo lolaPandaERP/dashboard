@@ -1395,7 +1395,7 @@ class General extends FactureStats
 	 }
 
 
-	 public function avoir($startfiscalyear, $lastDayYear, $paye){
+	 public function avoir($startfiscalyear, $lastDayYear){
 		global $db, $conf;
 
 		$sql = "SELECT SUM(total_ht) as total_ht ";
@@ -1417,16 +1417,15 @@ class General extends FactureStats
 	 }
 
 
-	 // retourne les factures standard impayées ou payées (standard)
-	 public function allInvoice($startfiscalyear, $lastDayYear, $paye = ''){
+	 // Retourne les factures (standard et avoir) impayées et payées sur une période donnée
+	 public function allInvoice($startfiscalyear, $lastDayYear, $paye){
 		global $db;
 
 		$sql = "SELECT SUM(total_ht) as total_ht ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $startfiscalyear . "' AND '" . $lastDayYear . "' ";
 		$sql .= "AND fk_statut != 0 ";
-		$sql .= "AND type = 0 "; // standard
-		$sql .= "AND paye = ".$paye;
+		$sql .= "AND paye =".$paye;
 
 		$resql = $db->query($sql);
 
@@ -1440,6 +1439,26 @@ class General extends FactureStats
 		return $standard_invoices;
 	 }
 
+	 public function closedInvoice($startfiscalyear, $lastDayYear){
+		global $db;
+
+		$sql = "SELECT SUM(total_ht) as total_ht ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE datef BETWEEN '" . $startfiscalyear . "' AND '" . $lastDayYear . "' ";
+		$sql .= "AND fk_statut = 3";
+
+		$resql = $db->query($sql);
+
+		if ($resql) {
+			if ($db->num_rows($resql)) {
+				$obj = $db->fetch_object($resql);
+				$closed_invoices = $obj->total_ht;
+			}
+			$db->free($resql);
+		}
+		return $closed_invoices;
+	 }
+
 	 // Retourne le total du montant HT de tous les avoirs payés et/ou impayés sur une periode donnée
 	 public function allDeposit($startfiscalyear, $lastDayYear, $paye = ''){
 		global $db;
@@ -1449,7 +1468,7 @@ class General extends FactureStats
 		$sql .= " WHERE datef BETWEEN '" . $startfiscalyear . "' AND '" . $lastDayYear . "' ";
 		$sql .= "AND fk_statut != 0 ";
 		$sql .= "AND type = 2 "; // avoir
-		$sql .= "AND paye = ".$paye;
+		$sql .= "AND paye =".$paye; // avoir
 
 		$resql = $db->query($sql);
 
@@ -1462,27 +1481,6 @@ class General extends FactureStats
 		}
 		return $avoir;
 	 }
-
-	// return all invoices on n years (without draft statut)
-	public function fetchCA($firstDayYear, $lastDayYear){
-
-		$sql = "SELECT SUM(total_ht) as total_ht ";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-		$sql .= " WHERE datef BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "' ";
-		$sql .= " AND fk_statut != 0";
-		$sql .= " AND type = 0 ";
-
-		$resql = $this->db->query($sql);
-
-		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$result = $obj->total_ht;
-			}
-			$this->db->free($resql);
-		}
-		return $result;
- 	}
 
 
 	// Retourne un tableau de toutes les factures (hors brouillon) impayées sur une période donnée
@@ -1507,7 +1505,7 @@ class General extends FactureStats
 	 }
 
 
-	// Retourne un tableau de toutes les factures (hors brouillon) impayées (hors period)
+	// Retourne un tableau de toutes les factures standard (hors brouillon - TTC) impayées (hors period)
 	public function fetchCustomerInvoices(){
 
 	   $sql = "SELECT SUM(total_ttc) as total_ttc";

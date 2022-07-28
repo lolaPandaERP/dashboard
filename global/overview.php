@@ -137,26 +137,28 @@ $info1 = "Chiffre d'affaire n-1";
 $info2 = "Progression ";
 
 // Fiscal current years
-$total_standard_invoice = $object->turnover($startFiscalyear, $endYear); // paye + imp
-$total_avoir_invoice = $object->avoir($startFiscalyear, $endYear, ''); // paye + imp
-$total_CA = $total_standard_invoice + $total_avoir_invoice; // total
+$total_paid_invoice = $object->allInvoice($startFiscalyear, $endYear, 1); // paye
+$total_unpaid_invoice = $object->allInvoice($startFiscalyear, $endYear, 0); // paye
+
+$total_standard_invoice = $total_paid_invoice + $total_unpaid_invoice;
+
+$total_closed_invoice = $object->closedInvoice($startFiscalyear, $endYear); // paye + imp
+$total_CA = $total_standard_invoice - $total_closed_invoice; // total
 
 $dataItem1 = price($total_CA)."\n€"; // display datas
 
 // Fiscal last years
-// standard
-$total_unpaid_invoice_lastyear = $object->allInvoice($startFiscalLastyear, $endLastYear, 0);
-$total_paid_invoice_lastYear = $object->allInvoice($startFiscalLastyear, $endLastYear, 1);
-$total_standard_invoices_lastYear = $total_unpaid_invoice_lastyear + $total_paid_invoice_lastYear;
+// standard unpaid + paid
+$total_paid_invoice_lastyear = $object->allInvoice($startFiscalLastyear, $endLastYear, 1); // paye
+$total_unpaid_invoice_lastyear = $object->allInvoice($startFiscalLastyear, $endLastYear, 0); // paye
 
-// credit note
-$total_unpaid_deposit_lastYear = $object->allDeposit($startFiscalLastyear, $endLastYear, 0);
-$total_paid_deposit_lastYear = $object->allDeposit($startFiscalLastyear, $endLastYear, 1);
-$total_creditnote_lastYear = $total_unpaid_deposit_lastYear + $total_paid_deposit_lastYear;
+$total_standard_invoice_lastyear = $total_paid_invoice_lastyear + $total_unpaid_invoice_lastyear;
 
-$total_turnover_lastYear = $total_standard_invoices_lastYear + $total_creditnote_lastYear; // total CA last year
+$total_closed_invoice_lastyear = $object->closedInvoice($startFiscalyear, $endYear); // paye + imp
+$total_CA_lastyear = $total_standard_invoice_lastyear - $total_closed_invoice_lastyear; // total
 
-$dataInfo1 = price($total_turnover_lastYear)."\n€"; // display data
+$dataInfo1 = price($total_CA_lastyear)."\n€"; // display datas
+
 
 /**
 * Dats infos for turnover's progress
@@ -254,12 +256,12 @@ $firstPop_info2 = $info1;
 $firstPop_info3 = $info2;
 
 // All unpaid or paid invoice on current year and last year
-$total_unpaid_invoice_year = $object->allInvoice($startFiscalyear, $endYear, $paye = 0); // unpaid
-$total_paid_invoice_year = $object->allInvoice($startFiscalyear, $endYear, $paye = 1); // paid
+// $total__invoice_year = $object->turnover($startFiscalyear, $endYear); // unpaid
+// $total_paid_invoice_year = $object->allInvoice($startFiscalyear, $endYear); // paid
 
 // All Unpaid or pay credit note on current year and last year
-$total_unpaid_deposit_year = $object->allDeposit($startFiscalyear, $endYear, $paye = 0);
-$total_paid_deposit_year = $object->allDeposit($startFiscalyear, $endYear, $paye = 1);
+$total_unpaid_deposit_year = $object->allDeposit($startFiscalyear, $endYear, 0);
+$total_paid_deposit_year = $object->allDeposit($startFiscalyear, $endYear, 1);
 
 $firstPop_data1 = 'Factures clients impayées <strong>('.price($total_unpaid_invoice_year).' €)</strong> + payées <strong>('.price($total_paid_invoice_year).' €)</strong> + Avoirs clients impayés <strong>('.price(abs($total_unpaid_deposit_year)).' €)</strong> + payés <strong>('.price(abs($total_paid_deposit_year)).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
 $firstPop_data2 = 'Factures clients impayées <strong>('.price($total_unpaid_invoice_lastyear).' €)</strong> + payées <strong>('.price($total_paid_invoice_lastYear).' €)</strong> + Avoirs clients impayés <strong>('.price(abs($total_unpaid_deposit_lastYear)).' €)</strong> + payés <strong>('.price(abs($total_paid_deposit_lastYear)).'€)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
