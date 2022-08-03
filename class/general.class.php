@@ -1708,7 +1708,7 @@ class General extends FactureStats
 	 *		- factures fournisseurs impayées
 	 *		- le total de la TVA du mois en cours
 	 */
-	 public function fetchVariablesExpenses($date_start, $date_end){
+	 public function fetchVariablesExpenses($date_start, $date_end, $supplier_invoice, $tva){
 
 		$supplier_invoice = $this->outstandingSupplier($date_start, $date_end, 0);
 		$tva = $this->fetchTVA($date_start, $date_end);

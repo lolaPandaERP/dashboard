@@ -186,19 +186,42 @@ if (!$mesg){
 $graphiqueA = $p1->show($tresuryChart);
 
 
-// Total charge of current month
+// Total charge
 $info3 = "Charges fixes";
-$staticExpenses = $object->fetchStaticExpenses($startFiscalyear, $endYear, $currentAccount);
-$dataInfo3 = price($staticExpenses) . "\n€";
+// Static Expenses details (on prev month)
+$arr_salarys = $object->fetchSalarys($startFiscalYear, $endYear, $currentAccount);
+$socialesTaxes_charges = $object->fetchSocialAndTaxesCharges($startFiscalYear, $endYear, $currentAccount);
+$emprunts = $object->fetchEmprunts($startFiscalYear, $endYear, $currentAccount);
 
+$staticExpenses = ($arr_salarys + $socialesTaxes_charges + $emprunts); // static expenses total
+
+// TODO : vat by current month
+// $total_vat_by_month = $object->fetchTVA($firstDayLastMonth, $lastDayLastMonth);
+$total_expense = $object->fetchExpenses($startFiscalYear, $endYear); // expenses
+$dataInfo3 = price($total_expense)."\n€";
+
+/**
+ * Variable expenses
+ */
 $info4 = "Charges variables";
-$variablesExpenses = $object->fetchVariablesExpenses($startFiscalyear, $endYear);
-$dataInfo4 = price($variablesExpenses) . "\n€";
+
+// supplier invoices
+$array_suppliers_invoice_paid = $object->outstandingSupplier($startFiscalYear, $endYear, 1 ); // paid
+$total_suppliers_invoice_paid = array_sum($array_suppliers_invoice_paid);
+
+$array_suppliers_invoice_unpaid = $object->outstandingSupplier($startFiscalYear, $endYear, 0); // unpaid
+$total_suppliers_invoice_unpaid = array_sum($array_suppliers_invoice_unpaid);
+
+$total_suppliers_invoice_paid_and_unpaid = $total_suppliers_invoice_unpaid + $total_suppliers_invoice_paid;
+
+$variousPaiements = $object->fetchVariousPaiements($startFiscalYear, $endYear, $currentAccount);
+$variablesExpenses = $total_suppliers_invoice_paid_and_unpaid + $total_vat_by_month + $variousPaiements;
+$dataInfo4 = price($variablesExpenses)."\n€";
+
 
 $titleItem2 = "Charge totale";
 $result3 = ($variablesExpenses + $staticExpenses);
 $dataItem2 = price($result3). "\n€";
-
 
 // For tresury (popupinfo)
 $secondPop_info1 = $titleItem2;
@@ -229,7 +252,7 @@ for($i = $startMonthFiscalYear; $i <= 12 ; $i++){
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
 	$staticExpenses += $object->fetchStaticExpenses($date_start, $date_end, $currentAccount); // static
-	$variableExpenses += $object->fetchVariablesExpenses($date_start, $date_end); // variables
+	// $variableExpenses += $object->fetchVariablesExpenses($date_start, $date_end, $total_suppliers_invoice_paid_and_unpaid, $tva); // variables
 
 	$total_charges = ($staticExpenses + $variableExpenses);
 
@@ -256,7 +279,7 @@ if (!$mesg){
 	$px2->SetWidth('500');
 	$chargeGraph = $px2->draw($file, $fileurl);
 }
-$graphiqueB = $px2->show($chargeGraph);
+// $graphiqueB = $px2->show($chargeGraph);
 
 
 

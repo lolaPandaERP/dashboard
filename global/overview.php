@@ -154,7 +154,7 @@ $total_unpaid_invoice_lastyear = $object->allInvoice($startFiscalLastyear, $endL
 
 $total_standard_invoice_lastyear = $total_paid_invoice_lastyear + $total_unpaid_invoice_lastyear;
 
-$total_closed_invoice_lastyear = $object->closedInvoice($startFiscalLastyear, $endLastYear); // paye + imp
+$total_closed_invoice_lastyear = $object->closedInvoice($startFiscalyear, $endYear); // paye + imp
 $total_CA_lastyear = $total_standard_invoice_lastyear - $total_closed_invoice_lastyear; // total
 
 $dataInfo1 = price($total_CA_lastyear)."\n€"; // display datas
