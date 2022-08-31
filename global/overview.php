@@ -119,11 +119,6 @@ $lastDayYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year));
 $firstDayLastYear = date('Y-m-d', mktime(0, 0, 1, 1, 1, $year - 1));
 $lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
 
-$nowyear = strftime("%Y", dol_now());
-$year = GETPOST('year') > 0 ? GETPOST('year', 'int') : $nowyear;
-$startyear = $year - (empty($conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS) ? 2 : max(1, min(10, $conf->global->MAIN_STATS_GRAPHS_SHOW_N_YEARS)));
-$endyear = $year;
-
 // Load start month fiscal year for datas graph
 $startFiscalYear = $conf->global->START_FISCAL_YEAR;
 $startMonthFiscalYear = $object->startMonthForGraphLadder($startFiscalYear, 12);
@@ -166,12 +161,12 @@ $dataInfo1 = price($total_CA_lastyear)."\n€"; // display datas
 
 // CA by current month
 $total_standard_invoice_currentMonth = $object->turnover($firstDayCurrentMonth, $lastDayCurrentMonth); // paye + imp
-$total_avoir_invoice_currentMonth = $object->avoir($firstDayCurrentMonth, $lastDayCurrentMonth, ''); // paye + imp
+$total_avoir_invoice_currentMonth = $object->avoir($firstDayCurrentMonth, $lastDayCurrentMonth); // paye + imp
 $total_CA_currentMonth = $total_standard_invoice_currentMonth + $total_avoir_invoice_currentMonth; // total
 
 // CA by last month
 $total_standard_invoice_lastMonth = $object->turnover($firstDayLastMonth, $lastDayLastMonth); // paye + imp
-$total_avoir_invoice_lastMonth = $object->avoir($firstDayLastMonth, $lastDayLastMonth, ''); // paye + imp
+$total_avoir_invoice_lastMonth = $object->avoir($firstDayLastMonth, $lastDayLastMonth); // paye + imp
 $total_CA_lastMonth = $total_standard_invoice_lastMonth + $total_avoir_invoice_lastMonth; // total
 
 $result = $object->progress($total_CA_currentMonth, $total_CA_lastMonth);
@@ -195,44 +190,43 @@ $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
 $total_CA = $total_standard_invoice + $total_avoir_invoice;
 
-$m = 12 + $startMonthFiscalYear;
+for($mm = $startMonthFiscalYear, $yy = $year; $i < 13; $i++, $mm++){
 
-	for($i = $startMonthFiscalYear; $i <= 12 ; $i++){
+	strtotime('Last Year');
+	$lastyear = date($year-1);
+	$month = date('n');
+	$year = date('Y');
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
 
-		// if($m > 12){
-		// 	$nextYear = $year+1;
-		// 	$m = 0 + $startMonthFiscalYear;
-		// }
+	// Start and end of each month on current years
+	$date_start = $year.'-'.$i.'-01';
+	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-		strtotime('Last Year');
-		$lastyear = date($year-1);
+	// Start and end of each month on last year
+	$date_start_lastYear = $lastyear.'-'.$i.'-01';
+	$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
 
-		$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
-		$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
+	$total_standard_invoice_Year += $object->turnover($date_start, $date_end); // current
+	$total_standard_invoice_LastYear += $object->turnover($date_start_lastYear, $date_end_lastYear); // last year
 
-		// Start and end of each month on current years
-		$date_start = $year.'-'.$i.'-01';
-		$date_end = $year.'-'.$i.'-'.$lastDayMonth;
+	if($mm > 12){
+		$mm = 1;
+        $yy++;
+	}
 
-		// Start and end of each month on last year
-		$date_start_lastYear = $lastyear.'-'.$i.'-01';
-		$date_end_lastYear = $lastyear.'-'.$i.'-'.$lastDayMonthLastyear;
+	if(date('n', $date_start) == $mm)
+	{
+		$total_standard_invoice_Year += $invoice->total_ht;
+		$total_standard_invoice_LastYear += $invoice->total_ht;
+	}
 
-		$total_standard_invoice_Year += $object->turnover($date_start, $date_end); // current
-		$total_standard_invoice_LastYear += $object->turnover($date_start_lastYear, $date_end_lastYear); // last year
-
-		if(date('n', $date_start) == $i){
-			$total_standard_invoice_Year += $invoice->total_ht;
-			$total_standard_invoice_LastYear += $invoice->total_ht;
-		}
-
-			$data[] = [
-				html_entity_decode($monthsArr[$i]),
-				$total_standard_invoice_LastYear,
-				$total_standard_invoice_Year
-			];
-		}
-
+	$data[] = [
+		html_entity_decode($monthsArr[$mm]),
+		$total_standard_invoice_LastYear,
+		$total_standard_invoice_Year
+	];
+}
 
 $px1 = new DolGraph();
 $mesg = $px1->isGraphKo();
@@ -255,16 +249,14 @@ $firstPop_info1 = $titleItem1;
 $firstPop_info2 = $info1;
 $firstPop_info3 = $info2;
 
-// All unpaid or paid invoice on current year and last year
-// $total__invoice_year = $object->turnover($startFiscalyear, $endYear); // unpaid
-// $total_paid_invoice_year = $object->allInvoice($startFiscalyear, $endYear); // paid
-
 // All Unpaid or pay credit note on current year and last year
 $total_unpaid_deposit_year = $object->allDeposit($startFiscalyear, $endYear, 0);
 $total_paid_deposit_year = $object->allDeposit($startFiscalyear, $endYear, 1);
+$total_unpaid_deposit_lastyear = $object->allDeposit($startFiscalLastyear, $endYear, 0);
+$total_paid_deposit_lastyear = $object->allDeposit($startFiscalLastyear, $endYear, 1);
 
-$firstPop_data1 = 'Factures clients impayées <strong>('.price($total_unpaid_invoice_year).' €)</strong> + payées <strong>('.price($total_paid_invoice_year).' €)</strong> + Avoirs clients impayés <strong>('.price(abs($total_unpaid_deposit_year)).' €)</strong> + payés <strong>('.price(abs($total_paid_deposit_year)).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
-$firstPop_data2 = 'Factures clients impayées <strong>('.price($total_unpaid_invoice_lastyear).' €)</strong> + payées <strong>('.price($total_paid_invoice_lastYear).' €)</strong> + Avoirs clients impayés <strong>('.price(abs($total_unpaid_deposit_lastYear)).' €)</strong> + payés <strong>('.price(abs($total_paid_deposit_lastYear)).'€)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
+$firstPop_data1 = 'Factures clients impayées <strong>('.price($total_unpaid_invoice).' €)</strong> + payées <strong>('.price($total_paid_invoice).' €)</strong> + Avoirs clients impayés <strong>('.price(abs($total_unpaid_deposit_year)).' €)</strong> + payés <strong>('.price(abs($total_paid_deposit_year)).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
+$firstPop_data2 = 'Factures clients impayées <strong>('.price($total_unpaid_invoice_lastyear).' €)</strong> + payées <strong>('.price($total_paid_invoice_lastyear).' €)</strong> + Avoirs clients impayés <strong>('.price(abs($total_unpaid_deposit_lastYear)).' €)</strong> + payés <strong>('.price(abs($total_paid_deposit_lastYear)).'€)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
 $firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100 ) </br> <strong> ( (".$total_CA_currentMonth." - ".$total_CA_lastMonth.") / ".$total_CA_currentMonth.") x 100 </strong>";
 
 
@@ -314,7 +306,7 @@ $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
 $data = [];
 
-for($i = 1; $i <= 12; $i++){
+for($i = $startMonthFiscalYear; $i <= 12; $i++){
 
 	// Current Year
 	$date_start = $year.'-'.$i.'-01';
