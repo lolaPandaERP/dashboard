@@ -5,8 +5,9 @@ include('../template/template_admin.php');
 <!-- GRILLE STRUCTURE HTML -->
 	<section class="page-content">
 
-		<div class="grid-container-4">
-			<div class="grid-1">
+		<div class="">
+			<div class="row">
+			<div class="grid-1 col-lg-6 col-md-12">
 				<div class="card bg-c-blue order-card">
 					<div class="card-body">
 					<div class="pull-left">
@@ -36,18 +37,18 @@ include('../template/template_admin.php');
 							<?php print $dataItem1 ?>
 						</h1>
 						<hr>
-						<div class="col-lg-14">
+						<div class="col-lg-12">
   							<div class="center-block">
    		 						<div class="pull-left"><?php print $info1 ?> : <h4 class="center"><?php print $dataInfo1 ?></h4></div>
 								<div class="pull-right"><?php print $info2 ?> : <h4 class="center"><?php print $dataInfo2 ?></h4></div>
 							</div>
 							</div>
 						</div>
-							<?php print $graphiqueA ?>
+						<div class="chart"><?php print $graphiqueA ?></div>
 					</div>
 				</div>
 
-			<div class="grid-1">
+			<div class="grid-1 col-lg-6 col-md-12">
 				<div class="card bg-c-blue order-card">
 					<!-- Corps de la carte -->
 					<div class="card-body">
@@ -78,27 +79,25 @@ include('../template/template_admin.php');
 							<?php print $dataItem2 ?>
 						</h1>
 						<hr>
-						<div class="col-lg-14">
+						<div class="col-lg-12">
   							<div class="center-block">
    		 						<div class="pull-left"><?php print $info3 ?> : <h4 class="center"><?php print $dataInfo3 ?></h4></div></a>
 								<div class="pull-right"><?php print $info4 ?> : <h4 class="center"><?php print $dataInfo4 ?></h4></div></a>
 							</div>
 							</div>
 						</div>
-						<div class="customerGraph" id="d1">
+						<div class="customerGraph col-lg-6 col-xs-12" id="d1">
 							<?php print $graphiqueB;?>
 						</div>
-						<div class="graphGraph" id="d2">
+						<div class="graphGraph " id="d2">
 							 <?php print $graphiqueB2;?>
 							</div>
 						</div>
 					</div>
+			</div>
 
-
-			<!-- end bloc 1 -->
-
-			<!-- bloc 1 -->
-			<div class="grid-1">
+			<div class="row">
+			<div class="grid-1 col-lg-6 col-md-12">
 				<div class="card bg-c-blue order-card">
 					<!-- Corps de la carte -->
 					<div class="card-body">
@@ -129,7 +128,7 @@ include('../template/template_admin.php');
 							<?php print $dataItem3 ?>
 						</h1>
 						<hr>
-						<div class="col-lg-14">
+						<div class="col-lg-12">
   							<div class="center-block">
    		 						<div class="pull-left"><?php print $info5 ?> : <h4 class="center"><?php print $dataInfo5 ?></h4></div>
 								<div class="pull-right"><?php print $info6 ?> : <h4 class="center"><?php print $dataInfo6 ?></h4></div>
@@ -143,20 +142,20 @@ include('../template/template_admin.php');
 			</div>
 
 				<!-- bloc 1 -->
-				<div class="grid-1">
+				<div class="grid-1 col-lg-6 col-md-12">
 					<div class="card bg-c-blue order-card">
 						<!-- Corps de la carte -->
 						<div class="card-body">
-						<div class="pull-left">
-						<div class="popup" onclick="showGraph4()">
-							<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
-								<span class="popuptext" id="fourPop">
-									<h4> Détails des informations / calculs </h4>
-								<ul>
-									<li><strong><?php print $fourPop_info1 ?></strong><br><?php print $fourPop_data1 ?></li><hr>
-									<li><strong><?php print $fourPop_info2 ?></strong><br><?php print $fourPop_data2 ?> </li><hr>
-									<li><strong><?php print $fourPop_info3 ?></strong><br><?php print $fourPop_data3 ?> </li>
-								</ul>
+							<div class="pull-left">
+								<div class="popup" onclick="showGraph4()">
+									<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
+									<span class="popuptext" id="fourPop">
+										<h4> Détails des informations / calculs </h4>
+										<ul>
+											<li><strong><?php print $fourPop_info1 ?></strong><br><?php print $fourPop_data1 ?></li><hr>
+											<li><strong><?php print $fourPop_info2 ?></strong><br><?php print $fourPop_data2 ?> </li><hr>
+											<li><strong><?php print $fourPop_info3 ?></strong><br><?php print $fourPop_data3 ?> </li>
+										</ul>
 								</span>
 							</div>
 							</div>
@@ -174,7 +173,7 @@ include('../template/template_admin.php');
 								<?php print $dataItem4 ?>
 							</h1>
 							<hr>
-							<div class="col-lg-14">
+							<div class="col-lg-12">
 								<div class="center-block">
 									<div class="pull-left"><?php print $info7 ?> : <h4 class="center"><?php print $dataInfo7 ?></h4></div>
 									<div class="pull-right"><?php print $info8 ?> : <h4 class="center"><?php print $dataInfo8 ?></h4></div>
@@ -186,7 +185,18 @@ include('../template/template_admin.php');
 							</div>
 						</div>
 					</div>
+				</div>
 
+			</div>
+
+
+
+			<!-- end bloc 1 -->
+
+			<!-- bloc 1 -->
+
+
+		</section>
 			<!-- end bloc 1 -->
 
 
