@@ -322,7 +322,7 @@ print load_fiche_titre($langs->trans("Net à produire"));
 
 print $object->load_navbar();
 
-include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
+include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes4.php';
 
 // PRODUCTION LES + PROCHES
 $titleItem1 = "<h4>Productions les + proches</h4>";
