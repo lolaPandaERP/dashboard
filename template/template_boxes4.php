@@ -86,7 +86,7 @@ include('../template/template_admin.php');
 							</div>
 							</div>
 						</div>
-						<div class="customerGraph col-lg-6 col-xs-12" id="d1">
+						<div class="customerGraph " id="d1">
 							<?php print $graphiqueB;?>
 						</div>
 						<div class="graphGraph " id="d2">
