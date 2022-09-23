@@ -115,7 +115,7 @@ if(!empty($conf->global->START_FISCAL_YEAR)){
  */
 $titleItem1 = "Productions en cours";
 $object = new General($db);
-$validated_order_fiscalYear = $object->fetchValidatedOrder($startFiscalyear, $endYear);
+$validated_order_fiscalYear = $object->fetchOrder(1);
 $dataItem1 = price($validated_order_fiscalYear). "\n€";
 
 // total amount of delivery order on current month
