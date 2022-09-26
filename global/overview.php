@@ -136,63 +136,55 @@ $info1 = "Chiffre d'affaire n-1";
 $info2 = "Progression ";
 
 // Fiscal current years
-$total_paid_invoice_year = $object->turnover($startFiscalYear, $endYear, 1);
-$total_unpaid_invoice_year = $object->turnover($startFiscalYear, $endYear, 0);
+$total_invoice_year = $object->turnover($startFiscalYear, $endYear);
+$total_deposit_year = $object->avoir($startFiscalYear, $endYear);
 
-$total_unpaid_deposit_year = $object->avoir($startFiscalYear, $endYear, 0);
-$total_paid_deposit_year = $object->avoir($startFiscalYear, $endYear, 1);
-
-$total_closed_invoice = $object->closedInvoice($startFiscalyear, $endYear);
-
-$total_CA_year = $total_paid_invoice_year + $total_unpaid_invoice_year + $total_unpaid_deposit_year + $total_paid_deposit_year - $total_closed_invoice;
-$dataItem1 = price($total_CA_year)."\n€"; // Display datas
+$totalCA_year = $total_invoice_year + $total_deposit_year;
+$dataItem1 = price($totalCA_year)."\n€"; // Display datas
 
 // Fiscal last years
-
-$total_paid_invoice_lastyear = $object->fetchInvoices($startFiscalLastyear, $endLastYear, 1);
+$total_paid_invoice_lastyear = $object->fetchInvoices($startFiscalLastyear, $endLastYear);
 $total_unpaid_invoice_lastyear = $object->fetchUnpaidInvoice($startFiscalLastyear, $endLastYear);
-$total_closed_invoice_lastyear = $object->closedInvoice($startFiscalLastyear, $endLastYear);
-$totalCA_LastYear = $total_paid_invoice_lastyear + $total_unpaid_invoice_lastyear;
+$total_deposit_lastyear = $object->avoir($startFiscalLastyear, $endLastYear);
 
-$dataInfo1 = price($totalCA_LastYear)."\n€"; // Display datas
+$totalCA_lastyear = $total_paid_invoice_lastyear + $total_unpaid_invoice_lastyear;
+$dataInfo1 = price($totalCA_lastyear)."\n€"; // Display datas
 
 /**
 * Dats infos for turnover's progress
 */
 
 // CA by current month on current year
-$total_paid_invoice_currentMonth = $object->turnover($firstDayCurrentMonth, $lastDayCurrentMonth, 1);
-$total_paid_deposit_currentMonth = $object->avoir($firstDayCurrentMonth, $lastDayCurrentMonth, 1);
-$total_unpaid_invoice_currentMonth = $object->turnover($firstDayCurrentMonth, $lastDayCurrentMonth, 0);
-$total_unpaid_deposit_currentMonth = $object->avoir($firstDayCurrentMonth, $lastDayCurrentMonth, 0);
-
-$total_closed_invoice_currentMonth = $object->closedInvoice($firstDayCurrentMonth, $lastDayCurrentMonth);
-
-$CA_currentMonth = $total_paid_invoice_currentMonth + $total_paid_deposit_currentMonth + $total_unpaid_invoice_currentMonth + $total_unpaid_deposit_currentMonth; // total
-$total_CA_currentMonth_year = $CA_currentMonth - $total_closed_invoice_currentMonth; // total
+$invoice_month_year = $object->turnover($startFiscalYear, date('Y-m-d',$datetime));
+$deposit_month_year = $object->avoir($startFiscalYear, date('Y-m-d',$datetime));
+$total_month_year = $invoice_month_year + $deposit_month_year;
 
 // CA by current month on last year
-$total_paid_invoice_lastMonth = $object->turnover($firstDayCurrentMonthLastYear, $lastDayCurrentMonthLastYear, 1);
-$total_paid_deposit_lastMonth = $object->avoir($firstDayCurrentMonthLastYear, $lastDayCurrentMonthLastYear, 1);
-$total_unpaid_invoice_lastMonth = $object->turnover($firstDayCurrentMonthLastYear, $lastDayCurrentMonthLastYear, 0);
-$total_unpaid_deposit_lastMonth = $object->avoir($firstDayCurrentMonthLastYear, $lastDayCurrentMonthLastYear, 0);
+$datenow_lastyear = date('Y-m-d', mktime(0, 0, 1, $month, date('d'), $year - 1)); // last year
 
-$total_closed_invoice_currentMonth_lastyear = $object->closedInvoice($firstDayCurrentMonthLastYear, $lastDayCurrentMonthLastYear);
+$total_invoice_month_lastyear = $object->turnover($startFiscalLastyear, $datenow_lastyear);
+$total_deposit_month_lastyear = $object->avoir($startFiscalLastyear, $datenow_lastyear);
+$closed_invoice = $object->closedInvoice($startFiscalLastyear, $datenow_lastyear);
+$total_month_lastyear = $total_invoice_month_lastyear + $total_deposit_month_lastyear - $closed_invoice;
 
-$CA_currentMonth_lastyear = $total_paid_invoice_currentMonth + $total_paid_deposit_currentMonth + $total_unpaid_invoice_currentMonth + $total_unpaid_deposit_currentMonth; // total
-$total_CA_currentMonth_lastyear = $CA_currentMonth_lastyear - $total_closed_invoice_currentMonth_lastyear; // total
-
-$total_CA_lastMonth = $total_paid_invoice_lastMonth + $total_paid_deposit_lastMonth + $total_unpaid_invoice_lastMonth + $total_unpaid_deposit_lastMonth; // total
-
-$result = $object->progress($total_CA_currentMonth_year, $total_CA_currentMonth_lastyear);
-$dataInfo2 = intval($result)  . "\n%";
+$result = $object->progress($total_month_year, $total_month_lastyear);
+$dataInfo2 = $result . "\n%";
 
 // Display increase/decrease
 if($dataInfo2 < 0){
 	$dataInfo2 = '<p style=color:red>'.$dataInfo2.'</p>';
 } else {
-	$dataInfo2 = '<p style=color:green>'.$dataInfo2.'</p>';
+	$dataInfo2 = '<p style=color:green>+'.$dataInfo2.'</p>';
 }
+
+// For first info popup
+$firstPop_info1 = $titleItem1;
+$firstPop_info2 = $info1;
+$firstPop_info3 = $info2;
+
+$firstPop_data1 = 'Factures clients validées <strong>('.price($totalCA_year + $total_deposit_year).' €)</strong> + Avoirs clients validées <strong>('.price(abs($total_deposit_year)).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
+$firstPop_data2 = 'Factures clients validées <strong>('.price($totalCA_lastyear - $total_deposit_lastyear).' €)</strong> + Avoirs clients validées <strong>('.price(abs($total_deposit_lastyear)).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
+$firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100 ) où </br> <strong> ( (".$total_month_year." - ".$total_month_lastyear.") / ".$total_month_year.") x 100 </strong>";
 
 /**
  * GRAPH 1
@@ -224,35 +216,33 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 	$date_start = $yy.'-'.$mm.'-01';
 	$date_end = $yy.'-'.$mm.'-'.$lastDayMonth;
 
-	$paid_invoice_Year = $object->turnover($date_start, $date_end, 1);
-	$unpaid_invoice_Year = $object->turnover($date_start, $date_end, 0);
-	$paid_deposit_Year = $object->avoir($date_start, $date_end, 1);
-	$unpaid_deposit_Year = $object->avoir($date_start, $date_end, 0);
-	$total_closed_invoice = $object->closedInvoice($date_start, $endYear);
+	// Fiscal Year
+	$total_invoice_month_year += $object->turnover($date_start, $date_end);
+	$total_deposit_month_year += $object->avoir($date_start, $date_end);
 
-	$total_CA_year = $paid_invoice_Year + $unpaid_invoice_Year + $paid_deposit_Year + $unpaid_deposit_Year;
+	$total_month_year = $total_invoice_month_year + $total_deposit_month_year;
 
 	// Start and end of each month on last year
 	$date_start_lastYear = $lastyear.'-'.$mm.'-01';
 	$date_end_lastYear = $lastyear.'-'.$mm.'-'.$lastDayMonthLastyear;
 
-	$paid_invoice_LastYear = $object->turnover($date_start_lastYear, $date_end_lastYear, 1);
-	$unpaid_invoice_LastYear = $object->turnover($date_start_lastYear, $date_end_lastYear, 0);
-	$paid_deposit_LastYear = $object->avoir($date_start_lastYear, $date_end_lastYear, 1);
-	$unpaid_deposit_LastYear = $object->avoir($date_start_lastYear, $date_end_lastYear, 0);
+	$total_invoice_month_lastyear += $object->turnover($date_start_lastYear, $date_end_lastYear);
+	$total_deposit_month_lastyear += $object->avoir($date_start_lastYear, $date_end_lastYear);
+	$closed_invoice += $object->closedInvoice($date_start_lastYear, $date_end_lastYear);
 
-	$total_CA_LastYear = $paid_invoice_LastYear + $unpaid_invoice_LastYear + $paid_deposit_LastYear + $unpaid_deposit_LastYear;
+	$total_month_lastyear = $total_invoice_month_lastyear + $total_deposit_month_lastyear - $closed_invoice;
 
+	// Last fiscal year
 	if(date('n', $date_start) == $mm)
 	{
-		$total_CA_year += $invoice->total_ht;
-		$total_CA_LastYear += $invoice->total_ht;
+		$total_month_year += $invoice->total_ht;
+		$total_month_lastyear += $invoice->total_ht;
 	}
 
 	$data1[] = [
 		html_entity_decode($monthsArr[$mm]),
-		$total_CA_LastYear,
-		$total_CA_year
+		$total_month_lastyear,
+		$total_month_year
 	];
 
 	if($mm >= 12){
@@ -263,7 +253,7 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 
 $px1 = new DolGraph();
 $mesg = $px1->isGraphKo();
-$legend = ['Année N-1', 'Année N'];
+$legend = ['Exercice N-1', 'Exercice N'];
 
 if (!$mesg){
 	$px1->SetTitle("Evolution du chiffre d'affaires");
@@ -277,17 +267,6 @@ if (!$mesg){
 }
 $graphiqueA = $px1->show($turnoverChart);
 
-// For first info popup
-$firstPop_info1 = $titleItem1;
-$firstPop_info2 = $info1;
-$firstPop_info3 = $info2;
-
-$total_unpaid_deposit_lastyear = $object->avoir($startFiscalLastyear, $endLastYear, 0);
-$total_paid_deposit_lastyear = $object->avoir($startFiscalLastyear, $endLastYear, 1);
-
-$firstPop_data1 = 'Factures clients impayées <strong>('.price($total_unpaid_invoice_year).' €)</strong> + payées <strong>('.price($total_paid_invoice_year).' €)</strong> + Avoirs clients impayés <strong>('.price(abs($total_unpaid_deposit_year)).' €)</strong> + payés <strong>('.price(abs($total_paid_deposit_year)).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
-$firstPop_data2 = 'Factures clients impayées <strong>('.price($total_unpaid_invoice_lastyear).' €)</strong> + payées <strong>('.price($total_paid_invoice_lastyear).' €)</strong> + Avoirs clients impayés <strong>('.price(abs($total_unpaid_deposit_lastYear)).' €)</strong> + payés <strong>('.price(abs($total_paid_deposit_lastyear)).'€)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
-$firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100 ) </br> <strong> ( (".$total_CA_currentMonth_year." - ".$total_CA_currentMonth_lastyear.") / ".$total_CA_currentMonth_year.") x 100 </strong>";
 
 /**
  * OUTSTANDING CUSTOMER AND SUPPLIER
@@ -323,11 +302,11 @@ if($dataInfo4 > 0){
 
 // Display total C/F
 $totalOutstangdingCF = $total_customerOustandingYear - $total_supplierOutstandingYear;
-$dataItem2 = price($totalOutstangdingCF)  ."\n€";
+$dataItem2 = price($totalOutstangdingCF) ."\n€";
 
 /**
  * GRAPH OUSTANDING BILL
- */
+*/
 
 // Current Year | CUSTOMER
 $file = "oustandingCustomerChartNumberAndAmount";

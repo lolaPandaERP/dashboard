@@ -1314,12 +1314,13 @@ class General extends FactureStats
 	 * Retourne les factures clients (tout types) payées sur une période xx
 	*/
 
-	function fetchInvoices($date_start, $date_end, $paye){
+	function fetchInvoices($date_start, $date_end){
 
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
-		$sql .= " AND paye = 1";
+		$sql .= " AND paye=1";
+		$sql .= " AND fk_statut !=0";
 
 		$resql = $this->db->query($sql);
 
@@ -1334,13 +1335,14 @@ class General extends FactureStats
 	 }
 
 
+	 // Retourne les facturs impayées (hors brouillon et hors acomptes) sur une periode donnée
 	function fetchUnpaidInvoice($date_start, $date_end){
 
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
-		$sql .= " AND fk_statut = 1 ";
 		$sql .= " AND paye = 0 ";
+		$sql .= " AND fk_statut =1 "; // are validated
 
 		$resql = $this->db->query($sql);
 
@@ -1383,15 +1385,14 @@ class General extends FactureStats
 	 }
 
 	 //retourne toutes les factures standard payées + impayées(hors brouillon /) sur une période donnée
-	public function turnover($date_start, $date_end, $paye=''){
+	public function turnover($date_start, $date_end){
 		global $db, $conf;
 
 		$sql = "SELECT SUM(total_ht) as total_ht ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
-		$sql .= "AND fk_statut != 0 "; // not draft
-		$sql .= "AND type = 0 "; // standard invoice
-		$sql .= "AND paye = ".$paye; // standard invoice
+		$sql .= " AND type != 3 AND type!=2"; // not accompte and not deposit
+		$sql .= " AND fk_statut != 0"; // not draft - are validated
 
 		$resql = $db->query($sql);
 
@@ -1407,7 +1408,7 @@ class General extends FactureStats
 
 
 	 // retourne les avoirs impayes et/ou payés (hors brouillon) sur une période donnée
-	 public function avoir($startfiscalyear, $lastDayYear, $paye=''){
+	 public function avoir($startfiscalyear, $lastDayYear){
 		global $db, $conf;
 
 		$sql = "SELECT SUM(total_ht) as total_ht ";
@@ -1415,7 +1416,6 @@ class General extends FactureStats
 		$sql .= " WHERE datef BETWEEN '" . $startfiscalyear . "' AND '" . $lastDayYear . "' ";
 		$sql .= "AND fk_statut != 0 ";
 		$sql .= "AND type = 2 "; // avoir
-		$sql .= "AND paye = ".$paye; // avoir
 
 		$resql = $db->query($sql);
 
@@ -1429,6 +1429,7 @@ class General extends FactureStats
 		return $avoir;
 	 }
 
+	 // Retourne les factures abandonnées sur une periode d
 	 public function closedInvoice($startfiscalyear, $lastDayYear){
 		global $db;
 
