@@ -195,7 +195,7 @@ $monthsArr = monthArray($langs, 1); // months
 $file = "evolutionCAchart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
-
+unset($yy);
 for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 
 	if(!$yy){
@@ -209,8 +209,8 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 	strtotime('Last Year');
 	$lastyear = date($yy-1);
 	$month = date('n');
-	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $yy);
-	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $mm, $yy);
+	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $mm, $lastyear);
 
 	// Start and end of each month on current years
 	$date_start = $yy.'-'.$mm.'-01';
@@ -329,7 +329,6 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 	$date_end = $yy.'-'.$mm.'-'.$lastDayMonth;
 
 	$array_customer_outstanding_year = $object->outstandingBill($date_start, $date_end);
-
 	$nb_total_customer_outstanding_year = count($array_customer_outstanding_year); // number
 	$amount_total_customer_outstanding_year = array_sum($array_customer_outstanding_year); // amount
 
@@ -356,7 +355,7 @@ $mesg = $px2->isGraphKo();
 $legend = ['Nombre', 'Montant'];
 
 if (!$mesg){
-	$px2->SetTitle("Evolution des encours clients TTC - ".$year);
+	$px2->SetTitle("Evolution des encours clients - HT ");
 	$px2->datacolor = array(array(255,99,71), array(128, 187, 240));
 	$px2->SetData($data2);
 	$px2->SetLegend($legend);
@@ -482,21 +481,36 @@ $secondPop_data3 = "Somme de toutes les factures fournisseurs impayées (hors br
 $titleItem3 = "Marge brute N";
 
 // For calcul gross Margin
-$invoicesArr = $object->fetchInvoice($startFiscalyear, $endYear);
+$invoicesArr = $object->fetchInvoice($startFiscalYear, $endYear);
+$arrDepositMargin = $object->avoirForMargin($startFiscalYear, $endYear);
+
+foreach($arrDepositMargin as $fac){
+	$res = $invoice->fetch($fac->rowid);
+	$linesArr = $invoice->lines;
+
+	foreach($linesArr as $line){
+		$costprice += $line->pa_ht * $line->qty;
+		$totalHT += $line->total_ht;
+	}
+	$marginDeposit = $totalHT - $costprice;
+
+}
+var_dump($arrDepositMargin);
+
 $invoice = new Facture($db);
-// var_dump($invoicesArr[0]);
 
-// foreach($invoicesArr as $fac){
+foreach($invoicesArr as $fac){
 
-// 	$res = $invoice->fetch($fac->rowid);
+	$res = $invoice->fetch($fac->rowid);
+	$linesArr = $invoice->lines;
 
-// 	$linesArr = $invoice->lines;
-// 	foreach($linesArr as $line){
-// 		$costprice += $line->buy_price_ht * $line->qty;
-// 		$totalHT += $line->total_ht;
-// 	}
-// 	$margin = $totalHT - $costprice;
-// }
+	foreach($linesArr as $line){
+		$costprice += $line->pa_ht * $line->qty;
+		$totalHT += $line->total_ht;
+	}
+	$margin = $totalHT - $costprice;
+}
+$dataItem3 = price($margin) . "\n€";
 
 $info6 = "Marge brut prévisionnelle";
 $forecastMargin = $conf->global->FORECAST_MARGIN; // manual entry
@@ -538,29 +552,42 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 
 	$arr_standard_invoice_LastYear = $object->fetchInvoice($date_start_lastYear, $date_end_lastYear); // last year
 	$total_standard_invoice_LastYear = array_sum($arr_standard_invoice_LastYear);
-	// var_dump(count($arr_standard_invoice_Year));
 
-	// if(date('n', $date_start) == $mm){
-	// 	$total_standard_invoice_Year += $invoice->total_ht;
-	// 	$total_standard_invoice_LastYear += $invoice->total_ht;
-	// }
-
-	foreach($arr_standard_invoice_Year as $acc){
-
-		$idinvoice = $invoice->fetch($acc->rowid);
-		$linesArr = $invoice->lines;
-
-		foreach($linesArr as $line){
-			$costprice += $line->pa_ht * $line->qty;
-			$totalHT += $line->total_ht;
-		}
-		$marginYear = $totalHT - $costprice;
+	if(date('n', $date_start) == $mm){
+		$total_standard_invoice_Year += $invoice->total_ht;
+		$total_standard_invoice_LastYear += $invoice->total_ht;
 	}
-	$totalMarginYear += $marginYear;
+
+	// foreach($arr_standard_invoice_Year as $acc){
+
+	// 	$invoice->fetch($acc->rowid);
+	// 	$linesArr = $invoice->lines;
+
+	// 	foreach($linesArr as $line){
+	// 		$costprice += $line->pa_ht * $line->qty;
+	// 		$totalHT += $line->total_ht;
+	// 	}
+	// 	$marginYear = $totalHT - $costprice;
+	// }
+	// $totalMarginYear += $marginYear;
+
+
+	// foreach($arr_standard_invoice_LastYear as $val){
+
+	// 	$invoice->fetch($val->rowid);
+	// 	$linesArr = $invoice->lines;
+
+	// 	foreach($linesArr as $line){
+	// 		$costprice += $line->pa_ht * $line->qty;
+	// 		$totalHT += $line->total_ht;
+	// 	}
+	// 	$marginLastYear = $totalHT - $costprice;
+	// }
+	// $totalmarginLastYear += $marginLastYear;
 
 	$data[] = [
 		html_entity_decode($monthsArr[$mm]), // month
-		// $totalMarginLastYear,
+		$totalmarginLastYear,
 		$totalMarginYear,
 	];
 
@@ -568,12 +595,11 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 		$mm = 0;
 		$yy++;
 	}
-
 }
 
 $px6 = new DolGraph();
 $mesg = $px6->isGraphKo();
-$legend = ['Année N-1', 'Année N'];
+$legend = ['Exercice N-1', 'Exercice N'];
 
 if (!$mesg){
 	$px6->SetTitle("Evolution du montant de la marge brute");
@@ -588,7 +614,7 @@ if (!$mesg){
 
 $graphiqueC = $px6->show($marginChart);
 
-$dataItem3 = price($marginYear) . "\n€";
+
 // Margin To produce on current mounth
 $info5 = "Marge restant à produire";
 $dataInfo5 = price($marginYear - $forecastMargin);

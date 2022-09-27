@@ -1361,18 +1361,11 @@ class General extends FactureStats
 	  */
 	 function fetchInvoice($date_start, $date_end){
 
-		$sql = " SELECT * ";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "facture" ;
+		$sql = "SELECT * ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
-		// $sql .= " AND fk_statut != 0; ";
-		// $sql .= " AND type = 0";
-		// $sql .= " INNER JOIN " . MAIN_DB_PREFIX . "facturedet as fd";
-		// $sql .= " ON f.rowid = fd.fk_facture";
-		// $sql = "SELECT * FROM `llx_facture` as f INNER JOIN `llx_facturedet` as fd ON f.rowid = fd.fk_facture;";
-		// $sql .= " WHERE f.datef BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
-		// $sql = "SELECT f.total_ht, fd.buy_price_ht FROM `llx_facture` as f INNER JOIN `llx_facturedet` as fd ON f.rowid = fd.fk_facture WHERE f.datef BETWEEN \"2022-07-01\" AND \"2023-07-01\";";
-
-		// $sql = "SELECT COUNT(*) FROM `llx_facture` WHERE datef BETWEEN \"2022-07-01\" AND \"2023-06-30\" AND fk_statut != 0;";
+		$sql .= " AND fk_statut != 0";
+		$sql .= " AND type != 3 AND type != 2";
 		$resql = $this->db->query($sql);
 		$result = [];
 
@@ -1384,7 +1377,7 @@ class General extends FactureStats
 		return $result;
 	 }
 
-	 //retourne toutes les factures standard payées + impayées(hors brouillon /) sur une période donnée
+	 // Retourne toutes les factures standard payées + impayées(hors brouillon /) sur une période donnée
 	public function turnover($date_start, $date_end){
 		global $db, $conf;
 
@@ -1429,6 +1422,27 @@ class General extends FactureStats
 		return $avoir;
 	 }
 
+	  // retourne un tableau d'avoirs impayes et/ou payés (hors brouillon) sur une période donnée
+	  public function avoirForMargin($startfiscalyear, $lastDayYear){
+		global $db, $conf;
+
+		$sql = "SELECT SUM(total_ht) as total_ht ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE datef BETWEEN '" . $startfiscalyear . "' AND '" . $lastDayYear . "' ";
+		$sql .= "AND fk_statut != 0 ";
+		$sql .= "AND type = 2 "; // avoir
+
+		$resql = $db->query($sql);
+		$result = [];
+
+			if($resql){
+				while($obj = $this->db->fetch_object(($resql))){
+					$result[] = $obj->total_ht;
+				}
+			}
+			return $result;
+	 }
+
 	 // Retourne les factures abandonnées sur une periode d
 	 public function closedInvoice($startfiscalyear, $lastDayYear){
 		global $db;
@@ -1465,7 +1479,7 @@ class General extends FactureStats
 
 			if($resql){
 				while($obj = $this->db->fetch_object(($resql))){
-					$result[] = $obj->total_ttc;
+					$result[] = $obj->total_ht;
 				}
 			}
 			return $result;
@@ -1478,7 +1492,7 @@ class General extends FactureStats
 	 * */
 	public function fetchCustomerInvoices(){
 
-	   $sql = "SELECT SUM(total_ttc) as total_ttc";
+	   $sql = "SELECT SUM(total_ht) as total_ht";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 	   $sql .= " WHERE paye = 0 ";
 	   $sql .= " AND fk_statut =1";
@@ -1488,7 +1502,7 @@ class General extends FactureStats
 
 	   if($resql){
 		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj->total_ttc;
+			   $result[] = $obj->total_ht;
 		   }
 	   }
 	   return $result;
@@ -1514,7 +1528,7 @@ class General extends FactureStats
 
 	   if($resql){
 		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj->total_ttc;
+			   $result[] = $obj->total_ht;
 		   }
 	   }
 	   return $result;
@@ -1529,7 +1543,7 @@ class General extends FactureStats
 	 	// Retourne un tableau de toutes les factures fournisseurs (hors brouillon) impayées (hors period)
 	public function fetchSupplierInvoices(){
 
-		$sql = "SELECT SUM(total_ttc) as total_ttc";
+		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
 		$sql .= " WHERE paye = 0";
 		$sql .= " AND fk_statut != 0 ";
@@ -1539,7 +1553,7 @@ class General extends FactureStats
 
 		if($resql){
 			while($obj = $this->db->fetch_object(($resql))){
-				$result[] = $obj->total_ttc;
+				$result[] = $obj->total_ht;
 			}
 		}
 		return $result;
@@ -1562,7 +1576,7 @@ class General extends FactureStats
 
 	   if($resql){
 		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj->total_ttc;
+			   $result[] = $obj->total_ht;
 		   }
 	   }
 	   return $result;
@@ -1587,7 +1601,7 @@ class General extends FactureStats
 
 	   if($resql){
 		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj->total_ttc;
+			   $result[] = $obj->total_ht;
 		   }
 	   }
 	   return $result;
@@ -1599,7 +1613,7 @@ class General extends FactureStats
 	  public function fetchModelInvoices($firstDayCurrentMonth, $lastDayCurrentMonth){
 		global $db;
 
-	   $sql = "SELECT SUM(total_ttc) as total_ttc";
+	   $sql = "SELECT SUM(total_ht) as total_ht";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_rec";
 	   $sql .= " WHERE date_last_gen BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
 		//    $sql .= " AND date_when BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
@@ -1611,7 +1625,7 @@ class General extends FactureStats
 
 	   if($resql){
 		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj->total_ttc;
+			   $result[] = $obj->total_ht;
 		   }
 	   }
 	   return $result;
@@ -1654,7 +1668,7 @@ class General extends FactureStats
 	 */
 	public function fetchExpenses($date_start, $date_end = ''){
 
-		$sql = "SELECT SUM(total_ttc) as total_ttc";
+		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "expensereport";
 		$sql .= " WHERE date_debut >= '" . $date_start . "' AND date_fin <= '" . $date_end. "'";
 		$sql .= " AND fk_statut != 0";
@@ -1663,7 +1677,7 @@ class General extends FactureStats
 		if ($resql) {
 			if ($this->db->num_rows($resql)) {
 				$obj = $this->db->fetch_object($resql);
-				$tva = $obj->total_ttc;
+				$tva = $obj->total_ht;
 			}
 			$this->db->free($resql);
 		}
