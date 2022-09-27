@@ -481,27 +481,26 @@ $secondPop_data3 = "Somme de toutes les factures fournisseurs impayées (hors br
 $titleItem3 = "Marge brute N";
 
 // For calcul gross Margin
-$invoicesArr = $object->fetchInvoice($startFiscalYear, $endYear);
 $arrDepositMargin = $object->avoirForMargin($startFiscalYear, $endYear);
 
-foreach($arrDepositMargin as $fac){
-	$res = $invoice->fetch($fac->rowid);
+// On parcours les avoirs, et on recupere la somme total de la marge
+foreach($arrDepositMargin as $val){
+	$res1 = $invoice->fetch($val->rowid);
 	$linesArr = $invoice->lines;
 
 	foreach($linesArr as $line){
-		$costprice += $line->pa_ht * $line->qty;
-		$totalHT += $line->total_ht;
+		$costpriceDeposit += $line->pa_ht * $line->qty;
+		$totalHTdeposit += $line->total_ht;
 	}
-	$marginDeposit = $totalHT - $costprice;
-
+	$marginDeposit = $costpriceDeposit + $totalHTdeposit;
 }
-var_dump($arrDepositMargin);
 
+// On parcours les factures, et on recupere la somme total de la marge
+$invoicesArr = $object->fetchInvoice($startFiscalYear, $endYear);
 $invoice = new Facture($db);
-
 foreach($invoicesArr as $fac){
 
-	$res = $invoice->fetch($fac->rowid);
+	$res2 = $invoice->fetch($fac->rowid);
 	$linesArr = $invoice->lines;
 
 	foreach($linesArr as $line){
@@ -510,14 +509,21 @@ foreach($invoicesArr as $fac){
 	}
 	$margin = $totalHT - $costprice;
 }
-$dataItem3 = price($margin) . "\n€";
+
+$grossMargin = $margin + $marginDeposit;
+// On additionne la somme total de la marge des factures + celle des avoirs
+$dataItem3 = price($grossMargin) . "\n€";
 
 $info6 = "Marge brut prévisionnelle";
 $forecastMargin = $conf->global->FORECAST_MARGIN; // manual entry
 $dataInfo6 = $forecastMargin."\n€";
 
-// Graph
+// Margin To produce on current mounth
+$info5 = "Marge restant à produire";
+$dataInfo5 = price($forecastMargin - $grossMargin);
 
+
+// Graph
 $file = "marginChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
@@ -558,32 +564,32 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 		$total_standard_invoice_LastYear += $invoice->total_ht;
 	}
 
-	// foreach($arr_standard_invoice_Year as $acc){
+	foreach($arr_standard_invoice_Year as $acc){
 
-	// 	$invoice->fetch($acc->rowid);
-	// 	$linesArr = $invoice->lines;
+		$invoice->fetch($acc->rowid);
+		$linesArr = $invoice->lines;
 
-	// 	foreach($linesArr as $line){
-	// 		$costprice += $line->pa_ht * $line->qty;
-	// 		$totalHT += $line->total_ht;
-	// 	}
-	// 	$marginYear = $totalHT - $costprice;
-	// }
-	// $totalMarginYear += $marginYear;
+		foreach($linesArr as $line){
+			$costprice += $line->pa_ht * $line->qty;
+			$totalHT += $line->total_ht;
+		}
+		$marginYear = $totalHT - $costprice;
+	}
+	$totalMarginYear = $marginYear;
 
 
-	// foreach($arr_standard_invoice_LastYear as $val){
+	foreach($arr_standard_invoice_LastYear as $val){
 
-	// 	$invoice->fetch($val->rowid);
-	// 	$linesArr = $invoice->lines;
+		$invoice->fetch($val->rowid);
+		$linesArr = $invoice->lines;
 
-	// 	foreach($linesArr as $line){
-	// 		$costprice += $line->pa_ht * $line->qty;
-	// 		$totalHT += $line->total_ht;
-	// 	}
-	// 	$marginLastYear = $totalHT - $costprice;
-	// }
-	// $totalmarginLastYear += $marginLastYear;
+		foreach($linesArr as $line){
+			$costprice += $line->pa_ht * $line->qty;
+			$totalHT += $line->total_ht;
+		}
+		$marginLastYear = $totalHT - $costprice;
+	}
+	$totalmarginLastYear += $marginLastYear;
 
 	$data[] = [
 		html_entity_decode($monthsArr[$mm]), // month
@@ -615,17 +621,13 @@ if (!$mesg){
 $graphiqueC = $px6->show($marginChart);
 
 
-// Margin To produce on current mounth
-$info5 = "Marge restant à produire";
-$dataInfo5 = price($marginYear - $forecastMargin);
-
 // For margin info popup
 $thirdPop_info1 = $titleItem3;
 $thirdPop_info2 = $info5;
 $thirdPop_info3 = $info6;
 
-$thirdPop_data1 = "Somme totale de la marge des factures client validées <strong>(".price($marginYear)."\n€)</strong> sur l'exercice fiscal en cours";
-$thirdPop_data2 = "La marge brute prévisionnelle <strong>(".price($forecastMargin)."\n€)</strong> - le total de la marge des factures <strong>(".price($margin)."\n€)</strong> ";
+$thirdPop_data1 = "Somme totale de la marge des factures client validées <strong>(".price($grossMargin)."\n€)</strong> sur l'exercice fiscal en cours";
+$thirdPop_data2 = "La marge brute sur l'exercice fiscal en cours <strong>(".price($grossMargin)."\n€)</strong> - la marge brute prévisionnelle <strong>(".price($grossMargin)."\n€)</strong> ";
 $thirdPop_data3 = "Définit dans la configuration du module : <strong>(".price($forecastMargin)."\n€)</strong>";
 
 /**

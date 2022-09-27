@@ -1426,21 +1426,20 @@ class General extends FactureStats
 	  public function avoirForMargin($startfiscalyear, $lastDayYear){
 		global $db, $conf;
 
-		$sql = "SELECT SUM(total_ht) as total_ht ";
+		$sql = "SELECT * ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $startfiscalyear . "' AND '" . $lastDayYear . "' ";
 		$sql .= "AND fk_statut != 0 ";
 		$sql .= "AND type = 2 "; // avoir
-
 		$resql = $db->query($sql);
 		$result = [];
 
-			if($resql){
-				while($obj = $this->db->fetch_object(($resql))){
-					$result[] = $obj->total_ht;
-				}
+		if($resql){
+			while($obj = $this->db->fetch_object(($resql))){
+				$result[] = $obj;
 			}
-			return $result;
+		}
+		return $result;
 	 }
 
 	 // Retourne les factures abandonnées sur une periode d
