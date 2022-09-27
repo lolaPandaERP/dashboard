@@ -226,11 +226,11 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 	$date_start_lastYear = $lastyear.'-'.$mm.'-01';
 	$date_end_lastYear = $lastyear.'-'.$mm.'-'.$lastDayMonthLastyear;
 
-	$total_invoice_month_lastyear += $object->turnover($date_start_lastYear, $date_end_lastYear);
-	$total_deposit_month_lastyear += $object->avoir($date_start_lastYear, $date_end_lastYear);
-	$closed_invoice += $object->closedInvoice($date_start_lastYear, $date_end_lastYear);
+	$invoice_paid_month_lastyear += $object->fetchInvoices($date_start_lastYear, $date_end_lastYear);
+	$invoice_unpaid_month_lastyear += $object->fetchUnpaidInvoice($date_start_lastYear, $date_end_lastYear);
+	// $deposit_month_lastyear += $object->avoir($date_start_lastYear, $date_end_lastYear);
 
-	$total_month_lastyear = $total_invoice_month_lastyear + $total_deposit_month_lastyear - $closed_invoice;
+	$total_month_lastyear = $invoice_paid_month_lastyear + $invoice_unpaid_month_lastyear;
 
 	// Last fiscal year
 	if(date('n', $date_start) == $mm)
@@ -564,32 +564,32 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 		$total_standard_invoice_LastYear += $invoice->total_ht;
 	}
 
-	foreach($arr_standard_invoice_Year as $acc){
+	// foreach($arr_standard_invoice_Year as $acc){
 
-		$invoice->fetch($acc->rowid);
-		$linesArr = $invoice->lines;
+	// 	$invoice->fetch($acc->rowid);
+	// 	$linesArr = $invoice->lines;
 
-		foreach($linesArr as $line){
-			$costprice += $line->pa_ht * $line->qty;
-			$totalHT += $line->total_ht;
-		}
-		$marginYear = $totalHT - $costprice;
-	}
-	$totalMarginYear = $marginYear;
+	// 	foreach($linesArr as $line){
+	// 		$costprice += $line->pa_ht * $line->qty;
+	// 		$totalHT += $line->total_ht;
+	// 	}
+	// 	$marginYear = $totalHT - $costprice;
+	// }
+	// $totalMarginYear = $marginYear;
 
 
-	foreach($arr_standard_invoice_LastYear as $val){
+	// foreach($arr_standard_invoice_LastYear as $val){
 
-		$invoice->fetch($val->rowid);
-		$linesArr = $invoice->lines;
+	// 	$invoice->fetch($val->rowid);
+	// 	$linesArr = $invoice->lines;
 
-		foreach($linesArr as $line){
-			$costprice += $line->pa_ht * $line->qty;
-			$totalHT += $line->total_ht;
-		}
-		$marginLastYear = $totalHT - $costprice;
-	}
-	$totalmarginLastYear += $marginLastYear;
+	// 	foreach($linesArr as $line){
+	// 		$costprice += $line->pa_ht * $line->qty;
+	// 		$totalHT += $line->total_ht;
+	// 	}
+	// 	$marginLastYear = $totalHT - $costprice;
+	// }
+	// $totalmarginLastYear += $marginLastYear;
 
 	$data[] = [
 		html_entity_decode($monthsArr[$mm]), // month
