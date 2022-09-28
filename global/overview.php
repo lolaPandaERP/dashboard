@@ -650,6 +650,7 @@ $info8 = "Recurrent mensuel";
 */
 
 // Static Expenses details (on prev month)
+var_dump($firstDayLastMonth, $lastDayLastMonth);
 $arr_salarys = $object->fetchSalarys($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
 
 $socialesTaxes_charges = $object->fetchSocialAndTaxesCharges($firstDayLastMonth, $lastDayLastMonth, $currentAccount);

@@ -1041,10 +1041,10 @@ class General extends FactureStats
 	*/
 
 	/**
-	 * Retourne le compte courant utilisé
+	 * Retourne le compte courant utilisé par la dite entreprise
 	 */
 	public function getIdBankAccount(){
-		$sql = "SELECT rowid";
+		$sql = "SELECT MIN(rowid)";
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
 		$resql = $this->db->query($sql);
 
@@ -1064,7 +1064,6 @@ class General extends FactureStats
 	public function fetchAllBankAccount(){
 		$sql = "SELECT * ";
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
-
 		$resql = $this->db->query($sql);
 
 		$result = [];
@@ -1149,11 +1148,11 @@ class General extends FactureStats
 	/**
 	 * Return le cumul des montants d'un compte courant
 	 */
-	public function fetchSoldeOnYear($account){
+	public function totalSoldeCurrentAccount($account){
 
 		$sql = "SELECT SUM(amount) as amount
 				FROM `llx_bank`
-				WHERE fk_account = ".$account." AND ";
+				WHERE fk_account = ".$account;
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
@@ -1187,14 +1186,16 @@ class General extends FactureStats
 	/**
 	 * Return the progress between 2 values.
 	 * It's variation rate
+	 * The rate of change measures the evolution of a variable between two dates compared to its starting value.
+	 * This relative variation is expressed as a percentage (%).
 	 */
-	public function progress($VA, $VD){
+	public function progress($arrival_value, $starting_value){
 
-		// ( (VA - VD) / VA) * 100
-		$VA;
-		$VD;
-		$res = ($VA - $VD);
-		$res = ($res / $VD);
+		// ((VA - VD) / VA) * 100
+		$arrival_value;
+		$starting_value;
+		$res = ($arrival_value - $starting_value);
+		$res = ($res / $starting_value);
 		$resultat = $res * 100;
 		$resultat = round($resultat, 2);
 
