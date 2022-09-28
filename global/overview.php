@@ -228,7 +228,6 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 
 	$invoice_paid_month_lastyear += $object->fetchInvoices($date_start_lastYear, $date_end_lastYear);
 	$invoice_unpaid_month_lastyear += $object->fetchUnpaidInvoice($date_start_lastYear, $date_end_lastYear);
-	// $deposit_month_lastyear += $object->avoir($date_start_lastYear, $date_end_lastYear);
 
 	$total_month_lastyear = $invoice_paid_month_lastyear + $invoice_unpaid_month_lastyear;
 
@@ -549,52 +548,44 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 	$date_start = $yy.'-'.$mm.'-01';
 	$date_end = $yy.'-'.$mm.'-'.$lastDayMonth;
 
-	// Start and end of each month on last year
-	$date_start_lastYear = $lastyear.'-'.$mm.'-01';
-	$date_end_lastYear = $lastyear.'-'.$mm.'-'.$lastDayMonthLastyear;
+	$arrStandardInvoiceYear = $object->fetchInvoice($date_start, $date_end); // current
+	$arrDepositMarginForGraph = $object->avoirForMargin($date_start, $date_end);
 
-	$arr_standard_invoice_Year = $object->fetchInvoice($date_start, $date_end); // current
-	$total_standard_invoice_Year = array_sum($arr_standard_invoice_Year);
-
-	$arr_standard_invoice_LastYear = $object->fetchInvoice($date_start_lastYear, $date_end_lastYear); // last year
-	$total_standard_invoice_LastYear = array_sum($arr_standard_invoice_LastYear);
 
 	if(date('n', $date_start) == $mm){
-		$total_standard_invoice_Year += $invoice->total_ht;
-		$total_standard_invoice_LastYear += $invoice->total_ht;
+		$totalMarginGraph += $invoice->total_ht;
+		// $total_standard_invoice_LastYear += $invoice->total_ht;
 	}
 
-	// foreach($arr_standard_invoice_Year as $acc){
+	// On parcours les avoirs, et on recupere la somme total de la marge pour chaque mois
+	foreach($arrDepositMarginForGraph as $dep){
+		$invoice->fetch($dep->rowid);
+		$linesArr = $invoice->lines;
 
-	// 	$invoice->fetch($acc->rowid);
-	// 	$linesArr = $invoice->lines;
+		foreach($linesArr as $line){
+			$costpriceDepositGraph += $line->pa_ht * $line->qty;
+			$totalHTdepositGraph += $line->total_ht;
+		}
+		$marginDepositGraph = $costpriceDepositGraph + $totalHTdepositGraph;
+	}
 
-	// 	foreach($linesArr as $line){
-	// 		$costprice += $line->pa_ht * $line->qty;
-	// 		$totalHT += $line->total_ht;
-	// 	}
-	// 	$marginYear = $totalHT - $costprice;
-	// }
-	// $totalMarginYear = $marginYear;
+	foreach($arrStandardInvoiceYear as $acc){
 
+		$invoice->fetch($acc->rowid);
+		$linesArr = $invoice->lines;
 
-	// foreach($arr_standard_invoice_LastYear as $val){
+		foreach($linesArr as $line){
+			$costpriceGraph += $line->pa_ht * $line->qty;
+			$totalHTGraph += $line->total_ht;
+		}
+		$marginYear = $totalHTGraph - $costpriceGraph;
+	}
+	$totalMarginGraph = $marginYear + $marginDepositGraph ;
 
-	// 	$invoice->fetch($val->rowid);
-	// 	$linesArr = $invoice->lines;
-
-	// 	foreach($linesArr as $line){
-	// 		$costprice += $line->pa_ht * $line->qty;
-	// 		$totalHT += $line->total_ht;
-	// 	}
-	// 	$marginLastYear = $totalHT - $costprice;
-	// }
-	// $totalmarginLastYear += $marginLastYear;
 
 	$data[] = [
 		html_entity_decode($monthsArr[$mm]), // month
-		$totalmarginLastYear,
-		$totalMarginYear,
+		$totalMarginGraph,
 	];
 
 	if($mm >= 12){
@@ -605,11 +596,11 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 
 $px6 = new DolGraph();
 $mesg = $px6->isGraphKo();
-$legend = ['Exercice N-1', 'Exercice N'];
+$legend = ['Exercice N'];
 
 if (!$mesg){
 	$px6->SetTitle("Evolution du montant de la marge brute");
-	$px6->datacolor = array(array(255,206,126), array(138,233,232));
+	$px6->datacolor = array(array(138,233,232));
 	$px6->SetData($data);
 	$px6->SetLegend($legend);
 	$px6->SetType(array('lines')); // Array with type for each serie. Example: array('type1', 'type2', ...) where type can be: 'pie', 'piesemicircle', 'polar', 'lines', 'linesnopoint', 'bars', 'horizontalbars'...
@@ -634,11 +625,13 @@ $thirdPop_data3 = "Définit dans la configuration du module : <strong>(".price($
  * ---- TREASURY BOX -------
  */
 
-// Fecth current bank account
-$currentAccount = $object->getIdBankAccount();
+ // the smallest id of the base will always correspond to the current account of the said company
+$idaccounts = $object->fetchAllBankAccount();
+$currentAccount = min($idaccounts);
+$currentAccount = (int)$currentAccount;
 
  // Current balance on n year
-$solde = $object->fetchSoldeOnYear((int)$currentAccount);
+$solde = $object->totalSoldeCurrentAccount($currentAccount);
 
 // details datas for popupinfo (variables charges)
 $date_now = date('Y-m-d', dol_now());
@@ -654,14 +647,13 @@ $info8 = "Recurrent mensuel";
 
 /**
  *  Money flow out :
- */
+*/
 
 // Static Expenses details (on prev month)
 $arr_salarys = $object->fetchSalarys($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
 
 $socialesTaxes_charges = $object->fetchSocialAndTaxesCharges($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
 $emprunts = $object->fetchEmprunts($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
-
 $staticExpenses = ($arr_salarys + $socialesTaxes_charges + $emprunts); // static expenses total
 
 // TODO : vat by current month
@@ -692,7 +684,6 @@ $moneyFlowIn = $total_modelInvoice + $creditnote_unpaid_supplier_year;
  *  End Money flow in
  */
 
-
 // Variable expenses
 $array_suppliers_invoice_paid = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 1 ); // paid
 $total_suppliers_invoice_paid = array_sum($array_suppliers_invoice_paid);
@@ -707,7 +698,7 @@ $variablesExpenses = $total_suppliers_invoice_paid_and_unpaid + $total_vat_by_mo
 // Monthly charge
 $totalMonthlyExpenses = floatval( ($variablesExpenses + $staticExpenses));
 $dataInfo7 = price($totalMonthlyExpenses) . "\n€";
-// var_dump($solde);
+
 $tresury = $solde - $totalMoneyOut + $moneyFlowIn; // calcul for net tresury
 $dataItem4 = price($tresury) . "\n€"; // Display tresury
 
@@ -732,8 +723,7 @@ for($mm = 7; $mm < 13; $mm++){
 	// $date_start = $yy.'-'.$mm.'-01'; // first day of month
 	// $date_end = $yy.'-'.$mm.'-'.$lastDayMonth; // last day of month
 
-	$idaccount = $object->getIdBankAccount();
-	$soldeByMonth = $object->fetchSoldeOnYear((int)$idaccount);
+	$soldeByMonth = $object->totalSoldeCurrentAccount($currentAccount);
 
 
 	// if(date('n', $date_start) == $mm) {
@@ -777,8 +767,10 @@ $fourPop_info1 = $titleItem4;
 $fourPop_info2 = $info7;
 $fourPop_info3 = $info8;
 
+// Reset of the variable $currentAccount to fill in the information of the popup
+$currentAccount = min($idaccounts);
 
-$fourPop_data1 = '<i>Solde du compte en banque  ('.price($solde).'€) - sortie d\'argent ('.$totalMoneyOut.'€) + entrée d\'argent ('.$moneyFlowIn.'€)</i>
+$fourPop_data1 = '<i>Solde du compte en banque <strong>'.$currentAccount->bank.'</strong> : ('.price($solde).'€) - sortie d\'argent ('.$totalMoneyOut.'€) + entrée d\'argent ('.$moneyFlowIn.'€)</i>
 				  <br> <strong> SORTIE </strong> :
 				  <ul>
 				  	<li><strong>Charges fixes*</strong> ('.price($staticExpenses).' €) </li>
