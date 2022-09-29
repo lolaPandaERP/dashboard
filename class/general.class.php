@@ -1632,8 +1632,6 @@ class General extends FactureStats
 	}
 
 
-
-
 	/**
 	 * ---------------- TRESURY ---------------------
 	 */
@@ -1672,6 +1670,7 @@ class General extends FactureStats
 		$sql .= " FROM " . MAIN_DB_PREFIX . "expensereport";
 		$sql .= " WHERE date_debut >= '" . $date_start . "' AND date_fin <= '" . $date_end. "'";
 		$sql .= " AND fk_statut != 0";
+		$sql .= " AND paye = 1";
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
