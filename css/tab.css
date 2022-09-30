@@ -4,9 +4,15 @@
 div.tmenudiv {
 	padding-bottom: 10px;
 }
+
 /*
  Responsive Design 
 */
+
+section.page-content-general{
+	padding-top: 20px;
+}
+
 
 /* Extra small devices (portrait phones, less than 576px) */
 /* No media query since this is the default in Bootstrap */
@@ -56,16 +62,6 @@ li.current {
 	border-bottom: 1px solid white;
 }
 
-.grid-container-4 {
-	grid-template-areas: "a b";
-	gap: 30px;
-	padding: 20px;
-}
-
-div.container-fluid-2{
-	width: auto;
-}
-
 /* POPUP INFO */ 
 
 /* Popup container */
@@ -101,6 +97,10 @@ div.container-fluid-2{
   h4 {
 	  text-align:center;
   }
+
+  h2{
+	text-align:center;
+  }
   
   /* Toggle this class - hide and show the popup */
   .popup .show {
@@ -120,7 +120,6 @@ div.container-fluid-2{
 	to {opacity:1 ;}
   } 
 
-
   .container-fluid-2 {
 	grid-column: span 4;
   }
@@ -134,7 +133,5 @@ div.container-fluid-2{
 	color:rgb(39, 39, 39);
   }
 
-  div.mainbq{
-	display:block;
-	justify-content:flex-end;
-  }
+
+/* Template 6 boxs */ 

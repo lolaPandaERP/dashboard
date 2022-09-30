@@ -3,9 +3,8 @@ include('../template/template_admin.php');
 ?>
 
 <!-- GRILLE STRUCTURE HTML -->
-	<section class="page-content">
-
-		<div class="">
+	<section class="page-content-general">
+		<div class="general">
 			<div class="row">
 			<div class="grid-1 col-lg-6 col-md-12">
 				<div class="card bg-c-blue order-card">
@@ -39,8 +38,8 @@ include('../template/template_admin.php');
 						<hr>
 						<div class="col-lg-12">
   							<div class="center-block">
-   		 						<div class="pull-left"><?php print $info1 ?> : <h4 class="center"><?php print $dataInfo1 ?></h4></div>
-								<div class="pull-right"><?php print $info2 ?> : <h4 class="center"><?php print $dataInfo2 ?></h4></div>
+   		 						<div class="pull-left"><?php print $info1 ?> <h4 class="center"><?php print $dataInfo1 ?></h4></div>
+								<div class="pull-right"><?php print $info2 ?> <h4 class="center"><?php print $dataInfo2 ?></h4></div>
 							</div>
 							</div>
 						</div>
@@ -81,8 +80,8 @@ include('../template/template_admin.php');
 						<hr>
 						<div class="col-lg-12">
   							<div class="center-block">
-   		 						<div class="pull-left"><?php print $info3 ?> : <h4 class="center"><?php print $dataInfo3 ?></h4></div></a>
-								<div class="pull-right"><?php print $info4 ?> : <h4 class="center"><?php print $dataInfo4 ?></h4></div></a>
+   		 						<div class="pull-left"><?php print $info3 ?> <h4 class="center"><?php print $dataInfo3 ?></h4></div></a>
+								<div class="pull-right"><?php print $info4 ?> <h4 class="center"><?php print $dataInfo4 ?></h4></div></a>
 							</div>
 							</div>
 						</div>
@@ -130,8 +129,8 @@ include('../template/template_admin.php');
 						<hr>
 						<div class="col-lg-12">
   							<div class="center-block">
-   		 						<div class="pull-left"><?php print $info5 ?> : <h4 class="center"><?php print $dataInfo5 ?></h4></div>
-								<div class="pull-right"><?php print $info6 ?> : <h4 class="center"><?php print $dataInfo6 ?></h4></div>
+   		 						<div class="pull-left"><?php print $info5 ?> <h4 class="center"><?php print $dataInfo5 ?></h4></div>
+								<div class="pull-right"><?php print $info6 ?> <h4 class="center"><?php print $dataInfo6 ?></h4></div>
 							</div>
 							</div>
 						</div>
@@ -175,8 +174,17 @@ include('../template/template_admin.php');
 							<hr>
 							<div class="col-lg-12">
 								<div class="center-block">
-									<div class="pull-left"><?php print $info7 ?> : <h4 class="center"><?php print $dataInfo7 ?></h4></div>
-									<div class="pull-right"><?php print $info8 ?> : <h4 class="center"><?php print $dataInfo8 ?></h4></div>
+									<div class="pull-left">
+										<?php print $info7 ?>
+										<h4 class="center">
+											<?php print $dataInfo7 ?></h4>
+									</div>
+									<div class="pull-right">
+										<?php print $info8 ?>
+										<h4 class="center">
+											<?php print $dataInfo8 ?>
+										</h4>
+									</div>
 								</div>
 								</div>
 							</div>
