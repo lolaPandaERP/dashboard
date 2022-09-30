@@ -612,8 +612,7 @@ $thirdPop_info2 = $info5;
 $thirdPop_info3 = $info6;
 
 $thirdPop_data1 = "Somme totale de la marge des factures client validées <strong>(".price($grossMargin)."\n€)</strong> sur l'exercice fiscal en cours";
-$thirdPop_data2 = "La marge brute prévisionnelle <strong>(".price($grossMargin)."\n€)</strong> - la marge prévisionnelle <strong>(".price($forecastMargin)."\n€)</strong> -
-				  </br><strong>Calcul de la marge restant à produire</strong> : marge brute N - marge prévisionnelle ";
+$thirdPop_data2 = "<strong> Calcul : </strong> Marge prévisionnelle (".price($forecastMargin)."\n€) - marge brute N (".price($grossMargin)."\n€)";
 $thirdPop_data3 = "Définit dans la configuration du module : <strong>(".price($forecastMargin)."\n€)</strong>";
 
 /**
@@ -662,18 +661,16 @@ $totalMoneyOut = ($staticExpenses + $total_vat_by_month + $total_expense + $tota
  *  Money flow in
  */
 
-// facture client impayes
-$array_modelInvoice = $object->fetchModelInvoices($firstDayCurrentMonth, $lastDayCurrentMonth);
-$total_modelInvoice = array_sum($array_modelInvoice);
 
-// Monthly Charge
-$dataInfo8 = price($total_modelInvoice) . "\n€";
+// facture client impayes
+$outstandingBillOnYear = $object->outstandingBill($startFiscalyear, $endYear);
+$total_outstandingBillOnYear = array_sum($outstandingBillOnYear);
 
 // avoir fournisseur impayees
 $creditnote_unpaid_supplier_year = $object->allSupplierUnpaidDeposit($startFiscalYear, $endYear);
 $creditnote_unpaid_supplier_year = abs($creditnote_unpaid_supplier_year); //convert negative amount to positive for calculation
 
-$moneyFlowIn = $total_modelInvoice + $creditnote_unpaid_supplier_year;
+$moneyFlowIn = $total_outstandingBillOnYear + $creditnote_unpaid_supplier_year;
 
 /**
  *  End Money flow in
@@ -687,7 +684,7 @@ $array_suppliers_invoice_unpaid = $object->outstandingSupplier($firstDayCurrentM
 $total_suppliers_invoice_unpaid = array_sum($array_suppliers_invoice_unpaid);
 $total_suppliers_invoice_paid_and_unpaid = $total_suppliers_invoice_unpaid + $total_suppliers_invoice_paid;
 
-$variousPaiements = $object->fetchVariousPaiements($firstDayCurrentMonth, $lastDayCurrentMonth, $currentAccount);
+$variousPaiements = $object->fetchVariousPaiements($firstDayCurrentMonth, $lastDayCurrentMonth);
 $variablesExpenses = $total_suppliers_invoice_paid_and_unpaid + $total_vat_by_month + $variousPaiements;
 
 // Monthly charge
@@ -696,6 +693,15 @@ $dataInfo7 = price($totalMonthlyExpenses) . "\n€";
 
 $tresury = $solde - $totalMoneyOut + $moneyFlowIn; // calcul for net tresury
 $dataItem4 = price($tresury) . "\n€"; // Display tresury
+
+/**
+ * Recurrent mensuel :
+ * facture client impayees (modele - recurrent mensuel)
+ */
+$array_modelInvoice = $object->fetchModelInvoices($firstDayCurrentMonth, $lastDayCurrentMonth);
+$total_modelInvoice = array_sum($array_modelInvoice);
+
+$dataInfo8 = price($total_modelInvoice) . "\n€";
 
 // TRESURY GRAPH
 $file = "tresuryChart";
@@ -772,9 +778,9 @@ $fourPop_data1 = '<i>Solde du compte en banque <strong>'.$currentAccount->bank.'
 					<li><strong>TVA (client et fournisseur)</strong> : indisponible </li>
 					<li><strong>Notes de frais (payées)</strong> ('.price($total_expense).'€)</li>
 				  </ul>
-				  <br> <strong> ENTREE </strong> :
+				  <br> <strong> ENTREE (sur l\'exercice fiscal en cours) </strong> :
 				  <ul>
-				  	<li><strong>Factures clients impayées </strong> ('.price($total_modelInvoice).'€)</li>
+				  	<li><strong>Factures clients impayées  </strong> ('.price($total_outstandingBillOnYear).'€)</li>
 					<li><strong>Avoir fournisseurs impayées </strong> : ('.price($creditnote_unpaid_supplier_year).'€) </br> <i style="color:red;"> Attention, ils doivent obligatoiremment renseigner une <strong>date limite de réglement</strong></i></li>
 				  </ul></br>';
 
@@ -782,10 +788,10 @@ $fourPop_data2 = "<ul><li>charges variables (".price($variablesExpenses)."\n€)
 
 				<br> <strong> <li>Détail charges fixes </strong> : Salaires (".price($arr_salarys)."\n€) </strong> +  emprunts (".price($emprunts)."\n€) </strong> + charges sociales et fiscales (".price($socialesTaxes_charges)."\n€) </strong> </li>
 				<i style='color:blue;'>Les charges fixes sont calculées sur le mois précédent </i></br>
-				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur le mois courant (".price($total_suppliers_invoice_paid_and_unpaid)."\n€) </strong> + paiements divers (".price($variousPaiements)."\n€)</strong> + TVA du mois courant (indisponible) </strong> </li>
+				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur le mois courant (".price($total_suppliers_invoice_paid_and_unpaid)."\n€) </strong> + paiements divers (".price($variousPaiements)."\n€) + TVA du mois courant (indisponible) + notes frais payés  (".price($total_expense)."\n€) </li>
 				</ul>";
 
-$fourPop_data3 = "Montant total (TTC) des modèles de factures client ".price($total_modelInvoice)."\n€";
+$fourPop_data3 = "Montant total (HT) des modèles de factures client ".price($total_modelInvoice)."\n€";
 
 /*
  * Actions
