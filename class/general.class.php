@@ -1191,7 +1191,7 @@ class General extends FactureStats
 	 */
 	public function progress($arrival_value, $starting_value){
 
-		// ((VA - VD) / VA) * 100
+		// ((VA - VD) / VD) * 100
 		$arrival_value;
 		$starting_value;
 		$res = ($arrival_value - $starting_value);
@@ -1511,16 +1511,14 @@ class General extends FactureStats
 	 /*
 	  Fetch all unpaid customer invoices whose due date has passed
 	  */
-	public function fetchCustomerBillExceed($date = '', $date_start, $date_end, $type=''){
+	public function fetchCustomerBillExceed($date = ''){
 		global $db;
 
 	   $sql = "SELECT *";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-	   $sql .= " WHERE date_lim_reglement <= ".dol_now();
+	   $sql .= " WHERE date_lim_reglement < ".dol_now();
 	   $sql .= " AND fk_statut != 0";
 	   $sql .= " AND paye = 0";
-	   $sql .= " AND type = ".$type;
-	   $sql .= " AND datec BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
 
 	   $resql = $this->db->query($sql);
 
