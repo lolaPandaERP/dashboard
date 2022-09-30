@@ -3,3 +3,9 @@
 ## 1.0
 
 Initial version
+
+## 2.0 
+
+- Création du nouveau template pour l'onglet des encours
+    - 3 graphiques
+    - 3 listes
