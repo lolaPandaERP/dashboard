@@ -184,7 +184,7 @@ $firstPop_info3 = $info2;
 
 $firstPop_data1 = 'Factures clients validées <strong>('.price($totalCA_year + $total_deposit_year).' €)</strong> + Avoirs clients validées <strong>('.price(abs($total_deposit_year)).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
 $firstPop_data2 = 'Factures clients validées <strong>('.price($totalCA_lastyear - $total_deposit_lastyear).' €)</strong> + Avoirs clients validées <strong>('.price(abs($total_deposit_lastyear)).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
-$firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100 ) où </br> <strong> ( (".$total_month_year." - ".$total_month_lastyear.") / ".$total_month_year.") x 100 </strong>";
+$firstPop_data3 = "Taux de variation : ((VA - VD) / VD) x 100 ) où </br> <strong> ( (".$total_month_year." - ".$total_month_lastyear.") / ".$total_month_year.") x 100 </strong>";
 
 /**
  * GRAPH 1
