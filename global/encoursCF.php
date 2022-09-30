@@ -241,6 +241,7 @@ $dataItem2 = price($total_outstandingSupplierOnYear) . "\n€";
 $info3 = "Encours fournisseur M-1";
 $outstandingSupplierOnLastMonth = $object->outstandingSupplier($firstDayLastMonth, $lastDayLastMonth, 0);
 $total_outstandingSupplierOnLastMonth = array_sum($outstandingSupplierOnLastMonth); // fetch total in last month
+
 $dataInfo3 = price($total_outstandingSupplierOnLastMonth) . "\n€";
 
 /**
@@ -254,7 +255,7 @@ $outstandingSupplierLastMonthLastYear = $object->outstandingSupplier($firstDayLa
 $total_outstandingSupplierLastMonthLastYear = array_sum($outstandingSupplierLastMonthLastYear);
 
 $resultat = $object->progress($total_outstandingSupplierOnLastMonth, $total_outstandingSupplierLastMonthLastYear);
-$dataInfo4 = $resultat . "\n%";
+$dataInfo4 = intval($resultat). "\n%";
 
 // View data intuitively (positive or negative development)
 if ($dataInfo3 <= 0) {
@@ -264,7 +265,7 @@ if ($dataInfo3 <= 0) {
 }
 
 // Load info for outstanding supplier popupinfo
-$secondPop_info1 = $titleItem2;
+$secondPop_data1 = $titleItem2;
 $secondPop_info2 = $info3;
 $secondPop_info3 = $info4;
 
@@ -342,14 +343,19 @@ $graphiqueB = $px2->show($total_supplier_outstandingChart);
  * CUSTOMER AND SUPPLIERS OUTSTANDING
  */
 $titleItem3 = "Encours C/F ";
-$dataItem3 = price($total_outstandingBillOnYear - $total_outstandingSupplierOnYear) . "\n€"; // soustraction des encours client et encours fournisseur
+$dataItem3 = price($total_outstandingBillOnYear - $total_outstandingSupplierOnYear) . "\n€"; // soustraction des encours client et encours fournisseur sur l'exercice fiscal en cours
 
 $info5 = "Encours total M-1";
 $dataInfo5 = intval($total_outstandingLastMonth - $total_outstandingSupplierOnLastMonth) . "\n€"; // encours client m-1 - encours fourn m-1
 
+/**
+ *  Progression between :
+ * - the outstanding C/F of last month on current year
+ * - the outstanding C/F of last month on prev year
+*/
 $info6 = "Progression";
-$outCFCurrentMonth = ($total_OutCustomerCurrentMonth - $total_OutSupplierCurrentMonth);
-
+$total_cf_lastmonth_year = $total_OutCustomerCurrentMonth - $total_OutSupplierCurrentMonth;
+$total_vf_lastmonth_lastyear =
 // $resultat = $object->progress($total_OutCustomerCurrentMonth, $dataInfo5);
 $dataInfo6 = $resultat . "\n%";
 
@@ -357,6 +363,17 @@ $dataInfo6 = $resultat . "\n%";
 $thirdPop_info1 = $titleItem3;
 $thirdPop_info2 = $info5;
 $thirdPop_info3 = $info6;
+
+
+$thirdPop_data1 = "Factures fournisseurs impayées <strong>(" . price($total_outstandingSupplierOnYear) . "\n€)</strong> l'exercice en cours (HT) - Factures clients impayées sur l'exercice en cours (HT)";
+$thirdPop_data2 = "Factures fournisseurs impayées <strong>(" . price($total_outstandingSupplierOnYear) . "\n€) du mois dernier </strong> sur l'exercice en cours (HT) - Factures clients impayées <strong> du mois dernier </strong> sur l'exercice en cours (HT)";
+$thirdPop_data3 = "Progression du nombre d'encours fournisseurs par rapport au mois dernier
+					</br> Calcul : ((VA - VD) / VA) x 100 )
+					</br> Soit : <strong>(( " . $total_outstandingSupplierOnLastMonth . " - " . $total_outstandingSupplierLastMonthLastYear . ") / " . $total_outstandingSupplierOnLastMonth . ") x 100 </strong>
+					</br> Où VA = valeur d'arrivée et VD = Valeur de départ";
+
+
+
 
 // C/F chart on current year
 $file = "CFOustandingChartCurrentYear";

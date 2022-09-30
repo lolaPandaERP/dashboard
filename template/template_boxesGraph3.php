@@ -47,23 +47,23 @@ function showGraph() {
 	<!-- 2 boxes -->
 	<div class="card">
 	<div class="pull-left">
-		<div class="popup" onclick="showGraph()">
+		<div class="popup" onclick="showPop2()">
 		<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
-		<span class="popuptext" id="firstPop">
+		<span class="popuptext" id="secondPop">
 			<h4> Détails des informations / calculs </h4>
 			<ul>
-				<li><strong><?php print $firstPop_info4 ?></strong><br><?php print $firstPop_data4 ?></li><hr>
-				<li><strong><?php print $firstPop_info5 ?></strong><br><?php print $firstPop_data5 ?> </li><hr>
-				<li><strong><?php print $firstPop_info6 ?></strong><br><?php print $firstPop_data6 ?> </li>
+				<li><strong><?php print $secondPop_info1 ?></strong><br><?php print $secondPop_data1 ?></li><hr>
+				<li><strong><?php print $secondPop_info2 ?></strong><br><?php print $secondPop_data2 ?> </li><hr>
+				<li><strong><?php print $secondPop_info3 ?></strong><br><?php print $secondPop_data3 ?> </li>
 			</ul>
 		</span>
 	</div>
 </div>
 <script>
 // When the user clicks on div, open the popup
-function showGraph() {
-	var firstPopup = document.getElementById("firstPop");
-	firstPopup.classList.toggle("show");
+function showPop2() {
+	var secondPopup = document.getElementById("secondPop");
+	secondPopup.classList.toggle("show");
 }
 </script>
 <ul>
@@ -83,23 +83,23 @@ function showGraph() {
   	<!-- 2 boxes -->
 	<div class="card">
 	<div class="pull-left">
-		<div class="popup" onclick="showGraph()">
+		<div class="popup" onclick="showPop3()">
 		<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
-		<span class="popuptext" id="firstPop">
+		<span class="popuptext" id="thirdPop">
 			<h4> Détails des informations / calculs </h4>
 			<ul>
-				<li><strong><?php print $firstPop_info1 ?></strong><br><?php print $firstPop_data1 ?></li><hr>
-				<li><strong><?php print $firstPop_info2 ?></strong><br><?php print $firstPop_data2 ?> </li><hr>
-				<li><strong><?php print $firstPop_info3 ?></strong><br><?php print $firstPop_data3 ?> </li>
+				<li><strong><?php print $thirdPop_info1 ?></strong><br><?php print $thirdPop_data1 ?></li><hr>
+				<li><strong><?php print $thirdPop_info2 ?></strong><br><?php print $thirdPop_datat2 ?> </li><hr>
+				<li><strong><?php print $thirdPop_info3 ?></strong><br><?php print $thirdPop_data3 ?> </li>
 			</ul>
 		</span>
 	</div>
 </div>
 <script>
 // When the user clicks on div, open the popup
-function showGraph() {
-	var firstPopup = document.getElementById("firstPop");
-	firstPopup.classList.toggle("show");
+function showPop3() {
+	var thirdPopup = document.getElementById("thirdPop");
+	thirdPopup.classList.toggle("show");
 }
 </script>
 <ul>
@@ -121,23 +121,24 @@ function showGraph() {
   <!-- 3 list -->
   <div class="card">
 	<div class="pull-left">
-		<div class="popup" onclick="showGraph()">
-		<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title=""><span class="fas fa-info-circle  em088 opacityhigh"></span>
-		<span class="popuptext" id="firstPop">
+		<div class="popup" onclick="showPop4()">
+		<span class="classfortooltip" style="padding: 0px; padding: 0px; padding-right: 3px !important;" title="">
+		<span class="fas fa-info-circle  em088 opacityhigh"></span>
+		<span class="popuptext" id="fourPop">
 			<h4> Détails des informations / calculs </h4>
 			<ul>
-				<li><strong><?php print $firstPop_info1 ?></strong><br><?php print $firstPop_data1 ?></li><hr>
-				<li><strong><?php print $firstPop_info2 ?></strong><br><?php print $firstPop_data2 ?> </li><hr>
-				<li><strong><?php print $firstPop_info3 ?></strong><br><?php print $firstPop_data3 ?> </li>
+				<li><strong><?php print $thirdPop_info1 ?></strong><br><?php print $thirdPop_data1 ?></li><hr>
+				<li><strong><?php print $thirdPop_info2 ?></strong><br><?php print $thirdPop_data2 ?> </li><hr>
+				<li><strong><?php print $thirdPop_info3 ?></strong><br><?php print $thirdPop_data3 ?> </li>
 			</ul>
 		</span>
 	</div>
 </div>
 <script>
 // When the user clicks on div, open the popup
-function showGraph() {
-	var firstPopup = document.getElementById("firstPop");
-	firstPopup.classList.toggle("show");
+function showPop4() {
+	var fourPopup = document.getElementById("fourPop");
+	fourPopup.classList.toggle("show");
 }
 </script>
 <ul>
