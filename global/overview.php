@@ -721,13 +721,17 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $mm, $year);
 
 	// Current Year
-	// $date_start = $yy.'-'.$mm.'-01'; // first day of month
-	// $date_end = $yy.'-'.$mm.'-'.$lastDayMonth; // last day of month
+	$date_start = $yy.'-'.$mm.'-01'; // first day of month
+	$date_end = $yy.'-'.$mm.'-'.$lastDayMonth; // last day of month
 
-	$soldeByMonth = $object->totalSoldeCurrentAccount($currentAccount);
+	$soldeByMonth = $object->fetchAllDetailBankAccount($currentAccount, $date_start, $date_end);
+	$total_solde = array_sum($soldeByMonth);
+
+	var_dump($total_solde);
 
 	if(date('n', $date_start) == $mm) {
-		$tresury += ($soldeByMonth - $totalMoneyOut) + $moneyFlowIn;
+		// $tresury = $total_solde - $totalMoneyOut + $moneyFlowIn;
+		$total_solde;
 	 }
 
 	$data5[] = [
@@ -741,7 +745,7 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 	}
 }
 
-	// var_dump($total_solde, $totalMoneyOut, $moneyFlowIn);
+
 
 $px7 = new DolGraph();
 $mesg = $px7->isGraphKo();
