@@ -479,43 +479,40 @@ $fourPop_info1 = $titleItem4;
 $fourPop_data1 = "Somme des factures clients impayées (TTC) dont la date d'échéance a été dépassée";
 
 // List of invoices who date due has passed
-$result = $object->fetchDeliveredOrderToday();
+// $result = $object->fetchDeliveredOrderToday();
 
-if($result != null){
+// if($result != null){
 
-	foreach ($result as $res)
-	{
-		$societe = new Societe($db);
-		$societe->fetch($res->fk_soc);
+// 	foreach ($result as $res)
+// 	{
+// 		$societe = new Societe($db);
+// 		$societe->fetch($res->fk_soc);
 
-		$commande = new Commande($db);
-		$commande->fetch($res->rowid);
+// 		$commande = new Commande($db);
+// 		$commande->fetch($res->rowid);
 
-		$listeA = '
-				<ul class="list-group">
-					<li class="list-group-item d-flex justify-content-between align-items-center">
+// 		$listeA = '
+// 				<ul class="list-group">
+// 					<li class="list-group-item d-flex justify-content-between align-items-center">
 
-				<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'">'.$societe->name.'</hr></a>';
-				'<span class="badge badge-pill badge-primary">Réf. commande :  '.$commande->ref.'</span>';
+// 				<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'">'.$societe->name.'</hr></a>';
+// 				'<span class="badge badge-pill badge-primary">Réf. commande :  '.$commande->ref.'</span>';
 
-		if($commande->date_livraison != null) {
-			'<p><strong>Date de création : </strong>'.date('j-m-Y', $commande->date_commande).'';
-		} else {
-			<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span>';
-		}
-		</li>';
-		</ul>';
-	}
+// 		if($commande->date_livraison != null) {
+// 			<p><strong>Date de création : </strong>'.date('j-m-Y', $commande->date_commande).'';
+// 		} else {
+// 			<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span>';
+// 		}
+// 		</li>';
+// 		</ul>';
+// 	}
 
-} else {
-	print '<p class="center"><span class="badge badge-pill badge-danger">Aucune commande validées pour ce jour </span></p>';
-	print '</br>';
-}
+// } else {
+// 	print '<p class="center"><span class="badge badge-pill badge-danger">Aucune commande validées pour ce jour </span></p>';
+// 	print '</br>';
+// }
 
-?>
-</div>
-</div>
-</div>'
+
 
 /**
 * SUPPLIER OUSTANDING EXCEED
