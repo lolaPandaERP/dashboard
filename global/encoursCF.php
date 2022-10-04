@@ -101,12 +101,16 @@ $endLastYear = date('Y-m-d', strtotime('-'.$duree.'day', $TimestampendLastYear))
 // M - 1 on current year and last year
 $firstDayLastMonth = date('Y-m-d', mktime(0, 0, 0, $month - 1, 1, $year)); /// current year
 $lastDayLastMonth = date('Y-m-t', mktime(0, 0, 0, $month - 1, 1, $year));
-$firstDayLastMonthLastYear = date('Y-m-d', mktime(0, 0, 0, $month - 1, 1, $year - 1)); /// current year
-$lastDayLastMonthLastYear = date('Y-m-t', mktime(0, 0, 0, $month - 1, 1, $year - 1));
+// $firstDayLastMonthLastYear = date('Y-m-d', mktime(0, 0, 0, $month - 1, 1, $year - 1)); /// current year
+// $lastDayLastMonthLastYear = date('Y-m-t', mktime(0, 0, 0, $month - 1, 1, $year - 1));
 
 // First day and last day
 $firstDayYear = date('Y-m-d', mktime(0, 0, 0, 1, 1, $year)); // current years
 $lastDayYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year));
+
+// First day and last day of current month
+$firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
+$lastDayCurrentMonth = date('Y-m-t', mktime(0, 0, 0, $month, 1, $year));
 
 $firstDayLastYear = date('Y-m-d', mktime(0, 0, 1, 1, 1, $year - 1)); // last year
 $lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
@@ -139,12 +143,21 @@ if ($dataInfo1 <= 0) {
 }
 
 // Progression between the outstanding of last month on current year with the outstanding of last month on prev year
-$outstandingLastMonthLastYear = $object->outstandingBill($firstDayLastMonthLastYear, $lastDayLastMonthLastYear); // Encours C sur le mois dernier de l'exercice fiscal précédent
-$total_outstandingLastMonthLastYear = array_sum($outstandingLastMonthLastYear);
+// $outstandingLastMonthLastYear = $object->outstandingBill($firstDayLastMonthLastYear, $lastDayLastMonthLastYear); // Encours C sur le mois dernier de l'exercice fiscal précédent
+// $total_outstandingLastMonthLastYear = array_sum($outstandingLastMonthLastYear);
+
+// $info2 = "Progression ";
+// $resultat = $object->progress($total_outstandingLastMonth, $total_outstandingLastMonthLastYear);
+// $dataInfo2 = intval($resultat) . "\n%";
+
+// Total outstanding customer on current month on year
+$outstandingCustomerCurrentMonth = $object->outstandingBill($firstDayCurrentMonth, $lastDayCurrentMonth); // Encours C sur le mois dernier de l'exercice fiscal précédent
+$total_outstandingCurrentMonth = array_sum($outstandingCustomerCurrentMonth);
 
 $info2 = "Progression ";
-$resultat = $object->progress($total_outstandingLastMonth, $total_outstandingLastMonthLastYear);
+$resultat = $object->progress($total_outstandingCurrentMonth, $total_outstandingLastMonth);
 $dataInfo2 = intval($resultat) . "\n%";
+
 
 // Condition d'affichage pour la progression
 if ($dataInfo2 > 0) {
@@ -159,10 +172,10 @@ $firstPop_info2 = $info1;
 $firstPop_info3 = $info2;
 
 $firstPop_data1 = "Total du montant des factures clients impayées <strong>(" . price($total_outstandingBillOnYear) . "\n€)</strong> sur l'exercice en cours (HT)";
-$firstPop_data2 = "Total du montant des factures clients impayées  <strong>(" . price($total_OutCustomerLastMonth) . "\n€)</strong> sur le mois précédent";
+$firstPop_data2 = "Total du montant des factures clients impayées  <strong>(" . price($total_outstandingLastMonth) . "\n€)</strong> sur le mois précédent";
 $firstPop_data3 = "Progression du montant des encours clients (du mois dernier sur l'exercice fiscal en cours) avec les encours du mois dernier sur l'exercice fiscal précédent
-				   </br> Calcul : ( (VA - VD) / VA) x 100 )
-				   </br> Soit : <strong>(( " . $total_outstandingLastMonth . " - " . $total_outstandingLastMonthLastYear . ") / " . $total_outstandingLastMonth . ") x 100 </strong>
+				   </br> Calcul : ( (VA - VD) / VD) x 100 )
+				   </br> Soit : <strong>(( " . $total_outstandingCurrentMonth . " - " . $total_outstandingLastMonth . ") / " . $total_outstandingLastMonth . ") x 100 </strong>
 				   </br> Où VA = valeur d'arrivée et VD = Valeur de départ";
 
 // Drawing the first graph for nb of customer invoices by month
@@ -247,14 +260,18 @@ $dataInfo3 = price($total_outstandingSupplierOnLastMonth) . "\n€";
 /**
  *  Progression between :
  * - the outstanding suppliers of last month on current year
- * - the outstanding suppliers of last month on prev year
+ * - the outstanding suppliers of current month on current year
 */
 
 $info4 = "Progression";
-$outstandingSupplierLastMonthLastYear = $object->outstandingSupplier($firstDayLastMonthLastYear, $lastDayLastMonthLastYear, 0); // Encours C sur le mois dernier de l'exercice fiscal précédent
-$total_outstandingSupplierLastMonthLastYear = array_sum($outstandingSupplierLastMonthLastYear);
+// $outstandingSupplierLastMonthLastYear = $object->outstandingSupplier($firstDayLastMonthLastYear, $lastDayLastMonthLastYear, 0); // Encours C sur le mois dernier de l'exercice fiscal précédent
+// $total_outstandingSupplierLastMonthLastYear = array_sum($outstandingSupplierLastMonthLastYear);
 
-$resultat = $object->progress($total_outstandingSupplierOnLastMonth, $total_outstandingSupplierLastMonthLastYear);
+$outstandingSupplierLastMonthCurrentMonth = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 0); // Encours C sur le mois dernier de l'exercice fiscal précédent
+$total_outstandingSupplierCurrentMonth = array_sum($outstandingSupplierLastMonthCurrentMonth);
+
+
+$resultat = $object->progress($total_outstandingSupplierOnLastMonth, $total_outstandingSupplierCurrentMonth);
 $dataInfo4 = intval($resultat). "\n%";
 
 // View data intuitively (positive or negative development)
@@ -272,8 +289,8 @@ $secondPop_info3 = $info4;
 $secondPop_data1 = "Total du montant des factures fournisseurs impayées <strong>(" . price($total_outstandingSupplierOnYear) . "\n€)</strong> sur l'exercice en cours (HT)";
 $secondPop_data2 = "Total du montant des factures fournisseurs impayées  <strong>(" . price($total_outstandingSupplierOnLastMonth) . "\n€)</strong> sur le mois précédent (de l'exercice fiscal en cours)";
 $secondPop_data3 = "Progression du nombre d'encours fournisseurs par rapport au mois dernier
-					</br> Calcul : ((VA - VD) / VA) x 100 )
-					</br> Soit : <strong>(( " . $total_outstandingSupplierOnLastMonth . " - " . $total_outstandingSupplierLastMonthLastYear . ") / " . $total_outstandingSupplierOnLastMonth . ") x 100 </strong>
+					</br> Calcul : ((VA - VD) / Vd) x 100 )
+					</br> Soit : <strong>(( " . $total_outstandingSupplierOnLastMonth . " - " . $total_outstandingSupplierCurrentMonth . ") / " . $total_outstandingSupplierCurrentMonth . ") x 100 </strong>
 					</br> Où VA = valeur d'arrivée et VD = Valeur de départ";
 
 
@@ -346,17 +363,17 @@ $titleItem3 = "Encours C/F ";
 $dataItem3 = price($total_outstandingBillOnYear - $total_outstandingSupplierOnYear) . "\n€"; // soustraction des encours client et encours fournisseur sur l'exercice fiscal en cours
 
 $info5 = "Encours total M-1";
-$dataInfo5 = intval($total_outstandingLastMonth - $total_outstandingSupplierOnLastMonth) . "\n€"; // encours client m-1 - encours fourn m-1
+$dataInfo5 = price($total_outstandingLastMonth - $total_outstandingSupplierOnLastMonth) . "\n€"; // encours client m-1 - encours fourn m-1
 
 /**
  *  Progression between :
  * - the outstanding C/F of last month on current year
- * - the outstanding C/F of last month on prev year
+ * - the outstanding C/F of last month on current year
 */
 $info6 = "Progression";
-$total_cf_lastmonth_year = $total_OutCustomerCurrentMonth - $total_OutSupplierCurrentMonth;
-$total_vf_lastmonth_lastyear =
-// $resultat = $object->progress($total_OutCustomerCurrentMonth, $dataInfo5);
+$total_cf_currentmonth_year = $total_outstandingCurrentMonth - $total_outstandingSupplierCurrentMonth;
+$resultat = $object->progress($total_cf_currentmonth_year, $dataInfo5);
+
 $dataInfo6 = $resultat . "\n%";
 
 // Load info for outstanding C/F popupinfo
@@ -368,7 +385,7 @@ $thirdPop_info3 = $info6;
 $thirdPop_data1 = "Factures fournisseurs impayées <strong>(" . price($total_outstandingSupplierOnYear) . "\n€)</strong> l'exercice en cours (HT) - Factures clients impayées sur l'exercice en cours (HT)";
 $thirdPop_data2 = "Factures fournisseurs impayées <strong>(" . price($total_outstandingSupplierOnYear) . "\n€) du mois dernier </strong> sur l'exercice en cours (HT) - Factures clients impayées <strong> du mois dernier </strong> sur l'exercice en cours (HT)";
 $thirdPop_data3 = "Progression du nombre d'encours fournisseurs par rapport au mois dernier
-					</br> Calcul : ((VA - VD) / VA) x 100 )
+					</br> Calcul : ((VA - VD) / VD) x 100 )
 					</br> Soit : <strong>(( " . $total_outstandingSupplierOnLastMonth . " - " . $total_outstandingSupplierLastMonthLastYear . ") / " . $total_outstandingSupplierOnLastMonth . ") x 100 </strong>
 					</br> Où VA = valeur d'arrivée et VD = Valeur de départ";
 
@@ -440,16 +457,16 @@ $graphiqueC = $px3->show($amount_total_CFChart);
 // Customer outstandings exceeded
 $invoice = new Facture($db);
 
-// si date limite de regelemnt est inferieur au jour d'aujrdh - 1mois car date limite de reglement accorde delai d'1 mois
-$date = date('Y-m-d');
-
-$array_customer_exceed = $object->fetchCustomerBillExceed();
-// var_dump($array_customer_exceed);
-
+$array_customer_exceed = $object->fetchCustomerBillExceed(dol_now());
 $total_amount_exceed = array_sum($array_customer_exceed);
+
+var_dump($total_amount_exceed);
+
+// delai de 1 mois accordé au client pour reglement
+// $total_amount_exceed -= $conf->facture->client->warning_delay;
 $nb_total_exceed = count($array_customer_exceed);
 
-$titleItem4 = "Encours clients dépassés (" . $nb_total_exceed . ") ";
+$titleItem4 =  '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_option=late&search_options_paf=0">Encours clients dépassés (' . $nb_total_exceed . ') </a>';
 
 if ($total_amount_exceed <= 0) {
 	$dataItem4 = '<p class="badge badge-success" style="color:green;">Aucun encours clients dépassés';
@@ -461,18 +478,55 @@ if ($total_amount_exceed <= 0) {
 $fourPop_info1 = $titleItem4;
 $fourPop_data1 = "Somme des factures clients impayées (TTC) dont la date d'échéance a été dépassée";
 
+// List of invoices who date due has passed
+$result = $object->fetchDeliveredOrderToday();
 
-// Supplier outstandings exceeded
+if($result != null){
+
+	foreach ($result as $res)
+	{
+		$societe = new Societe($db);
+		$societe->fetch($res->fk_soc);
+
+		$commande = new Commande($db);
+		$commande->fetch($res->rowid);
+
+		$listeA = '
+				<ul class="list-group">
+					<li class="list-group-item d-flex justify-content-between align-items-center">
+
+				<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'">'.$societe->name.'</hr></a>';
+				'<span class="badge badge-pill badge-primary">Réf. commande :  '.$commande->ref.'</span>';
+
+		if($commande->date_livraison != null) {
+			'<p><strong>Date de création : </strong>'.date('j-m-Y', $commande->date_commande).'';
+		} else {
+			<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span>';
+		}
+		</li>';
+		</ul>';
+	}
+
+} else {
+	print '<p class="center"><span class="badge badge-pill badge-danger">Aucune commande validées pour ce jour </span></p>';
+	print '</br>';
+}
+
+?>
+</div>
+</div>
+</div>'
+
+/**
+* SUPPLIER OUSTANDING EXCEED
+*/
 $date = dol_now();
 
-$array_supplier_exceed = $object->fetchSupplierrBillExceed($date, $startFiscalLastyear, $endYear, 2);
-$array_supplier_credit_exceed = $object->fetchSupplierrBillExceed($date, $startFiscalLastyear, $endYear, 0);
+$array_supplier_exceed = $object->fetchSupplierBillExceed();
+$total_amount_supplier_exceed = array_sum($array_supplier_exceed);
+$nb_total_supplier_exceed = count($array_supplier_exceed);
 
-$total_amount_supplier_exceed = array_sum($array_supplier_exceed + $array_supplier_credit_exceed);
-$nb_total_supplier_exceed = count($array_supplier_exceed + $array_supplier_credit_exceed);
-
-
-$titleItem5 = "Encours fournisseur dépassé (" . $nb_total_supplier_exceed . ")";
+$titleItem5 =  '<a href="'.DOL_URL_ROOT.'/fourn/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_option=late&search_options_paf=0">Encours clients dépassés (' . $nb_total_supplier_exceed . ') </a>';
 
 if ($total_amount_supplier_exceed <= 0) {
 	$dataItem5 = '<p class="badge badge-success" style="color:green;">Aucun encours fournisseurs dépassés</p>';
@@ -486,8 +540,8 @@ $fivePop_data1 = "Somme des factures fournisseurs impayées (TTC) dont la date d
 // Supplier outstandings exceeded
 $date = dol_now();
 
-$array_supplier_exceed = $object->fetchSupplierrBillExceed($date, $startFiscalLastyear, $endYear, 2);
-$array_supplier_credit_exceed = $object->fetchSupplierrBillExceed($date, $startFiscalLastyear, $endYear, 0);
+$array_supplier_exceed = $object->fetchSupplierBillExceed($date, $startFiscalLastyear, $endYear, 2);
+$array_supplier_credit_exceed = $object->fetchSupplierBillExceed($date, $startFiscalLastyear, $endYear, 0);
 
 $total_amount_supplier_exceed = array_sum($array_supplier_exceed + $array_supplier_credit_exceed);
 $nb_total_supplier_exceed = count($array_supplier_exceed + $array_supplier_credit_exceed);
