@@ -1041,7 +1041,7 @@ class General extends FactureStats
 	*/
 
 	/**
-	 * Retourne le compte courant utilisé par la dite entreprise
+	 * Retourne le compte courant utilisé par la dite entreprise (premier identiant)
 	 */
 	public function getIdBankAccount(){
 		$sql = "SELECT MIN(rowid)";
@@ -1075,16 +1075,20 @@ class General extends FactureStats
 		return $result;
 	}
 
-	// Detail et lié avec la table gérant les comptes et les ecritures bancaires pour retrouver le solde de chaque compte
-	public function fetchAllDetailBankAccount(){
-		$sql = "SELECT amount as amount ";
+	/**
+	 * Detail et lié avec la table gérant les comptes et les ecritures bancaires
+	 * pour retrouver le solde de chaque compte
+	 */
+	public function fetchAllDetailBankAccount($date_start, $date_end){
+		$sql = "SELECT SUM(amount) as amount ";
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank as b";
 		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql .= " WHERE b.fk_account = ba.rowid";
+		$sql .= " AND b.datev BETWEEN ".$date_start." AND ".$date_end." ";
 
 		$resql = $this->db->query($sql);
 
-		// $result = [];
+		$result = [];
 		if($resql){
 			while($obj = $this->db->fetch_object(($resql))){
 				$result[] = $obj->amount;
@@ -1443,7 +1447,7 @@ class General extends FactureStats
 		return $result;
 	 }
 
-	 // Retourne les factures abandonnées sur une periode d
+	 // Retourne les factures abandonnées sur une periode donnee
 	 public function closedInvoice($startfiscalyear, $lastDayYear){
 		global $db;
 
@@ -1511,14 +1515,15 @@ class General extends FactureStats
 	 /*
 	  Fetch all unpaid customer invoices whose due date has passed
 	  */
-	public function fetchCustomerBillExceed($date = ''){
+	public function fetchCustomerBillExceed($date){
 		global $db;
 
-	   $sql = "SELECT *";
+	   $sql = "SELECT total_ttc as total_ttc";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-	   $sql .= " WHERE date_lim_reglement < ".dol_now();
-	   $sql .= " AND fk_statut != 0";
+	   $sql .= " WHERE retained_warranty_date_limit < ".$date;
 	   $sql .= " AND paye = 0";
+	   $sql .= " AND fk_statut != 0";
+	   $sql .= " AND type != 3";
 
 	   $resql = $this->db->query($sql);
 
@@ -1526,7 +1531,7 @@ class General extends FactureStats
 
 	   if($resql){
 		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj->total_ht;
+			   $result[] = $obj->total_ttc;
 		   }
 	   }
 	   return $result;
@@ -1583,7 +1588,7 @@ class General extends FactureStats
 	 /*
 	  Fetch all unpaid supplier invoices whose due date has passed
 	  */
-	  public function fetchSupplierrBillExceed($date = '', $date_start, $date_end, $type=''){
+	  public function fetchSupplierBillExceed(){
 		global $db;
 
 	   $sql = "SELECT *";
@@ -1591,8 +1596,6 @@ class General extends FactureStats
 	   $sql .= " WHERE date_lim_reglement <= ".dol_now();
 	   $sql .= " AND fk_statut != 0";
 	   $sql .= " AND paye = 0";
-	   $sql .= " AND datec BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
-	   $sql .= " AND type = ".$type;
 	   $resql = $this->db->query($sql);
 
 	   $result = [];
