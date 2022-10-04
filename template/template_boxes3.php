@@ -2,6 +2,8 @@
 include('../template/template_admin.php');
 ?>
 
+<!-- Template for list -->
+
 <div class="card-deck">
    <div class="card">
 

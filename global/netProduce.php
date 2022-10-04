@@ -79,7 +79,7 @@ $TimestampCurrentLastYear = strtotime($startFiscalLastyear);
 $endYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentYear));
 $endLastYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentLastYear));
 
-// First day and last day of current mounth
+// First day and last day of current month
 $firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
 $lastDayCurrentMonth = date('Y-m-t', mktime(0, 0, 0, $month, 1, $year));
 

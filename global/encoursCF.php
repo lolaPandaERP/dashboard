@@ -101,8 +101,6 @@ $endLastYear = date('Y-m-d', strtotime('-'.$duree.'day', $TimestampendLastYear))
 // M - 1 on current year and last year
 $firstDayLastMonth = date('Y-m-d', mktime(0, 0, 0, $month - 1, 1, $year)); /// current year
 $lastDayLastMonth = date('Y-m-t', mktime(0, 0, 0, $month - 1, 1, $year));
-// $firstDayLastMonthLastYear = date('Y-m-d', mktime(0, 0, 0, $month - 1, 1, $year - 1)); /// current year
-// $lastDayLastMonthLastYear = date('Y-m-t', mktime(0, 0, 0, $month - 1, 1, $year - 1));
 
 // First day and last day
 $firstDayYear = date('Y-m-d', mktime(0, 0, 0, 1, 1, $year)); // current years
