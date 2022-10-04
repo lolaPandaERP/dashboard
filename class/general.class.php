@@ -1253,7 +1253,6 @@ class General extends FactureStats
 
 	function fetchDeliveredOrder($date_start, $date_end){
 
-
 		global $db;
 
 		$sql = "SELECT * FROM ".MAIN_DB_PREFIX."commande";
@@ -1468,11 +1467,11 @@ class General extends FactureStats
 		return $closed_invoices;
 	 }
 
-	// Retourne un tableau de toutes les factures TTC (hors brouillon) impayées sur une période donnée
+	// Retourne un tableau de toutes les factures (hors brouillon) impayées sur une période donnée
 	 public function outstandingBill($date_start, $date_end){
 
 		 	// Encours client total sur l'exercice fiscal
-			$sql = "SELECT * ";
+			$sql = "SELECT *";
 			$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 			$sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
 			$sql .= " AND paye = 0";
@@ -1512,28 +1511,52 @@ class General extends FactureStats
 	   return $result;
 	}
 
-	 /*
-	  Fetch all unpaid customer invoices whose due date has passed
+	/*
+	 Sum of all unpaid customer invoices whose due date has passed
 	  */
-	public function fetchCustomerBillExceed($date){
+	  public function amountCustomerBillExceed(){
 		global $db;
 
-	   $sql = "SELECT total_ttc as total_ttc";
+	   $sql = "SELECT SUM(total_ttc) as total_ttc ";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-	   $sql .= " WHERE retained_warranty_date_limit < ".$date;
-	   $sql .= " AND paye = 0";
-	   $sql .= " AND fk_statut != 0";
+	   $sql .= " WHERE paye = 0";
+	   $sql .= " AND fk_statut = 1";
 	   $sql .= " AND type != 3";
+	   $sql .= " AND date_lim_reglement < ".dol_now();
+	   $sql .= " ORDER BY date_lim_reglement DESC ";
 
-	   $resql = $this->db->query($sql);
+		$resql = $db->query($sql);
 
-	   $result = [];
+		if($resql){
+			while($obj = $db->fetch_object(($resql))){
+				$result = $obj->total_ttc;
+			}
+		}
+	   return $result;
+	}
 
-	   if($resql){
-		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj->total_ttc;
-		   }
-	   }
+	 /*
+	  Fetch details of all unpaid customer invoices whose due date has passed
+	  */
+	public function fetchCustomerBillExceed(){
+		global $db;
+
+	   $sql = "SELECT rowid, ref, fk_soc, date_lim_reglement ";
+	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+	   $sql .= " WHERE paye = 0";
+	   $sql .= " AND fk_statut = 1";
+	   $sql .= " AND type != 3";
+	   $sql .= " AND date_lim_reglement < ".dol_now();
+	   $sql .= " ORDER BY date_lim_reglement DESC ";
+
+		$resql = $db->query($sql);
+		$result = [];
+
+		if($resql){
+			while($obj = $db->fetch_object(($resql))){
+				$result[] = $obj;
+			}
+		}
 	   return $result;
 	}
 
@@ -1585,24 +1608,52 @@ class General extends FactureStats
 	   return $result;
 	}
 
+	/*
+	 Sum of all unpaid customer suppplier whose due date has passed
+	  */
+	  public function amountSupplierBillExceed(){
+		global $db;
+
+	   $sql = "SELECT SUM(total_ttc) as total_ttc ";
+	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+	   $sql .= " WHERE paye = 0";
+	   $sql .= " AND fk_statut = 1";
+	   $sql .= " AND type != 3";
+	   $sql .= " AND date_lim_reglement < ".dol_now();
+	   $sql .= " ORDER BY date_lim_reglement DESC ";
+
+		$resql = $db->query($sql);
+
+		if($resql){
+			while($obj = $db->fetch_object(($resql))){
+				$result = $obj->total_ttc;
+			}
+		}
+	   return $result;
+	}
+
+
 	 /*
-	  Fetch all unpaid supplier invoices whose due date has passed
+	  Fetch details for all unpaid supplier invoices whose due date has passed
 	  */
 	  public function fetchSupplierBillExceed(){
 		global $db;
 
-	   $sql = "SELECT *";
+	   $sql = "SELECT rowid, ref, fk_soc, date_lim_reglement ";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-	   $sql .= " WHERE date_lim_reglement <= ".dol_now();
-	   $sql .= " AND fk_statut != 0";
-	   $sql .= " AND paye = 0";
+	   $sql .= " WHERE paye = 0";
+	   $sql .= " AND fk_statut = 1";
+	   $sql .= " AND type != 3";
+	   $sql .= " AND date_lim_reglement < ".dol_now();
+	   $sql .= " ORDER BY date_lim_reglement DESC ";
+
 	   $resql = $this->db->query($sql);
 
 	   $result = [];
 
 	   if($resql){
 		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj->total_ttc;
+			   $result[] = $obj;
 		   }
 	   }
 	   return $result;
