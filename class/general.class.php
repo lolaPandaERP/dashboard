@@ -1483,7 +1483,7 @@ class General extends FactureStats
 
 			if($resql){
 				while($obj = $this->db->fetch_object(($resql))){
-					$result[] = $obj->total_ht;
+					$result[] = $obj->total_ttc;
 				}
 			}
 			return $result;
@@ -1492,7 +1492,7 @@ class General extends FactureStats
 
 	/**
 	 * Retourne un tableau de toutes les factures standard
-	 * (hors brouillon - TTC) impayées (hors periode)
+	 * (hors brouillon - HT) impayées (hors periode)
 	 * */
 	public function fetchCustomerInvoices(){
 
@@ -1579,7 +1579,7 @@ class General extends FactureStats
 
 	   if($resql){
 		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj->total_ht;
+			   $result[] = $obj->total_ttc;
 		   }
 	   }
 	   return $result;
@@ -1602,7 +1602,7 @@ class General extends FactureStats
 
 	   if($resql){
 		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj->total_ht;
+			   $result[] = $obj->total_ttc;
 		   }
 	   }
 	   return $result;
@@ -1617,7 +1617,6 @@ class General extends FactureStats
 	   $sql = "SELECT SUM(total_ht) as total_ht";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_rec";
 	   $sql .= " WHERE date_last_gen BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
-		//    $sql .= " AND date_when BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
 	   $sql .= " AND suspended = 0";
 
 	   $resql = $this->db->query($sql);
