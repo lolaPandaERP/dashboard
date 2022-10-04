@@ -117,7 +117,7 @@ $lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
 $startFiscalYear = $conf->global->START_FISCAL_YEAR;
 $startMonthFiscalYear = $object->startMonthForGraphLadder($startFiscalYear, 12);
 
-
+$invoice = new Facture($db);
 /**
  * CUSTOMER OUTSTANDING
  */
@@ -126,6 +126,9 @@ $titleItem1 = "Encours clients";
 $outstandingBillOnYear = $object->outstandingBill($startFiscalyear, $endYear);
 $total_outstandingBillOnYear = array_sum($outstandingBillOnYear);
 $dataItem1 = price($total_outstandingBillOnYear) . "\n€";
+
+// $dataItem1 .= '<span class="classfortooltip" title="Encours clients HT : '.price($total_CustomerOutstandingTTC) .'">
+// 				<span class="fas fa-info-circle"></span>';
 
 // Encours C sur le mois dernier
 $info1 = "Encours du mois dernier";
@@ -140,25 +143,22 @@ if ($dataInfo1 <= 0) {
 	$dataInfo1 = $dataInfo1;
 }
 
-// Progression between the outstanding of last month on current year with the outstanding of last month on prev year
-// $outstandingLastMonthLastYear = $object->outstandingBill($firstDayLastMonthLastYear, $lastDayLastMonthLastYear); // Encours C sur le mois dernier de l'exercice fiscal précédent
-// $total_outstandingLastMonthLastYear = array_sum($outstandingLastMonthLastYear);
-
-// $info2 = "Progression ";
-// $resultat = $object->progress($total_outstandingLastMonth, $total_outstandingLastMonthLastYear);
-// $dataInfo2 = intval($resultat) . "\n%";
+/**
+ *  Variation rate between :
+ *  - the outstanding of last month on current year
+ * 	- the outstanding of current month on current year
+ *  */
 
 // Total outstanding customer on current month on year
-$outstandingCustomerCurrentMonth = $object->outstandingBill($firstDayCurrentMonth, $lastDayCurrentMonth); // Encours C sur le mois dernier de l'exercice fiscal précédent
+$outstandingCustomerCurrentMonth = $object->outstandingBill($firstDayCurrentMonth, $lastDayCurrentMonth);
 $total_outstandingCurrentMonth = array_sum($outstandingCustomerCurrentMonth);
 
 $info2 = "Progression ";
 $resultat = $object->progress($total_outstandingCurrentMonth, $total_outstandingLastMonth);
 $dataInfo2 = intval($resultat) . "\n%";
 
-
 // Condition d'affichage pour la progression
-if ($dataInfo2 > 0) {
+if ($total_outstandingCurrentMonth > $total_outstandingLastMonth) {
 	$dataInfo2 = '<p style=color:red>' . $dataInfo2;
 } else {
 	$dataInfo2 = '<p style=color:green>' . $dataInfo2;
@@ -169,26 +169,30 @@ $firstPop_info1 = $titleItem1;
 $firstPop_info2 = $info1;
 $firstPop_info3 = $info2;
 
-$firstPop_data1 = "Total du montant des factures clients impayées <strong>(" . price($total_outstandingBillOnYear) . "\n€)</strong> sur l'exercice en cours (HT)";
+$firstPop_data1 = "Total du montant des factures clients impayées <strong>(" . price($total_outstandingBillOnYear) . "\n€)</strong> sur l'exercice en cours (TTC)";
 $firstPop_data2 = "Total du montant des factures clients impayées  <strong>(" . price($total_outstandingLastMonth) . "\n€)</strong> sur le mois précédent";
-$firstPop_data3 = "Progression du montant des encours clients (du mois dernier sur l'exercice fiscal en cours) avec les encours du mois dernier sur l'exercice fiscal précédent
-				   </br> Calcul : ( (VA - VD) / VD) x 100 )
-				   </br> Soit : <strong>(( " . $total_outstandingCurrentMonth . " - " . $total_outstandingLastMonth . ") / " . $total_outstandingLastMonth . ") x 100 </strong>
-				   </br> Où VA = valeur d'arrivée et VD = Valeur de départ";
+$firstPop_data3 = "Progression du montant des encours clients <strong> du mois dernier sur l'exercice fiscal en cours</strong> avec les encours <strong> du mois courant sur l'exercice fiscal en cours </strong>
+				   </br> Calcul : ( (Valeur d'arrivée - Valeur de départ) / Valeur de départ) x 100 )
+				   </br> Soit : <strong>(( " . $total_outstandingCurrentMonth . " - " . $total_outstandingLastMonth . ") / " . $total_outstandingLastMonth . ") x 100 </strong>";
 
-// Drawing the first graph for nb of customer invoices by month
+/**
+ * FIRST GRAPH - Outstanding customer
+ */
 $monthsArr = monthArray($langs, 1); // months
 $file = "oustandingCustomerChartNumber";
 $fileurl = DOL_DOCUMENT_ROOT . '/custom/tab/img';
 $invoice = new Facture($db);
 unset($yy);
-for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
+$currentMonthLastYear = date('n', mktime(0, 0, 0, $month+1, 1, $year-1));
+$currentMonthLastYear = (int)$currentMonthLastYear;
+
+for($mm = $currentMonthLastYear; $mm < 13; $mm++){
 
 	if(!$yy){
-		$yy = $year;
+		$yy = $year-1;
 	}
 
-	if($mm == $startMonthFiscalYear && $yy == $year+1){
+	if($mm == $currentMonthLastYear && $yy == $year){
 		break;
 	}
 
@@ -227,7 +231,7 @@ $mesg = $px->isGraphKo();
 $legend = ['Nombre', 'Montant'];
 
 if (!$mesg) {
-	$px->SetTitle("Evolution des encours clients par mois - TTC");
+	$px->SetTitle("Evolution des encours clients - TTC");
 	$px->datacolor = array(array(255, 99, 71), array(128, 187, 240));
 	$px->SetData($data1);
 	$px->SetLegend($legend);
@@ -255,23 +259,6 @@ $total_outstandingSupplierOnLastMonth = array_sum($outstandingSupplierOnLastMont
 
 $dataInfo3 = price($total_outstandingSupplierOnLastMonth) . "\n€";
 
-/**
- *  Progression between :
- * - the outstanding suppliers of last month on current year
- * - the outstanding suppliers of current month on current year
-*/
-
-$info4 = "Progression";
-// $outstandingSupplierLastMonthLastYear = $object->outstandingSupplier($firstDayLastMonthLastYear, $lastDayLastMonthLastYear, 0); // Encours C sur le mois dernier de l'exercice fiscal précédent
-// $total_outstandingSupplierLastMonthLastYear = array_sum($outstandingSupplierLastMonthLastYear);
-
-$outstandingSupplierLastMonthCurrentMonth = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 0); // Encours C sur le mois dernier de l'exercice fiscal précédent
-$total_outstandingSupplierCurrentMonth = array_sum($outstandingSupplierLastMonthCurrentMonth);
-
-
-$resultat = $object->progress($total_outstandingSupplierOnLastMonth, $total_outstandingSupplierCurrentMonth);
-$dataInfo4 = intval($resultat). "\n%";
-
 // View data intuitively (positive or negative development)
 if ($dataInfo3 <= 0) {
 	$dataInfo3 = '<p class="badge badge-success" style="color:green;">Aucun encours';
@@ -279,31 +266,55 @@ if ($dataInfo3 <= 0) {
 	$dataInfo3 = $dataInfo3;
 }
 
+/**
+ *  Progression between :
+ * - the outstanding suppliers of last month on current year
+ * - the outstanding suppliers of current month on current year
+*/
+
+$info4 = "Progression";
+$outstandingSupplierLastMonthCurrentMonth = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 0); // Encours C sur le mois dernier de l'exercice fiscal précédent
+$total_outstandingSupplierCurrentMonth = array_sum($outstandingSupplierLastMonthCurrentMonth);
+
+$resultat = $object->progress($total_outstandingSupplierOnLastMonth, $total_outstandingSupplierCurrentMonth);
+$dataInfo4 = intval($resultat). "\n%";
+
+// View data intuitively (positive or negative development)
+if ($total_outstandingSupplierCurrentMonth > $total_outstandingSupplierOnLastMonth) {
+	$dataInfo4 = '<p style=color:red>' . $dataInfo4;
+} else {
+	$dataInfo4 = '<p style=color:green>-'. $dataInfo4;
+}
+
 // Load info for outstanding supplier popupinfo
 $secondPop_data1 = $titleItem2;
 $secondPop_info2 = $info3;
 $secondPop_info3 = $info4;
 
-$secondPop_data1 = "Total du montant des factures fournisseurs impayées <strong>(" . price($total_outstandingSupplierOnYear) . "\n€)</strong> sur l'exercice en cours (HT)";
-$secondPop_data2 = "Total du montant des factures fournisseurs impayées  <strong>(" . price($total_outstandingSupplierOnLastMonth) . "\n€)</strong> sur le mois précédent (de l'exercice fiscal en cours)";
-$secondPop_data3 = "Progression du nombre d'encours fournisseurs par rapport au mois dernier
-					</br> Calcul : ((VA - VD) / Vd) x 100 )
-					</br> Soit : <strong>(( " . $total_outstandingSupplierOnLastMonth . " - " . $total_outstandingSupplierCurrentMonth . ") / " . $total_outstandingSupplierCurrentMonth . ") x 100 </strong>
-					</br> Où VA = valeur d'arrivée et VD = Valeur de départ";
+$secondPop_data1 = "Total du montant des factures fournisseurs impayées <strong>(" . price($total_outstandingSupplierOnYear) . "\n€)</strong> sur l'exercice en cours (TTC)";
+$secondPop_data2 = "Total du montant des factures fournisseurs impayées  <strong>(" . price($total_outstandingSupplierOnLastMonth) . "\n€)</strong> sur le mois précédent (de l'exercice fiscal en cours) - HT";
+$secondPop_data3 = "Progression du montant des encours fournisseurs <strong> du mois dernier sur l'exercice fiscal en cours</strong> avec les encours <strong> du mois courant sur l'exercice fiscal en cours </strong>
+				   </br> Calcul : ( (Valeur d'arrivée - Valeur de départ) / Valeur de départ) x 100 )
+				   </br> Soit : <strong>(( " . $total_outstandingCurrentMonth . " - " . $total_outstandingLastMonth . ") / " . $total_outstandingLastMonth . ") x 100 </strong>";
 
 
-// Supplier chart
+/**
+ * SECOND GRAPH - Outstanding supplier
+ */
 $file = "supplierOustandingChart";
 $fileurl = DOL_DOCUMENT_ROOT . '/custom/tab/img';
 $invoice_supplier = new FactureFournisseur($db);
 unset($yy);
-for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
+$currentMonthLastYear = date('n', mktime(0, 0, 0, $month+1, 1, $year-1));
+$currentMonthLastYear = (int)$currentMonthLastYear;
+
+for($mm = $currentMonthLastYear; $mm < 13; $mm++){
 
 	if(!$yy){
-		$yy = $year;
+		$yy = $year-1;
 	}
 
-	if($mm == $startMonthFiscalYear && $yy == $year+1){
+	if($mm == $currentMonthLastYear && $yy == $year){
 		break;
 	}
 
@@ -372,45 +383,60 @@ $info6 = "Progression";
 $total_cf_currentmonth_year = $total_outstandingCurrentMonth - $total_outstandingSupplierCurrentMonth;
 $resultat = $object->progress($total_cf_currentmonth_year, $dataInfo5);
 
-$dataInfo6 = $resultat . "\n%";
+$dataInfo6 = intval($resultat). "\n%";
+
+// View data intuitively (positive or negative development)
+if ($total_cf_currentmonth_year > ($total_outstandingLastMonth - $total_outstandingSupplierOnLastMonth)) {
+	$dataInfo6 = '<p style=color:red>' . $dataInfo6;
+} else {
+	$dataInfo6 = '<p style=color:green>-'. $dataInfo6;
+}
 
 // Load info for outstanding C/F popupinfo
 $thirdPop_info1 = $titleItem3;
 $thirdPop_info2 = $info5;
 $thirdPop_info3 = $info6;
 
+$thirdPop_data1 = "Factures fournisseurs impayées <strong>(" . $dataItem3 . "\n€)</strong> l'exercice en cours (TTC) - Factures clients impayées sur l'exercice en cours (TTC)";
+$thirdPop_data2 = "( Factures fournisseurs - factures clients impayées <strong>(" . $dataInfo5 . "\n€) du mois dernier </strong> sur l'exercice en cours (TTC) ) - ( Factures fournisseurs - factures clients impayées <strong> du mois courant </strong> (".$total_cf_currentmonth_year."€) sur l'exercice en cours (TTC) )";
+$thirdPop_data3 = "Progression du montant d'encours fournisseurs/clients (mois courant) par rapport au mois dernier
+					</br> Calcul : ((Valeur d'arrivee - valeur de depart) / valeur de depart) x 100 )
+					</br> Soit : <strong>(( " . $total_cf_currentmonth_year . " - " . $dataInfo5 . ") / " . $dataInfo5 . ") x 100 </strong>";
 
-$thirdPop_data1 = "Factures fournisseurs impayées <strong>(" . price($total_outstandingSupplierOnYear) . "\n€)</strong> l'exercice en cours (HT) - Factures clients impayées sur l'exercice en cours (HT)";
-$thirdPop_data2 = "Factures fournisseurs impayées <strong>(" . price($total_outstandingSupplierOnYear) . "\n€) du mois dernier </strong> sur l'exercice en cours (HT) - Factures clients impayées <strong> du mois dernier </strong> sur l'exercice en cours (HT)";
-$thirdPop_data3 = "Progression du nombre d'encours fournisseurs par rapport au mois dernier
-					</br> Calcul : ((VA - VD) / VD) x 100 )
-					</br> Soit : <strong>(( " . $total_outstandingSupplierOnLastMonth . " - " . $total_outstandingSupplierLastMonthLastYear . ") / " . $total_outstandingSupplierOnLastMonth . ") x 100 </strong>
-					</br> Où VA = valeur d'arrivée et VD = Valeur de départ";
+/**
+ * THIRD GRAPH - Outstanding customer and supplier
+ */
 
-
-
-
-// C/F chart on current year
 $file = "CFOustandingChartCurrentYear";
 $fileurl = DOL_DOCUMENT_ROOT . '/custom/tab/img';
 $invoice_customer = new Facture($db);
 $invoice_supplier = new FactureFournisseur($db);
+unset($yy);
+$currentMonthLastYear = date('n', mktime(0, 0, 0, $month+1, 1, $year-1));
+$currentMonthLastYear = (int)$currentMonthLastYear;
 
-for ($i = $startMonthFiscalYear; $i <= 12; $i++) {
+for ($mm = $currentMonthLastYear; $mm <= 12; $mm++) {
+
+	if(!$yy){
+		$yy = $year-1;
+	}
+
+	if($mm == $currentMonthLastYear && $yy == $year){
+		break;
+	}
 
 	strtotime('Last Year');
 	$lastyear = date($year - 1);
 
-	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
-	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $i, $lastyear);
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $mm, $yy);
+	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $mm, $lastyear);
 
 	/**
 	 * CUSTOMER
 	 */
 
-	// Current Year
-	$date_start = $year . '-' . $i . '-01';
-	$date_end = $year . '-' . $i . '-' . $lastDayMonth;
+	$date_start = $yy . '-' . $mm . '-01';
+	$date_end = $yy . '-' . $mm . '-' . $lastDayMonth;
 
 	$array_customer_outstanding_year = $object->outstandingBill($date_start, $date_end);
 	$amount_total_customer_outstanding_year = array_sum($array_customer_outstanding_year);
@@ -426,13 +452,16 @@ for ($i = $startMonthFiscalYear; $i <= 12; $i++) {
 		$amount_total_supplier_outstanding_year += $invoice_supplier->total_ttc;
 	}
 
-	$ladder = html_entity_decode($monthsArr[$i]);
-
 	$data[] = [
-		$ladder, // months
+		html_entity_decode($monthsArr[$mm]), // months
 		$amount_total_customer_outstanding_year,
 		$amount_total_supplier_outstanding_year,
 	];
+
+	if($mm >= 12){
+		$mm = 0;
+		$yy++;
+	}
 }
 
 $px3 = new DolGraph();
@@ -440,7 +469,7 @@ $mesg = $px3->isGraphKo();
 $legend = ['Clients', 'Fournisseurs'];
 
 if (!$mesg) {
-	$px3->SetTitle("Evolution sur l'exercice en cours (TTC)");
+	$px3->SetTitle("Evolution des encours C/F - TTC");
 	$px3->datacolor = array(array(255, 165, 51), array(103, 187, 14));
 	$px3->SetData($data);
 	$px3->SetLegend($legend);
@@ -452,19 +481,18 @@ if (!$mesg) {
 $graphiqueC = $px3->show($amount_total_CFChart);
 
 
-// Customer outstandings exceeded
+/**
+ * CUSTOMER OUSTANDING EXCEED
+ */
+
 $invoice = new Facture($db);
+$total_amount_exceed = $object->amountCustomerBillExceed();
 
-$array_customer_exceed = $object->fetchCustomerBillExceed(dol_now());
-$total_amount_exceed = array_sum($array_customer_exceed);
+// Array of invoices who date due has passed - from oldest to newest
+$invoiceExceedArray = $object->fetchCustomerBillExceed();
+$nb_total_exceed = count($invoiceExceedArray);
 
-var_dump($total_amount_exceed);
-
-// delai de 1 mois accordé au client pour reglement
-// $total_amount_exceed -= $conf->facture->client->warning_delay;
-$nb_total_exceed = count($array_customer_exceed);
-
-$titleItem4 =  '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_option=late&search_options_paf=0">Encours clients dépassés (' . $nb_total_exceed . ') </a>';
+$titleItem4 =  '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_options_paf=0">Encours clients dépassés (' . $nb_total_exceed . ') </a>';
 
 if ($total_amount_exceed <= 0) {
 	$dataItem4 = '<p class="badge badge-success" style="color:green;">Aucun encours clients dépassés';
@@ -474,54 +502,40 @@ if ($total_amount_exceed <= 0) {
 
 // Load info for customer exceed popupinfo
 $fourPop_info1 = $titleItem4;
-$fourPop_data1 = "Somme des factures clients impayées (TTC) dont la date d'échéance a été dépassée";
+$fourPop_data1 = "Somme des factures clients impayées <strong>(".price($total_amount_exceed)." €)</strong> dont la date d'échéance a été dépassée
+				  (date limite de réglement est inférieure à la date d'aujourd'hui : <strong>".date('Y-m-d', dol_now())."</strong>";
 
-// List of invoices who date due has passed
-// $result = $object->fetchDeliveredOrderToday();
+if(is_array($invoiceExceedArray) && $invoiceExceedArray != null){
+	foreach ($invoiceExceedArray as $res)
+	{
+		$societe = new Societe($db);
+		$societe->fetch($res->fk_soc);
 
-// if($result != null){
+		$invoice = new Facture($db);
+		$invoice->fetch($res->rowid);
 
-// 	foreach ($result as $res)
-// 	{
-// 		$societe = new Societe($db);
-// 		$societe->fetch($res->fk_soc);
+		$refInvoice = $invoice->ref;
 
-// 		$commande = new Commande($db);
-// 		$commande->fetch($res->rowid);
-
-// 		$listeA = '
-// 				<ul class="list-group">
-// 					<li class="list-group-item d-flex justify-content-between align-items-center">
-
-// 				<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'">'.$societe->name.'</hr></a>';
-// 				'<span class="badge badge-pill badge-primary">Réf. commande :  '.$commande->ref.'</span>';
-
-// 		if($commande->date_livraison != null) {
-// 			<p><strong>Date de création : </strong>'.date('j-m-Y', $commande->date_commande).'';
-// 		} else {
-// 			<span class="badge badge-pill badge-warning">Aucune date de livraison spécifiée</span>';
-// 		}
-// 		</li>';
-// 		</ul>';
-// 	}
-
-// } else {
-// 	print '<p class="center"><span class="badge badge-pill badge-danger">Aucune commande validées pour ce jour </span></p>';
-// 	print '</br>';
-// }
-
-
+		$listeA = '<ul class="list-group">
+					<li class="list-group-item d-flex justify-content-between align-items-center">
+						<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a>
+						<a href="'.DOL_URL_ROOT.'/compta/facture/card.php?facid='.$invoice->id.'">
+							<span class="badge badge-primary">Réf. Facture :  '.$invoice->ref.'</span> Date : '.date('Y-m-d', $invoice->date_lim_reglement).'</span></a>
+						</li></ul>';
+	}
+}
 
 /**
 * SUPPLIER OUSTANDING EXCEED
 */
-$date = dol_now();
+$supplier_invoice = new FactureFournisseur($db);
+$total_amount_supplier_exceed = $object->amountSupplierBillExceed();
 
-$array_supplier_exceed = $object->fetchSupplierBillExceed();
-$total_amount_supplier_exceed = array_sum($array_supplier_exceed);
-$nb_total_supplier_exceed = count($array_supplier_exceed);
+// Array of suppliers invoices who date due has passed - from oldest to newest
+$invoiceSupplierExceed = $object->fetchSupplierBillExceed();
+$nb_supplier_exceed = count($invoiceSupplierExceed);
 
-$titleItem5 =  '<a href="'.DOL_URL_ROOT.'/fourn/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_option=late&search_options_paf=0">Encours clients dépassés (' . $nb_total_supplier_exceed . ') </a>';
+$titleItem5 =  '<a href="'.DOL_URL_ROOT.'/fourn/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_options_paf=0">Encours fournisseurs dépassés (' . $nb_supplier_exceed . ') </a>';
 
 if ($total_amount_supplier_exceed <= 0) {
 	$dataItem5 = '<p class="badge badge-success" style="color:green;">Aucun encours fournisseurs dépassés</p>';
@@ -530,29 +544,74 @@ if ($total_amount_supplier_exceed <= 0) {
 }
 // Load info for supplier exceed popupinfo
 $fivePop_info1 = $titleItem5;
-$fivePop_data1 = "Somme des factures fournisseurs impayées (TTC) dont la date d'échéance a été dépassée";
+$fivePop_data1 = "Somme des factures fournisseurs impayées <strong>(".price($total_amount_supplier_exceed)." €)</strong> dont la date d'échéance a été dépassée
+				  (date limite de réglement est inférieure à la date d'aujourd'hui : <strong>".date('Y-m-d', dol_now())."</strong>";
 
-// Supplier outstandings exceeded
-$date = dol_now();
+if(is_array($invoiceSupplierExceed) && $invoiceSupplierExceed != null){
+	foreach ($invoiceSupplierExceed as $res2)
+	{
+		$societe = new Societe($db);
+		$societe->fetch($res2->fk_soc);
 
-$array_supplier_exceed = $object->fetchSupplierBillExceed($date, $startFiscalLastyear, $endYear, 2);
-$array_supplier_credit_exceed = $object->fetchSupplierBillExceed($date, $startFiscalLastyear, $endYear, 0);
+		$supplier_invoice->fetch($res2->rowid);
 
-$total_amount_supplier_exceed = array_sum($array_supplier_exceed + $array_supplier_credit_exceed);
-$nb_total_supplier_exceed = count($array_supplier_exceed + $array_supplier_credit_exceed);
+		$refSupplierInvoice = $supplier_invoice->ref;
 
-
-$titleItem6 = "Encours clients dépassé (" . $nb_total_supplier_exceed . ") depuis </br> <strong>+ de 12 mois</strong>";
-
-if ($total_amount_supplier_exceed <= 0) {
-	$dataItem6 = '<p class="badge badge-success" style="color:green;">Aucun encours fournisseurs dépassés</p>';
-} else {
-	$dataItem6 = '<p class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i>' . "\n" . price($total_amount_supplier_exceed) . "\n€";
+		$listeB = '<ul class="list-group">
+					<li class="list-group-item d-flex justify-content-between align-items-center">
+						<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a>
+						<a href="'.DOL_URL_ROOT.'/fourn/facture/card.php?facid='.$supplier_invoice->id.'">
+							<span class="badge badge-secondary">Réf. Facture fourn.:  '.$refSupplierInvoice.'</span>
+							Date : '.date('Y-m-d', $supplier_invoice->calculate_date_lim_reglement()).'</span></a>
+						</li></ul>';
+	}
 }
-// Load info for supplier exceed popupinfo
-$fivePop_info1 = $titleItem6;
-$fivePop_data1 = "Somme des factures fournisseurs impayées (TTC) dont la date d'échéance a été dépassée";
 
+/**
+ * OUTSTANDING CUSTOMER EXCEED SINCE + 12 MONTHS
+ *  */
+
+$invoice = new Facture($db);
+$total_amount_exceed = $object->amountCustomerBillExceed();
+
+// Array of invoices who date due has passed - from oldest to newest
+$invoiceExceedArray = $object->fetchCustomerBillExceed();
+$nb_total_exceed = count($invoiceExceedArray);
+
+$titleItem6 =  '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_options_paf=0">Encours clients dépassés (' . $nb_total_exceed . ')
+			    <strong> depuis + de 12 mois </strong></a>';
+
+if ($total_amount_exceed <= 0) {
+	$dataItem6 = '<p class="badge badge-success" style="color:green;">Aucun encours clients dépassés';
+} else {
+	$dataItem6 = '<p class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i>' . "\n" . price($total_amount_exceed) . "\n€" . '</p>';
+}
+
+// Load info for customer exceed popupinfo
+$sixPop_info1 = $titleItem6;
+$sixPop_data1 = "Somme des factures clients impayées (".price($total_amount_exceed)." €)
+				  dont la date d'échéance a été dépassé depuis <strong> + de 12 mois </strong>";
+
+if(is_array($invoiceExceedArray) && $invoiceExceedArray != null){
+	foreach ($invoiceExceedArray as $res3)
+	{
+		$societe = new Societe($db);
+		$societe->fetch($res3->fk_soc);
+
+		$invoice = new Facture($db);
+		$invoice->fetch($res3->rowid);
+
+		$refInvoice = $invoice->ref;
+
+		$listeC = '<ul class="list-group">
+					<li class="list-group-item d-flex justify-content-between align-items-center">
+						<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a>
+						<a href="'.DOL_URL_ROOT.'/compta/facture/card.php?facid='.$invoice->id.'">
+							<span class="badge badge-primary">Réf. Facture :  '.$invoice->ref.'</span>
+							Date : '.date('Y-m-d', $invoice->date_lim_reglement).'</span></a>
+						</li></ul>';
+	}
+}
 
 /*
  * View
@@ -571,12 +630,8 @@ print load_fiche_titre($langs->trans("Encours Client/Fournisseur"));
 // Template for nav
 $object->load_navbar();
 
-
-
 // template for boxes
 include DOL_DOCUMENT_ROOT . '/custom/tab/template/template_boxesGraph3.php';
-
-
 
 // End of page
 llxFooter();
