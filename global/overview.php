@@ -685,6 +685,7 @@ $total_suppliers_invoice_unpaid = array_sum($array_suppliers_invoice_unpaid);
 $total_suppliers_invoice_paid_and_unpaid = $total_suppliers_invoice_unpaid + $total_suppliers_invoice_paid;
 
 $variousPaiements = $object->fetchVariousPaiements($firstDayCurrentMonth, $lastDayCurrentMonth);
+
 $variablesExpenses = $total_suppliers_invoice_paid_and_unpaid + $total_vat_by_month + $variousPaiements;
 
 // Monthly charge
@@ -790,7 +791,7 @@ $fourPop_data2 = "<ul><li>charges variables (".price($variablesExpenses)."\n€)
 
 				<br> <strong> <li>Détail charges fixes </strong> : Salaires (".price($arr_salarys)."\n€) </strong> +  emprunts (".price($emprunts)."\n€) </strong> + charges sociales et fiscales (".price($socialesTaxes_charges)."\n€) </strong> </li>
 				<i style='color:blue;'>Les charges fixes sont calculées sur le mois précédent </i></br>
-				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur le mois courant (".price($total_suppliers_invoice_paid_and_unpaid)."\n€) </strong> + paiements divers (".price($variousPaiements)."\n€) + TVA du mois courant (indisponible) + notes frais payés  (".price($total_expense)."\n€) </li>
+				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur le mois courant (".price($total_suppliers_invoice_paid_and_unpaid)."\n€) </strong> + paiements divers (sens crédit : ".price($variousPaiements)."\n€) + TVA du mois courant (indisponible) + notes frais payés  (".price($total_expense)."\n€) </li>
 				</ul>";
 
 $fourPop_data3 = "Montant total (HT) des modèles de factures client ".price($total_modelInvoice)."\n€";

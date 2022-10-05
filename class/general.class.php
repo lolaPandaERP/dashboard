@@ -1824,10 +1824,10 @@ class General extends FactureStats
 	 */
 	public function fetchVariousPaiements($date_start, $date_end){
 
-		$sql = "SELECT SUM(amount) as amount";
-		$sql .= " FROM ". MAIN_DB_PREFIX . "payment_various as vp" ;
-		$sql .= " WHERE datep BETWEEN ".$date_start." AND ".$date_end." ";
-		$sql .= "AND sens = 1 ";
+		$sql = "SELECT * ";
+		$sql .= " FROM ". MAIN_DB_PREFIX . "payment_various" ;
+		$sql .= " WHERE datep BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
+		$sql .= " AND sens = 1 ";
 
 		$resql = $this->db->query($sql);
 
