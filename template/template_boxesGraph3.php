@@ -138,10 +138,8 @@ function showList1() {
 	fourPopup.classList.toggle("show");
 }
 </script>
-<ul>
 	<h4><?php print $titleItem4 ?></h4>
-	<h2><?php print $dataItem4 ?></p></h2>
-</ul>
+	<h2><?php print $dataItem4 ?></h2>
     <div class="card-body">
 			<?php print $listeA ?>
     </div>

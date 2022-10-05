@@ -1114,7 +1114,7 @@ class General extends FactureStats
 				<a href="overview.php?mode=customer&filter=2022"><i class="fa fa-fw fa-home"></i> Général</a>
 				</li>
 				<li class="<?php if ($current == "./encoursCF.php?filter=".$year){ echo 'current';} else{ echo'no_current';}?>">
-				<a href="./encoursCF.php?filter=2022"><i class="fa fa-pie-chart"></i> Encours C/F</a>
+				<a href="./encoursCF.php?page=1"><i class="fa fa-pie-chart"></i> Encours C/F</a>
 				</li>
 				<li class="<?php if ($current == 'treso_previ.php'){ echo 'current';} else{ echo'no_current';}?>">
 				<a href="treso_previ.php"><i class="fa fa-bank"></i> Trésorerie</a>
@@ -1514,15 +1514,15 @@ class General extends FactureStats
 	/*
 	 Sum of all unpaid customer invoices whose due date has passed
 	*/
-	  public function amountCustomerBillExceed($date){
+	  public function amountCustomerBillExceed($date = ''){
 		global $db;
 
 	   $sql = "SELECT SUM(total_ttc) as total_ttc";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 	   $sql .= " WHERE paye = 0 ";
-	   $sql .= " AND fk_statut !=0 ";
+	   $sql .= " AND fk_statut = 1";
 	   $sql .= " AND type != 3";
-	   $sql .= " AND date_lim_reglement < '" . $date . "' ";
+		$sql .= " AND date_lim_reglement < '" . $date . "' ";
 
 		$resql = $db->query($sql);
 		$result = [];
@@ -1538,15 +1538,15 @@ class General extends FactureStats
 	 /*
 	  Fetch details of all unpaid customer invoices whose due date has passed
 	  */
-	public function fetchCustomerBillExceed(){
+	public function fetchCustomerBillExceed($date = ''){
 		global $db;
 
-	   $sql = "SELECT rowid, ref, fk_soc, date_lim_reglement ";
+	   $sql = "SELECT * ";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 	   $sql .= " WHERE paye = 0";
 	   $sql .= " AND fk_statut = 1";
 	   $sql .= " AND type != 3";
-	   $sql .= " AND date_lim_reglement < ".dol_now();
+	   $sql .= " AND date_lim_reglement < '" . $date . "' ";
 	   $sql .= " ORDER BY date_lim_reglement DESC ";
 
 		$resql = $db->query($sql);
@@ -1611,22 +1611,22 @@ class General extends FactureStats
 	/*
 	 Sum of all unpaid customer suppplier whose due date has passed
 	  */
-	  public function amountSupplierBillExceed(){
+	  public function amountSupplierBillExceed($date = ''){
 		global $db;
 
 	   $sql = "SELECT SUM(total_ttc) as total_ttc ";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-	   $sql .= " WHERE paye = 0";
+	   $sql .= " WHERE paye = 0 ";
 	   $sql .= " AND fk_statut = 1";
 	   $sql .= " AND type != 3";
-	   $sql .= " AND date_lim_reglement < ".dol_now();
-	   $sql .= " ORDER BY date_lim_reglement DESC ";
+		$sql .= " AND date_lim_reglement < '" . $date . "' ";
 
 		$resql = $db->query($sql);
+		$result = [];
 
 		if($resql){
 			while($obj = $db->fetch_object(($resql))){
-				$result = $obj->total_ttc;
+				$result[] = $obj->total_ttc;
 			}
 		}
 	   return $result;
@@ -1636,7 +1636,7 @@ class General extends FactureStats
 	 /*
 	  Fetch details for all unpaid supplier invoices whose due date has passed
 	  */
-	  public function fetchSupplierBillExceed(){
+	  public function fetchSupplierBillExceed($date = ''){
 		global $db;
 
 	   $sql = "SELECT rowid, ref, fk_soc, date_lim_reglement ";
@@ -1644,7 +1644,7 @@ class General extends FactureStats
 	   $sql .= " WHERE paye = 0";
 	   $sql .= " AND fk_statut = 1";
 	   $sql .= " AND type != 3";
-	   $sql .= " AND date_lim_reglement < ".dol_now();
+	   $sql .= " AND date_lim_reglement < '" . $date . "' ";
 	   $sql .= " ORDER BY date_lim_reglement DESC ";
 
 	   $resql = $this->db->query($sql);

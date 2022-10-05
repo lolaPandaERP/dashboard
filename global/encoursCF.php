@@ -379,17 +379,16 @@ $dataInfo5 = price($total_outstandingLastMonth - $total_outstandingSupplierOnLas
  * - the outstanding C/F of last month on current year
  * - the outstanding C/F of last month on current year
 */
-$info6 = "Progression";
-$total_cf_currentmonth_year = $total_outstandingCurrentMonth - $total_outstandingSupplierCurrentMonth;
-$resultat = $object->progress($total_cf_currentmonth_year, $dataInfo5);
-
+$info6 = "Comparaison";
+// $resultat = $object->progress($total_outstandingBillOnYear, $total_outstandingSupplierOnYear);
+$resultat = ( ($total_outstandingBillOnYear - $total_outstandingSupplierOnYear) / $total_outstandingBillOnYear ) * 100;
 $dataInfo6 = intval($resultat). "\n%";
 
 // View data intuitively (positive or negative development)
-if ($total_cf_currentmonth_year > ($total_outstandingLastMonth - $total_outstandingSupplierOnLastMonth)) {
+if ($resultat <= 0 ) {
 	$dataInfo6 = '<p style=color:red>' . $dataInfo6;
 } else {
-	$dataInfo6 = '<p style=color:green>-'. $dataInfo6;
+	$dataInfo6 = '<p style=color:green>'. $dataInfo6;
 }
 
 // Load info for outstanding C/F popupinfo
@@ -401,7 +400,7 @@ $thirdPop_data1 = "Factures fournisseurs impayées <strong>(" . $dataItem3 . "\n
 $thirdPop_data2 = "( Factures fournisseurs - factures clients impayées <strong>(" . $dataInfo5 . "\n€) du mois dernier </strong> sur l'exercice en cours (TTC) ) - ( Factures fournisseurs - factures clients impayées <strong> du mois courant </strong> (".$total_cf_currentmonth_year."€) sur l'exercice en cours (TTC) )";
 $thirdPop_data3 = "Progression du montant d'encours fournisseurs/clients (mois courant) par rapport au mois dernier
 					</br> Calcul : ((Valeur d'arrivee - valeur de depart) / valeur de depart) x 100 )
-					</br> Soit : <strong>(( " . $total_cf_currentmonth_year . " - " . $dataInfo5 . ") / " . $dataInfo5 . ") x 100 </strong>";
+					</br> Soit : <strong>(( " . $total_outstandingBillOnYear . " - " . $total_outstandingSupplierOnYear . ") / " . $total_outstandingBillOnYear . ") x 100 </strong>";
 
 /**
  * THIRD GRAPH - Outstanding customer and supplier
@@ -486,12 +485,12 @@ $graphiqueC = $px3->show($amount_total_CFChart);
  */
 
 $invoice = new Facture($db);
-$date = date('Y-m-d', dol_now());
-$arr_amount_exceed = $object->amountCustomerBillExceed($date);
+$date_now = date('Y-m-d', dol_now());
+$arr_amount_exceed = $object->amountCustomerBillExceed($date_now);
 $total_amount_exceed = array_sum($arr_amount_exceed);
 
 // Array of invoices who date due has passed - from oldest to newest
-$invoiceExceedArray = $object->fetchCustomerBillExceed();
+$invoiceExceedArray = $object->fetchCustomerBillExceed($date_now);
 $nb_total_exceed = count($invoiceExceedArray);
 
 $titleItem4 =  '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_options_paf=0">Encours clients dépassés (' . $nb_total_exceed . ') </a>';
@@ -507,9 +506,8 @@ $fourPop_info1 = $titleItem4;
 $fourPop_data1 = "Somme des factures clients impayées <strong>(".price($total_amount_exceed)." €)</strong> dont la date d'échéance a été dépassée
 				  (date limite de réglement est inférieure à la date d'aujourd'hui : <strong>".date('Y-m-d', dol_now())."</strong>";
 
-if(is_array($invoiceExceedArray) && $invoiceExceedArray != null){
-	foreach ($invoiceExceedArray as $res)
-	{
+foreach ($invoiceExceedArray as $res)
+{
 		$societe = new Societe($db);
 		$societe->fetch($res->fk_soc);
 
@@ -518,14 +516,15 @@ if(is_array($invoiceExceedArray) && $invoiceExceedArray != null){
 
 		$refInvoice = $invoice->ref;
 
-		$listeA = '<ul class="list-group">
-					<li class="list-group-item d-flex justify-content-between align-items-center">
-						<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a>
-						<a href="'.DOL_URL_ROOT.'/compta/facture/card.php?facid='.$invoice->id.'">
-							<span class="badge badge-primary">Réf. Facture :  '.$invoice->ref.'</span> Date : '.date('Y-m-d', $invoice->date_lim_reglement).'</span></a>
-						</li></ul>';
-	}
+		$listeA .= '<ul class="list-group">';
+		$listeA .=	'<li class="list-group-item list-group-item-action">';
+		$listeA .=	'<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a></br>';
+		$listeA .=	'<a href="'.DOL_URL_ROOT.'/compta/facture/card.php?facid='.$invoice->id.'">';
+		$listeA .= '<span class="badge badge-primary">Réf. Facture :  '.$invoice->ref.'</span></br> Date : '.date('Y-m-d', $invoice->date_lim_reglement).'</a>';
+		$listeA .= '</li></ul>';
 }
+
+
 
 /**
 * SUPPLIER OUSTANDING EXCEED
@@ -534,7 +533,7 @@ $supplier_invoice = new FactureFournisseur($db);
 $total_amount_supplier_exceed = $object->amountSupplierBillExceed();
 
 // Array of suppliers invoices who date due has passed - from oldest to newest
-$invoiceSupplierExceed = $object->fetchSupplierBillExceed();
+$invoiceSupplierExceed = $object->fetchSupplierBillExceed($date_now);
 $nb_supplier_exceed = count($invoiceSupplierExceed);
 
 $titleItem5 =  '<a href="'.DOL_URL_ROOT.'/fourn/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_options_paf=0">Encours fournisseurs dépassés (' . $nb_supplier_exceed . ') </a>';
@@ -549,32 +548,29 @@ $fivePop_info1 = $titleItem5;
 $fivePop_data1 = "Somme des factures fournisseurs impayées <strong>(".price($total_amount_supplier_exceed)." €)</strong> dont la date d'échéance a été dépassée
 				  (date limite de réglement est inférieure à la date d'aujourd'hui : <strong>".date('Y-m-d', dol_now())."</strong>";
 
-if(is_array($invoiceSupplierExceed) && $invoiceSupplierExceed != null){
-	foreach ($invoiceSupplierExceed as $res2)
-	{
+// On laisse 10 factures par listes
+	foreach ($invoiceSupplierExceed as $res2){
 		$societe = new Societe($db);
 		$societe->fetch($res2->fk_soc);
 
 		$supplier_invoice->fetch($res2->rowid);
 
-		$refSupplierInvoice = $supplier_invoice->ref;
+		$refInvoice = $supplier_invoice->ref;
 
-		$listeB = '<ul class="list-group">
-					<li class="list-group-item d-flex justify-content-between align-items-center">
-						<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a>
-						<a href="'.DOL_URL_ROOT.'/fourn/facture/card.php?facid='.$supplier_invoice->id.'">
-							<span class="badge badge-secondary">Réf. Facture fourn.:  '.$refSupplierInvoice.'</span>
-							Date : '.date('Y-m-d', $supplier_invoice->calculate_date_lim_reglement()).'</span></a>
-						</li></ul>';
+		$listeB .= '<ul class="list-group">';
+		$listeB .=	'<li class="list-group-item list-group-item-action">';
+		$listeB .=	'<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a></br>';
+		$listeB .=	'<a href="'.DOL_URL_ROOT.'/compta/facture/card.php?facid='.$supplier_invoice->id.'">';
+		$listeB .= '<span class="badge badge-primary">Réf. Facture :  '.$supplier_invoice->ref.'</span></br> Date : '.date('Y-m-d', $supplier_invoice->date_echeance).'</a>';
+		$listeB .= '</li></ul>';
 	}
-}
 
 /**
  * OUTSTANDING CUSTOMER EXCEED SINCE + 12 MONTHS
  *  */
 
 $invoice = new Facture($db);
-// $total_amount_exceed = $object->amountCustomerBillExceed($date);
+$total_amount_exceed = $object->amountCustomerBillExceed($date);
 
 // Array of invoices who date due has passed - from oldest to newest
 $invoiceExceedArray = $object->fetchCustomerBillExceed();
@@ -605,13 +601,12 @@ if(is_array($invoiceExceedArray) && $invoiceExceedArray != null){
 
 		$refInvoice = $invoice->ref;
 
-		$listeC = '<ul class="list-group">
-					<li class="list-group-item d-flex justify-content-between align-items-center">
-						<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a>
-						<a href="'.DOL_URL_ROOT.'/compta/facture/card.php?facid='.$invoice->id.'">
-							<span class="badge badge-primary">Réf. Facture :  '.$invoice->ref.'</span>
-							Date : '.date('Y-m-d', $invoice->date_lim_reglement).'</span></a>
-						</li></ul>';
+		$listeC .= '<ul class="list-group">';
+		$listeC .=	'<li class="list-group-item list-group-item-action">';
+		$listeC .=	'<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a></br>';
+		$listeC .=	'<a href="'.DOL_URL_ROOT.'/compta/facture/card.php?facid='.$invoice->id.'">';
+		$listeC .= '<span class="badge badge-primary">Réf. Facture :  '.$invoice->ref.'</span></br> Date : '.date('Y-m-d', $invoice->date_lim_reglement).'</a>';
+		$listeC .= '</li></ul>';
 	}
 }
 
