@@ -131,7 +131,7 @@ $dataInfo1 = price($total_deliveryOrderOnLastMonth) . "\n€";
 // Progression
 $info2 = "Progression";
 
-$result = $object->progress($total_deliveryOrderOnCurrentMonth, $total_deliveryOrderOnLastMonth);
+// $result = $object->progress($total_deliveryOrderOnCurrentMonth, $total_deliveryOrderOnLastMonth);
 $dataInfo2 = $result  ."\n%";
 
 // Infos popup for production in progress
@@ -215,7 +215,7 @@ $nbDeliveryOrderByCurrentMonth = count($result3);
 $dataInfo4 = $nbDeliveryOrderByCurrentMonth;
 
 $info4 = "Progression";
-$result = $object->progress($nbDeliveryOrderByCurrentMonth, $nbDeliveryOrderByLastMonth);
+// $result = $object->progress($nbDeliveryOrderByCurrentMonth, $nbDeliveryOrderByLastMonth);
 $dataInfo4 = $result . "\n%";
 
 // Info popup for number of production in progress
@@ -322,7 +322,7 @@ print load_fiche_titre($langs->trans("Net à produire"));
 
 print $object->load_navbar();
 
-include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes4.php';
+include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxesGraph3.php';
 
 // PRODUCTION LES + PROCHES
 $titleItem1 = "<h4>Productions les + proches</h4>";
@@ -382,7 +382,7 @@ $thirdPop_data2 = "Liste des tiers pour chaques commandes validées";
 											foreach ($result3 as $res)
 											{
 												$societe = new Societe($db);
-												$res = $societe->fetch($res->fk_soc);
+												$societe->fetch($res->fk_soc);
 
 												$commande = new Commande($db);
 												$commande->fetch($res->rowid);
