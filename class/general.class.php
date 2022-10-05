@@ -1513,23 +1513,23 @@ class General extends FactureStats
 
 	/*
 	 Sum of all unpaid customer invoices whose due date has passed
-	  */
-	  public function amountCustomerBillExceed(){
+	*/
+	  public function amountCustomerBillExceed($date){
 		global $db;
 
-	   $sql = "SELECT SUM(total_ttc) as total_ttc ";
+	   $sql = "SELECT SUM(total_ttc) as total_ttc";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-	   $sql .= " WHERE paye = 0";
-	   $sql .= " AND fk_statut = 1";
+	   $sql .= " WHERE paye = 0 ";
+	   $sql .= " AND fk_statut !=0 ";
 	   $sql .= " AND type != 3";
-	   $sql .= " AND date_lim_reglement < ".dol_now();
-	   $sql .= " ORDER BY date_lim_reglement DESC ";
+	   $sql .= " AND date_lim_reglement < '" . $date . "' ";
 
 		$resql = $db->query($sql);
+		$result = [];
 
 		if($resql){
 			while($obj = $db->fetch_object(($resql))){
-				$result = $obj->total_ttc;
+				$result[] = $obj->total_ttc;
 			}
 		}
 	   return $result;

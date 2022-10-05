@@ -486,7 +486,9 @@ $graphiqueC = $px3->show($amount_total_CFChart);
  */
 
 $invoice = new Facture($db);
-$total_amount_exceed = $object->amountCustomerBillExceed();
+$date = date('Y-m-d', dol_now());
+$arr_amount_exceed = $object->amountCustomerBillExceed($date);
+$total_amount_exceed = array_sum($arr_amount_exceed);
 
 // Array of invoices who date due has passed - from oldest to newest
 $invoiceExceedArray = $object->fetchCustomerBillExceed();
@@ -572,7 +574,7 @@ if(is_array($invoiceSupplierExceed) && $invoiceSupplierExceed != null){
  *  */
 
 $invoice = new Facture($db);
-$total_amount_exceed = $object->amountCustomerBillExceed();
+// $total_amount_exceed = $object->amountCustomerBillExceed($date);
 
 // Array of invoices who date due has passed - from oldest to newest
 $invoiceExceedArray = $object->fetchCustomerBillExceed();
