@@ -727,8 +727,6 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 	$soldeByMonth = $object->fetchAllDetailBankAccount($currentAccount, $date_start, $date_end);
 	$total_solde = array_sum($soldeByMonth);
 
-	var_dump($total_solde);
-
 	if(date('n', $date_start) == $mm) {
 		// $tresury = $total_solde - $totalMoneyOut + $moneyFlowIn;
 		$total_solde;
