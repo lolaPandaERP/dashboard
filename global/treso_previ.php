@@ -112,15 +112,15 @@ $currentAccount = intval($currentAccount);
 $titleItem1 = "Trésorerie";
 
 $idBankAccount = $object->getIdBankAccount();
-$array_tresury = $object->fetchSoldeOnYear($startFiscalyear, $endYear, $currentAccount);
-$total_tresury = array_sum($array_tresury);
+$total_tresury = $object->totalSoldeCurrentAccount($idBankAccount);
+// $total_tresury = array_sum($array_tresury);
 
 $dataItem1 = price($total_tresury) ."\n€";
 
 $info1 = "Trésorerie M-1";
 
-$soldeOnLastMonth = $object->fetchSoldeOnYear($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
-$dataInfo1 = price($soldeOnLastMonth) ."\n€";
+// $soldeOnLastMonth = $object->fetchSoldeOnYear();
+// $dataInfo1 = price($soldeOnLastMonth) ."\n€";
 
 $info2 = "Progression";
 
@@ -149,8 +149,8 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-	$solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
-	$total_solde = array_sum($solde);
+	// $solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
+	// $total_solde = array_sum($solde);
 
 	// $supplier_paid_invoice = $object->allSupplierUnPaidInvoices($date_start, $date_end, 1);
 	// $supplier_paid_deposit = $object->allSupplierUnPaidDeposit($date_start, $date_end, 1);
@@ -279,7 +279,7 @@ if (!$mesg){
 	$px2->SetWidth('500');
 	$chargeGraph = $px2->draw($file, $fileurl);
 }
-// $graphiqueB = $px2->show($chargeGraph);
+$graphiqueB = $px2->show($chargeGraph);
 
 
 
@@ -303,12 +303,11 @@ print load_fiche_titre($langs->trans("Trésorerie et Prévisionnel"));
 
 print $object->load_navbar($currentPage);
 
-include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes2.php';
+include DOL_DOCUMENT_ROOT.'/custom/tab/template/template_boxes3.php';
 
 /**
  *  CUSTOMER OUTSTANDING AT 30 DAYS
  */
-
 
 $titleItem3 = "Encours clients à 30 jours";
 $dataItem3 = 100;
