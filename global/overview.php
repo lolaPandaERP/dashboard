@@ -634,7 +634,6 @@ $titleItem4 = "Trésorerie prévisionnelle";
 $info7 = "Charges mensuelles";
 $info8 = "Recurrent mensuel";
 
-
 /**
  * DATAS CALCUL TRESURY
 */
@@ -707,61 +706,154 @@ $dataInfo8 = price($total_modelInvoice) . "\n€";
 // TRESURY GRAPH
 $file = "tresuryChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
-unset($yy);
+// unset($yy);
 
-for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
+// for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 
-	if(!$yy){
-		$yy = $year;
+// 	if(!$yy){
+// 		$yy = $year;
+// 	}
+
+// 	if($mm == $startMonthFiscalYear && $yy == $year+1){
+// 		break;
+// 	}
+
+// 	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $mm, $year);
+// 	$solde = $object->fetchAllDetailBankAccount($currentAccount);
+
+// 	$datas[$i] = $solde;
+// 	$graph_datas = array();
+// 	$i = 0;
+
+// 	$data[] = [
+// 		html_entity_decode($monthsArr[$mm]), // month
+// 		$totalMarginGraph,
+// 	];
+
+// 	if($mm >= 12){
+// 		$mm = 0;
+// 		$yy++;
+// 	}
+
+// }
+
+// $px7 = new DolGraph();
+// $mesg = $px7->isGraphKo();
+// $legend = ['Année N'];
+
+// if (!$mesg){
+// 	$px7->SetTitle("Evolution de la trésorerie prévisionnelle");
+// 	$px7->datacolor = array(array(138,233,232));
+// 	$px7->SetLegend($legend);
+// 	$px7->SetData($graph_datas);
+// 	$px7->SetType(array('linesnopoint'));
+// 	$px7->setHeight('250');
+// 	$px7->SetWidth('500');
+// 	$tresuryChart = $px7->draw($file, $fileurl);
+// }
+
+	// Loading table $amounts
+	$amounts = array();
+	$sql = "SELECT date_format(b.datev,'%Y%m%d')";
+	$sql .= ", SUM(b.amount)";
+	$sql .= " FROM ".MAIN_DB_PREFIX."bank as b";
+	$sql .= ", ".MAIN_DB_PREFIX."bank_account as ba";
+	$sql .= " WHERE b.fk_account = ba.rowid";
+	$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
+	$sql .= " AND b.datev >= '".$db->escape($year)."-01-01 00:00:00'";
+	$sql .= " AND b.datev <= '".$db->escape($year)."-12-31 23:59:59'";
+	if ($account && $_GET["option"] != 'all') {
+		$sql .= " AND b.fk_account IN (".$db->sanitize($account).")";
+	}
+	$sql .= " GROUP BY date_format(b.datev,'%Y%m%d')";
+
+	$resql = $db->query($sql);
+	if ($resql) {
+		$num = $db->num_rows($resql);
+		$i = 0;
+		while ($i < $num) {
+			$row = $db->fetch_row($resql);
+			$amounts[$row[0]] = $row[1];
+			$i++;
+		}
+		$db->free($resql);
+	} else {
+		dol_print_error($db);
 	}
 
-	if($mm == $startMonthFiscalYear && $yy == $year+1){
-		break;
+	// Calculation of $solde before the start of the graph
+	$solde = 0;
+	$solde = $object->soldeOfCurrentAccount($currentAccount, $yy);
+
+	// Chargement de labels et datas pour tableau 4
+	$labels = array();
+	$datas = array();
+	$datamin = array();
+	$dataall = array();
+
+	$subtotal = 0;
+	$now = time();
+	$day = dol_mktime(12, 0, 0, 1, 1, $year);
+	$textdate = strftime("%Y%m%d", $day);
+	$xyear = substr($textdate, 0, 4);
+	$xday = substr($textdate, 6, 2);
+
+	$i = 0;
+	while ($xyear == $year && $day <= $datetime) {
+		$subtotal = $subtotal + (isset($amounts[$textdate]) ? $amounts[$textdate] : 0);
+		if ($day > $now) {
+			$datas[$i] = ''; // Valeur speciale permettant de ne pas tracer le graph
+		} else {
+			$datas[$i] = $solde + $subtotal;
+		}
+		$datamin[$i] = $object->min_desired;
+		$dataall[$i] = $object->min_allowed;
+		$labels[$i] = dol_print_date($day, "%Y%m");
+		$day += 86400;
+		$textdate = strftime("%Y%m%d", $day);
+		$xyear = substr($textdate, 0, 4);
+		$xday = substr($textdate, 6, 2);
+		$i++;
 	}
 
-	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $mm, $year);
-
-	// Current Year
-	$date_start = $yy.'-'.$mm.'-01'; // first day of month
-	$date_end = $yy.'-'.$mm.'-'.$lastDayMonth; // last day of month
-
-	$soldeByMonth = $object->fetchAllDetailBankAccount($currentAccount, $date_start, $date_end);
-	$total_solde = array_sum($soldeByMonth);
-
-	if(date('n', $date_start) == $mm) {
-		// $tresury = $total_solde - $totalMoneyOut + $moneyFlowIn;
-		$total_solde;
-	 }
-
-	$data5[] = [
-		html_entity_decode($monthsArr[$mm]), // month
-		$tresury,
-	];
-
-	if($mm >= 12){
-		$mm = 0;
-		$yy++;
+	// Fabrication tableau 2
+	$title = $langs->transnoentities("Balance").' - '.$langs->transnoentities("Year").': '.$year;
+	$graph_datas = array();
+	foreach ($datas as $i => $val) {
+		$graph_datas[$i] = array(isset($labels[$i]) ? $labels[$i] : '', $datas[$i]);
+		if ($object->min_desired) {
+			array_push($graph_datas[$i], $datamin[$i]);
+		}
+		if ($object->min_allowed) {
+			array_push($graph_datas[$i], $dataall[$i]);
+		}
 	}
-}
-
-
-
-$px7 = new DolGraph();
-$mesg = $px7->isGraphKo();
-$legend = ['Année N'];
-
-if (!$mesg){
-	$px7->SetTitle("Evolution de la trésorerie nette");
-	$px7->datacolor = array(array(138,233,232));
-	$px7->SetLegend($legend);
-	$px7->SetData($data5);
-	$px7->SetType(array('lines'));
+	$px7 = new DolGraph();
+	$px7->SetData($graph_datas);
+	$arraylegends = array($langs->transnoentities("Solde"));
+	if ($object->min_desired) {
+		array_push($arraylegends, $langs->transnoentities("BalanceMinimalDesired"));
+	}
+	if ($object->min_allowed) {
+		array_push($arraylegends, $langs->transnoentities("BalanceMinimalAllowed"));
+	}
+	$px7->SetLegend($arraylegends);
+	$px7->SetLegendWidthMin(180);
+	$px7->SetMaxValue($px7->GetCeilMaxValue() < 0 ? 0 : $px7->GetCeilMaxValue());
+	$px7->SetMinValue($px7->GetFloorMinValue() > 0 ? 0 : $px7->GetFloorMinValue());
+	$px7->SetTitle($title);
 	$px7->setHeight('250');
 	$px7->SetWidth('500');
-	$tresuryChart = $px7->draw($file, $fileurl);
-}
+	$px7->SetType(array('linesnopoint', 'linesnopoint', 'linesnopoint'));
+	$px7->setBgColor('onglet');
+	$px7->setBgColorGrid(array(255, 255, 255));
+	$px7->SetHideXGrid(true);
+	//$px7->SetHorizTickIncrement(30.41);	// 30.41 jours/mois en moyenne
+	$px7->draw($file, $fileurl);
 
-$graphiqueD = $px7->show($tresuryChart);
+	$graphiqueD = $px7->show($tresuryChart);
+
+
 
 /**
  * For tresury info popup
