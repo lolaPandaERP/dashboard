@@ -295,7 +295,7 @@ $secondPop_data1 = "Total du montant des factures fournisseurs impayées <strong
 $secondPop_data2 = "Total du montant des factures fournisseurs impayées  <strong>(" . price($total_outstandingSupplierOnLastMonth) . "\n€)</strong> sur le mois précédent (de l'exercice fiscal en cours) - HT";
 $secondPop_data3 = "Progression du montant des encours fournisseurs <strong> du mois dernier sur l'exercice fiscal en cours</strong> avec les encours <strong> du mois courant sur l'exercice fiscal en cours </strong>
 				   </br> Calcul : ( (Valeur d'arrivée - Valeur de départ) / Valeur de départ) x 100 )
-				   </br> Soit : <strong>(( " . $total_outstandingCurrentMonth . " - " . $total_outstandingLastMonth . ") / " . $total_outstandingLastMonth . ") x 100 </strong>";
+				   </br> Soit : <strong>(( " . price($total_outstandingSupplierCurrentMonth) . " - " . price($total_outstandingSupplierOnLastMonth) . ") / " . price($total_outstandingSupplierOnLastMonth) . ") x 100 </strong>";
 
 
 /**
@@ -380,7 +380,6 @@ $dataInfo5 = price($total_outstandingLastMonth - $total_outstandingSupplierOnLas
  * - the outstanding C/F of last month on current year
 */
 $info6 = "Comparaison";
-// $resultat = $object->progress($total_outstandingBillOnYear, $total_outstandingSupplierOnYear);
 $resultat = ( ($total_outstandingBillOnYear - $total_outstandingSupplierOnYear) / $total_outstandingBillOnYear ) * 100;
 $dataInfo6 = intval($resultat). "\n%";
 
@@ -518,9 +517,12 @@ foreach ($invoiceExceedArray as $res)
 
 		$listeA .= '<ul class="list-group">';
 		$listeA .=	'<li class="list-group-item list-group-item-action">';
-		$listeA .=	'<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a></br>';
+		$listeA .=	'<strong><a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a></br></strong>';
 		$listeA .=	'<a href="'.DOL_URL_ROOT.'/compta/facture/card.php?facid='.$invoice->id.'">';
-		$listeA .= '<span class="badge badge-primary">Réf. Facture :  '.$invoice->ref.'</span></br> Date : '.date('Y-m-d', $invoice->date_lim_reglement).'</a>';
+		$listeA .= '<div class="pull-left" style="color:blue;">
+						Réf. Facture :  '.$invoice->ref.'</br>
+						Date : '.date('Y-m-d', $invoice->date_lim_reglement).'</a></div>';
+		$listeA .= '<div class="pull-right">Montant :  '.price($invoice->total_ht).' € </span></div>';
 		$listeA .= '</li></ul>';
 }
 
@@ -530,7 +532,8 @@ foreach ($invoiceExceedArray as $res)
 * SUPPLIER OUSTANDING EXCEED
 */
 $supplier_invoice = new FactureFournisseur($db);
-$total_amount_supplier_exceed = $object->amountSupplierBillExceed();
+$arr_amount_supplier_exceed = $object->amountSupplierBillExceed($date_now);
+$total_amount_supplier_exceed = array_sum($arr_amount_supplier_exceed);
 
 // Array of suppliers invoices who date due has passed - from oldest to newest
 $invoiceSupplierExceed = $object->fetchSupplierBillExceed($date_now);
@@ -559,9 +562,12 @@ $fivePop_data1 = "Somme des factures fournisseurs impayées <strong>(".price($to
 
 		$listeB .= '<ul class="list-group">';
 		$listeB .=	'<li class="list-group-item list-group-item-action">';
-		$listeB .=	'<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a></br>';
+		$listeB .=	'<strong><a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a></br></strong>';
 		$listeB .=	'<a href="'.DOL_URL_ROOT.'/compta/facture/card.php?facid='.$supplier_invoice->id.'">';
-		$listeB .= '<span class="badge badge-primary">Réf. Facture :  '.$supplier_invoice->ref.'</span></br> Date : '.date('Y-m-d', $supplier_invoice->date_echeance).'</a>';
+		$listeB .= '<div class="pull-left" style="color:blue;">
+						Réf. Facture :  '.$supplier_invoice->ref.'</br>
+						Date : '.date('Y-m-d', $supplier_invoice->date_echeance).'</a></div>';
+		$listeB .= '<div class="pull-right">Montant :  '.price($supplier_invoice->total_ht).' € </span></div>';
 		$listeB .= '</li></ul>';
 	}
 
@@ -569,29 +575,31 @@ $fivePop_data1 = "Somme des factures fournisseurs impayées <strong>(".price($to
  * OUTSTANDING CUSTOMER EXCEED SINCE + 12 MONTHS
  *  */
 
-$invoice = new Facture($db);
-$total_amount_exceed = $object->amountCustomerBillExceed($date);
+// 1 er du mois courant - 12 mois (1an)
+$exceedInvoiceOlderThanOneYear = date('Y-m-d', mktime(0, 0, 1, $month, 1, $year - 1));
+$arr_amount_older_exceed = $object->amountCustomerBillExceed($exceedInvoiceOlderThanOneYear);
+$total_amount_older_invoice_exceed = array_sum($arr_amount_older_exceed);
 
 // Array of invoices who date due has passed - from oldest to newest
-$invoiceExceedArray = $object->fetchCustomerBillExceed();
-$nb_total_exceed = count($invoiceExceedArray);
+$invoiceOlderExceedArray = $object->fetchCustomerBillExceed($exceedInvoiceOlderThanOneYear);
+$nb_total_older_invoice_exceed = count($invoiceOlderExceedArray);
 
-$titleItem6 =  '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_options_paf=0">Encours clients dépassés (' . $nb_total_exceed . ')
+$titleItem6 =  '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_options_paf=0">Encours clients dépassés (' . $nb_total_older_invoice_exceed . ')
 			    <strong> depuis + de 12 mois </strong></a>';
 
-if ($total_amount_exceed <= 0) {
+if ($total_amount_older_invoice_exceed <= 0) {
 	$dataItem6 = '<p class="badge badge-success" style="color:green;">Aucun encours clients dépassés';
 } else {
-	$dataItem6 = '<p class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i>' . "\n" . price($total_amount_exceed) . "\n€" . '</p>';
+	$dataItem6 = '<p class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i>' . "\n" . price($total_amount_older_invoice_exceed) . "\n€" . '</p>';
 }
 
-// Load info for customer exceed popupinfo
+// Load info for customer older invoice exceed popupinfo
 $sixPop_info1 = $titleItem6;
-$sixPop_data1 = "Somme des factures clients impayées (".price($total_amount_exceed)." €)
+$sixPop_data1 = "Somme des factures clients impayées (".price($total_amount_older_invoice_exceed)." €)
 				  dont la date d'échéance a été dépassé depuis <strong> + de 12 mois </strong>";
 
-if(is_array($invoiceExceedArray) && $invoiceExceedArray != null){
-	foreach ($invoiceExceedArray as $res3)
+if(is_array($invoiceOlderExceedArray) && $invoiceOlderExceedArray != null){
+	foreach ($invoiceOlderExceedArray as $res3)
 	{
 		$societe = new Societe($db);
 		$societe->fetch($res3->fk_soc);
@@ -603,9 +611,12 @@ if(is_array($invoiceExceedArray) && $invoiceExceedArray != null){
 
 		$listeC .= '<ul class="list-group">';
 		$listeC .=	'<li class="list-group-item list-group-item-action">';
-		$listeC .=	'<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a></br>';
+		$listeC .=	'<strong><a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a></br></strong>';
 		$listeC .=	'<a href="'.DOL_URL_ROOT.'/compta/facture/card.php?facid='.$invoice->id.'">';
-		$listeC .= '<span class="badge badge-primary">Réf. Facture :  '.$invoice->ref.'</span></br> Date : '.date('Y-m-d', $invoice->date_lim_reglement).'</a>';
+		$listeC .= '<div class="pull-left" style="color:blue;">
+						Réf. Facture :  '.$invoice->ref.'</br>
+						Date : '.date('Y-m-d', $invoice->date_lim_reglement).'</a></div>';
+		$listeC .= '<div class="pull-right">Montant :  '.price($invoice->total_ht).' € </span></div>';
 		$listeC .= '</li></ul>';
 	}
 }

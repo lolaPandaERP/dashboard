@@ -164,12 +164,10 @@ function showList2() {
 	fivePopup.classList.toggle("show");
 }
 </script>
-<ul>
-	<h4><?php print $titleItem5 ?></h4>
-	<h2><?php print $dataItem5 ?></p></h2>
-</ul>
+<h4><?php print $titleItem5 ?></h4>
+	<h2><?php print $dataItem5 ?></h2>
     <div class="card-body">
-		<?php print $listeB ?>
+			<?php print $listeB ?>
     </div>
 </div>
 <div class="card">
@@ -191,12 +189,10 @@ function showList3() {
 	sixPopup.classList.toggle("show");
 }
 </script>
-<ul>
-	<h4><?php print $titleItem6 ?></h4>
-	<h2><?php print $dataItem6 ?></p></h2>
-</ul>
+<h4><?php print $titleItem6 ?></h4>
+	<h2><?php print $dataItem6 ?></h2>
     <div class="card-body">
-		<?php print $listeC ?>
+			<?php print $listeC ?>
     </div>
 </div>
 
