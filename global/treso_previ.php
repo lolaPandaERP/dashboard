@@ -338,9 +338,8 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 		foreach($array_total_account as $acc){
 			$idaccount = $acc->rowid;
 
-			$solde = $object->fetchAllDetailBankAccount($date_start, $date_end, $idaccount);
-			$amount_treso_by_account = array_sum($solde);
-
+			$solde = $object->soldeOfCurrentAccount($date_start, $date_end, $idaccount, $year);
+			// $amount_treso_by_account = array_sum($solde);
 
 			if(date('n', $date_start) == $i){
 				$amount_treso_by_account += $acc->amount;

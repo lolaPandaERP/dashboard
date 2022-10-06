@@ -1079,22 +1079,27 @@ class General extends FactureStats
 	 * Detail et lié avec la table gérant les comptes et les ecritures bancaires
 	 * pour retrouver le solde de chaque compte
 	 */
-	public function fetchAllDetailBankAccount($date_start, $date_end){
-		$sql = "SELECT SUM(amount) as amount ";
+	public function soldeOfCurrentAccount($account, $year){
+		$sql = "SELECT SUM(b.amount)";
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank as b";
-		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."bank_account as ba";
+		$sql .= ", ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql .= " WHERE b.fk_account = ba.rowid";
-		$sql .= " AND b.datev BETWEEN ".$date_start." AND ".$date_end." ";
+		$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
+		$sql .= " AND b.datev < '".$this->db->escape($year)."-01-01'";
+		if ($account && $_GET["option"] != 'all') {
+			$sql .= " AND b.fk_account IN (".$this->db->sanitize($account).")";
+		}
 
 		$resql = $this->db->query($sql);
-
-		$result = [];
-		if($resql){
-			while($obj = $this->db->fetch_object(($resql))){
-				$result[] = $obj->amount;
-			}
+		if ($resql) {
+			$row = $this->db->fetch_row($resql);
+			$solde = $row[0];
+			$this->db->free($resql);
+		} else {
+			dol_print_error($this->db);
 		}
-		return $result;
+
+		return $solde;
 	}
 
 
@@ -1614,22 +1619,22 @@ class General extends FactureStats
 	  public function amountSupplierBillExceed($date = ''){
 		global $db;
 
-	   $sql = "SELECT SUM(total_ttc) as total_ttc ";
-	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-	   $sql .= " WHERE paye = 0 ";
-	   $sql .= " AND fk_statut = 1";
-	   $sql .= " AND type != 3";
-		$sql .= " AND date_lim_reglement < '" . $date . "' ";
+		$sql = "SELECT SUM(total_ttc) as total_ttc";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+		$sql .= " WHERE paye = 0 ";
+		$sql .= " AND fk_statut = 1";
+		$sql .= " AND type != 3";
+		 $sql .= " AND date_lim_reglement < '" . $date . "' ";
 
-		$resql = $db->query($sql);
-		$result = [];
+		 $resql = $db->query($sql);
+		 $result = [];
 
-		if($resql){
-			while($obj = $db->fetch_object(($resql))){
-				$result[] = $obj->total_ttc;
-			}
-		}
-	   return $result;
+		 if($resql){
+			 while($obj = $db->fetch_object(($resql))){
+				 $result[] = $obj->total_ttc;
+			 }
+		 }
+		return $result;
 	}
 
 
@@ -1639,7 +1644,7 @@ class General extends FactureStats
 	  public function fetchSupplierBillExceed($date = ''){
 		global $db;
 
-	   $sql = "SELECT rowid, ref, fk_soc, date_lim_reglement ";
+	    $sql = "SELECT * ";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
 	   $sql .= " WHERE paye = 0";
 	   $sql .= " AND fk_statut = 1";
@@ -1647,15 +1652,14 @@ class General extends FactureStats
 	   $sql .= " AND date_lim_reglement < '" . $date . "' ";
 	   $sql .= " ORDER BY date_lim_reglement DESC ";
 
-	   $resql = $this->db->query($sql);
+		$resql = $db->query($sql);
+		$result = [];
 
-	   $result = [];
-
-	   if($resql){
-		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj;
-		   }
-	   }
+		if($resql){
+			while($obj = $db->fetch_object(($resql))){
+				$result[] = $obj;
+			}
+		}
 	   return $result;
 	}
 
