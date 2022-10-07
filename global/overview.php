@@ -669,23 +669,18 @@ $total_outstandingBillOnYear = array_sum($outstandingBillOnYear);
 $creditnote_unpaid_supplier_year = $object->allSupplierUnpaidDeposit($startFiscalYear, $endYear);
 $creditnote_unpaid_supplier_year = abs($creditnote_unpaid_supplier_year); //convert negative amount to positive for calculation
 
+// Total
 $moneyFlowIn = $total_outstandingBillOnYear + $creditnote_unpaid_supplier_year;
 
+
 /**
- *  End Money flow in
+ *  DETAIL CHARGES
  */
 
 // Variable expenses
-$array_suppliers_invoice_paid = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 1 ); // paid
-$total_suppliers_invoice_paid = array_sum($array_suppliers_invoice_paid);
-
-$array_suppliers_invoice_unpaid = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 0); // unpaid
-$total_suppliers_invoice_unpaid = array_sum($array_suppliers_invoice_unpaid);
-$total_suppliers_invoice_paid_and_unpaid = $total_suppliers_invoice_unpaid + $total_suppliers_invoice_paid;
-
 $variousPaiements = $object->fetchVariousPaiements($firstDayCurrentMonth, $lastDayCurrentMonth);
-
-$variablesExpenses = $total_suppliers_invoice_paid_and_unpaid + $total_vat_by_month + $variousPaiements;
+$supplier_invoice_variable_expenses = $object->supplier_invoice_variable_expenses($firstDayCurrentMonth, $lastDayCurrentMonth);
+$variablesExpenses = $supplier_invoice_variable_expenses + $variousPaiements;
 
 // Monthly charge
 $totalMonthlyExpenses = floatval( ($variablesExpenses + $staticExpenses));
@@ -696,7 +691,7 @@ $dataItem4 = price($tresury) . "\n€"; // Display tresury
 
 /**
  * Recurrent mensuel :
- * facture client impayees (modele - recurrent mensuel)
+ * facture client impayees
  */
 $array_modelInvoice = $object->fetchModelInvoices($firstDayCurrentMonth, $lastDayCurrentMonth);
 $total_modelInvoice = array_sum($array_modelInvoice);
@@ -706,154 +701,105 @@ $dataInfo8 = price($total_modelInvoice) . "\n€";
 // TRESURY GRAPH
 $file = "tresuryChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
-// unset($yy);
 
-// for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
+// Loading table $amounts
+$amounts = array();
+$sql = "SELECT date_format(b.datev,'%Y%m%d')";
+$sql .= ", SUM(b.amount)";
+$sql .= " FROM ".MAIN_DB_PREFIX."bank as b";
+$sql .= ", ".MAIN_DB_PREFIX."bank_account as ba";
+$sql .= " WHERE b.fk_account = ba.rowid";
+$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
+$sql .= " AND b.datev >= '".$db->escape($year)."-01-01 00:00:00'";
+$sql .= " AND b.datev <= '".$db->escape($year)."-12-31 23:59:59'";
+if ($account && $_GET["option"] != 'all') {
+	$sql .= " AND b.fk_account IN (".$db->sanitize($account).")";
+}
+$sql .= " GROUP BY date_format(b.datev,'%Y%m%d')";
 
-// 	if(!$yy){
-// 		$yy = $year;
-// 	}
-
-// 	if($mm == $startMonthFiscalYear && $yy == $year+1){
-// 		break;
-// 	}
-
-// 	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $mm, $year);
-// 	$solde = $object->fetchAllDetailBankAccount($currentAccount);
-
-// 	$datas[$i] = $solde;
-// 	$graph_datas = array();
-// 	$i = 0;
-
-// 	$data[] = [
-// 		html_entity_decode($monthsArr[$mm]), // month
-// 		$totalMarginGraph,
-// 	];
-
-// 	if($mm >= 12){
-// 		$mm = 0;
-// 		$yy++;
-// 	}
-
-// }
-
-// $px7 = new DolGraph();
-// $mesg = $px7->isGraphKo();
-// $legend = ['Année N'];
-
-// if (!$mesg){
-// 	$px7->SetTitle("Evolution de la trésorerie prévisionnelle");
-// 	$px7->datacolor = array(array(138,233,232));
-// 	$px7->SetLegend($legend);
-// 	$px7->SetData($graph_datas);
-// 	$px7->SetType(array('linesnopoint'));
-// 	$px7->setHeight('250');
-// 	$px7->SetWidth('500');
-// 	$tresuryChart = $px7->draw($file, $fileurl);
-// }
-
-	// Loading table $amounts
-	$amounts = array();
-	$sql = "SELECT date_format(b.datev,'%Y%m%d')";
-	$sql .= ", SUM(b.amount)";
-	$sql .= " FROM ".MAIN_DB_PREFIX."bank as b";
-	$sql .= ", ".MAIN_DB_PREFIX."bank_account as ba";
-	$sql .= " WHERE b.fk_account = ba.rowid";
-	$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
-	$sql .= " AND b.datev >= '".$db->escape($year)."-01-01 00:00:00'";
-	$sql .= " AND b.datev <= '".$db->escape($year)."-12-31 23:59:59'";
-	if ($account && $_GET["option"] != 'all') {
-		$sql .= " AND b.fk_account IN (".$db->sanitize($account).")";
+$resql = $db->query($sql);
+if ($resql) {
+	$num = $db->num_rows($resql);
+	$i = 0;
+	while ($i < $num) {
+		$row = $db->fetch_row($resql);
+		$amounts[$row[0]] = $row[1];
+		$i++;
 	}
-	$sql .= " GROUP BY date_format(b.datev,'%Y%m%d')";
+	$db->free($resql);
+} else {
+	dol_print_error($db);
+}
 
-	$resql = $db->query($sql);
-	if ($resql) {
-		$num = $db->num_rows($resql);
-		$i = 0;
-		while ($i < $num) {
-			$row = $db->fetch_row($resql);
-			$amounts[$row[0]] = $row[1];
-			$i++;
-		}
-		$db->free($resql);
+// Calculation of $solde before the start of the graph
+$solde = 0;
+$solde = $object->soldeOfCurrentAccount($currentAccount, $yy);
+
+// Chargement de labels et datas pour tableau 4
+$labels = array();
+$datas = array();
+$datamin = array();
+$dataall = array();
+
+$subtotal = 0;
+$now = time();
+$day = dol_mktime(12, 0, 0, 1, 1, $year);
+$textdate = strftime("%Y%m%d", $day);
+$xyear = substr($textdate, 0, 4);
+$xday = substr($textdate, 6, 2);
+
+$i = 0;
+while ($xyear == $year && $day <= $datetime) {
+	$subtotal = $subtotal + (isset($amounts[$textdate]) ? $amounts[$textdate] : 0);
+	if ($day > $now) {
+		$datas[$i] = ''; // Valeur speciale permettant de ne pas tracer le graph
 	} else {
-		dol_print_error($db);
+		$datas[$i] = $solde + $subtotal;
 	}
-
-	// Calculation of $solde before the start of the graph
-	$solde = 0;
-	$solde = $object->soldeOfCurrentAccount($currentAccount, $yy);
-
-	// Chargement de labels et datas pour tableau 4
-	$labels = array();
-	$datas = array();
-	$datamin = array();
-	$dataall = array();
-
-	$subtotal = 0;
-	$now = time();
-	$day = dol_mktime(12, 0, 0, 1, 1, $year);
+	$datamin[$i] = $object->min_desired;
+	$dataall[$i] = $object->min_allowed;
+	$labels[$i] = dol_print_date($day, "%Y%m");
+	$day += 86400;
 	$textdate = strftime("%Y%m%d", $day);
 	$xyear = substr($textdate, 0, 4);
 	$xday = substr($textdate, 6, 2);
+	$i++;
+}
 
-	$i = 0;
-	while ($xyear == $year && $day <= $datetime) {
-		$subtotal = $subtotal + (isset($amounts[$textdate]) ? $amounts[$textdate] : 0);
-		if ($day > $now) {
-			$datas[$i] = ''; // Valeur speciale permettant de ne pas tracer le graph
-		} else {
-			$datas[$i] = $solde + $subtotal;
-		}
-		$datamin[$i] = $object->min_desired;
-		$dataall[$i] = $object->min_allowed;
-		$labels[$i] = dol_print_date($day, "%Y%m");
-		$day += 86400;
-		$textdate = strftime("%Y%m%d", $day);
-		$xyear = substr($textdate, 0, 4);
-		$xday = substr($textdate, 6, 2);
-		$i++;
-	}
-
-	// Fabrication tableau 2
-	$title = $langs->transnoentities("Balance").' - '.$langs->transnoentities("Year").': '.$year;
-	$graph_datas = array();
-	foreach ($datas as $i => $val) {
-		$graph_datas[$i] = array(isset($labels[$i]) ? $labels[$i] : '', $datas[$i]);
-		if ($object->min_desired) {
-			array_push($graph_datas[$i], $datamin[$i]);
-		}
-		if ($object->min_allowed) {
-			array_push($graph_datas[$i], $dataall[$i]);
-		}
-	}
-	$px7 = new DolGraph();
-	$px7->SetData($graph_datas);
-	$arraylegends = array($langs->transnoentities("Solde"));
+// Fabrication tableau 2
+$title = $langs->transnoentities("Balance").' - '.$langs->transnoentities("Year").': '.$year;
+$graph_datas = array();
+foreach ($datas as $i => $val) {
+	$graph_datas[$i] = array(isset($labels[$i]) ? $labels[$i] : '', $datas[$i]);
 	if ($object->min_desired) {
-		array_push($arraylegends, $langs->transnoentities("BalanceMinimalDesired"));
+		array_push($graph_datas[$i], $datamin[$i]);
 	}
 	if ($object->min_allowed) {
-		array_push($arraylegends, $langs->transnoentities("BalanceMinimalAllowed"));
+		array_push($graph_datas[$i], $dataall[$i]);
 	}
-	$px7->SetLegend($arraylegends);
-	$px7->SetLegendWidthMin(180);
-	$px7->SetMaxValue($px7->GetCeilMaxValue() < 0 ? 0 : $px7->GetCeilMaxValue());
-	$px7->SetMinValue($px7->GetFloorMinValue() > 0 ? 0 : $px7->GetFloorMinValue());
-	$px7->SetTitle($title);
-	$px7->setHeight('250');
-	$px7->SetWidth('500');
-	$px7->SetType(array('linesnopoint', 'linesnopoint', 'linesnopoint'));
-	$px7->setBgColor('onglet');
-	$px7->setBgColorGrid(array(255, 255, 255));
-	$px7->SetHideXGrid(true);
-	//$px7->SetHorizTickIncrement(30.41);	// 30.41 jours/mois en moyenne
-	$px7->draw($file, $fileurl);
+}
+$px7 = new DolGraph();
+$px7->SetData($graph_datas);
+$arraylegends = array($langs->transnoentities("Solde"));
+if ($object->min_desired) {
+	array_push($arraylegends, $langs->transnoentities("BalanceMinimalDesired"));
+}
+if ($object->min_allowed) {
+	array_push($arraylegends, $langs->transnoentities("BalanceMinimalAllowed"));
+}
+$px7->SetLegend($arraylegends);$px7->SetLegendWidthMin(180);
+$px7->SetMaxValue($px7->GetCeilMaxValue() < 0 ? 0 : $px7->GetCeilMaxValue());
+$px7->SetMinValue($px7->GetFloorMinValue() > 0 ? 0 : $px7->GetFloorMinValue());
+$px7->SetTitle($title);
+$px7->setHeight('250');
+$px7->SetWidth('500');
+$px7->SetType(array('linesnopoint', 'linesnopoint', 'linesnopoint'));
+$px7->setBgColor('onglet');
+$px7->setBgColorGrid(array(255, 255, 255));
+$px7->SetHideXGrid(true);
+$px7->draw($file, $fileurl);
 
-	$graphiqueD = $px7->show($tresuryChart);
-
-
+$graphiqueD = $px7->show($tresuryChart);
 
 /**
  * For tresury info popup
@@ -883,7 +829,7 @@ $fourPop_data2 = "<ul><li>charges variables (".price($variablesExpenses)."\n€)
 
 				<br> <strong> <li>Détail charges fixes </strong> : Salaires (".price($arr_salarys)."\n€) </strong> +  emprunts (".price($emprunts)."\n€) </strong> + charges sociales et fiscales (".price($socialesTaxes_charges)."\n€) </strong> </li>
 				<i style='color:blue;'>Les charges fixes sont calculées sur le mois précédent </i></br>
-				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur le mois courant (".price($total_suppliers_invoice_paid_and_unpaid)."\n€) </strong> + paiements divers (sens crédit : ".price($variousPaiements)."\n€) + TVA du mois courant (indisponible) + notes frais payés  (".price($total_expense)."\n€) </li>
+				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur le mois courant (".price($supplier_invoice_variable_expenses)."\n€) </strong> + paiements divers (sens crédit : ".price($variousPaiements)."\n€) + TVA du mois courant (indisponible) + notes frais payés  (".price($total_expense)."\n€) </li>
 				</ul>";
 
 $fourPop_data3 = "Montant total (HT) des modèles de factures client ".price($total_modelInvoice)."\n€";

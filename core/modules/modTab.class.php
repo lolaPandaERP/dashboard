@@ -798,10 +798,9 @@ class modTab extends DolibarrModules
 		if ($result < 0) return -1; // Do not activate module if error 'not allowed' returned when loading module SQL queries (the _load_table run sql with run_sql with the error allowed parameter set to 'default')
 
 		// Create extrafields during init
-		//include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
-		//$extrafields = new ExtraFields($this->db);
-		//$result1=$extrafields->addExtraField('tab_myattr1', "New Attr 1 label", 'boolean', 1,  3, 'thirdparty',   0, 0, '', '', 1, '', 0, 0, '', '', 'tab@tab', '$conf->tab->enabled');
-		//$result2=$extrafields->addExtraField('tab_myattr2', "New Attr 2 label", 'varchar', 1, 10, 'project',      0, 0, '', '', 1, '', 0, 0, '', '', 'tab@tab', '$conf->tab->enabled');
+		include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+		$extrafields = new ExtraFields($this->db);
+		$result1=$extrafields->addExtraField('dash_invoice_CF', "Charge", 'select', 1,  3, 'facture_fourn', 0, 1, '0', array('options'=>array('0'=>'Aucune', '1'=> 'Charge variable', '2'=>'Loyer', '3'=>'Logement', '4'=>'Téléphone', '5'=>'Energie', '6'=>'Emprunts', '7'=>'Divers')), 1, '', 1, '0 signifie que la facture n\'est pas une charge, 1 : signifie que la facture est une charge variable, les autres numéros : correspond à une charge fixe (possibilité de choisir la nature de ladite charge', '', '', 'tab@tab', '$conf->tab->enabled');
 		//$result3=$extrafields->addExtraField('tab_myattr3', "New Attr 3 label", 'varchar', 1, 10, 'bank_account', 0, 0, '', '', 1, '', 0, 0, '', '', 'tab@tab', '$conf->tab->enabled');
 		//$result4=$extrafields->addExtraField('tab_myattr4', "New Attr 4 label", 'select',  1,  3, 'thirdparty',   0, 1, '', array('options'=>array('code1'=>'Val1','code2'=>'Val2','code3'=>'Val3')), 1,'', 0, 0, '', '', 'tab@tab', '$conf->tab->enabled');
 		//$result5=$extrafields->addExtraField('tab_myattr5', "New Attr 5 label", 'text',    1, 10, 'user',         0, 0, '', '', 1, '', 0, 0, '', '', 'tab@tab', '$conf->tab->enabled');

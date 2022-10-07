@@ -1740,17 +1740,44 @@ class General extends FactureStats
 	}
 
 	/**
+	 * Utilise pour le calcul des charges variables :
+	 * seules les factures avec l'extrafield "dash_invoice_cf" = 1 sont considérées cm des charges variables.
+	 */
+	public function supplier_invoice_variable_expenses($date_start, $date_end = ''){
+
+		$sql = "SELECT ff.total_ttc ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn as ff";
+		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."facture_fourn_extrafields as ffe";
+		$sql .= " ON ffe.fk_object = ff.rowid";
+		$sql .= " WHERE ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end. "'";
+		$sql .= " AND ff.fk_statut != 0";
+		$sql .= " AND ff.type != 3";
+		$sql .= " AND ffe.dash_invoice_CF = 1";
+
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$supplier_invoice_variable_expenses = $obj->total_ttc;
+			}
+			$this->db->free($resql);
+		}
+		return $supplier_invoice_variable_expenses;
+	}
+
+	/**
 	 * Calcul pour le montant des charges variables
 	 * Doit prendre en compte :
 	 *		- factures fournisseurs impayées
 	 *		- le total de la TVA du mois en cours
 	 */
-	 public function fetchVariablesExpenses($date_start, $date_end, $supplier_invoice, $tva){
+	 public function fetchVariablesExpenses($date_start, $date_end, $supplier_invoice_variable_expenses, $tva){
 
-		$supplier_invoice = $this->outstandingSupplier($date_start, $date_end, 0);
+		$supplier_invoice_variable_expenses = $this->supplier_invoice_variable_expenses($date_start, $date_end, 0);
 		$tva = $this->fetchTVA($date_start, $date_end);
 
-		$resultat = ($supplier_invoice + $tva);
+		$resultat = ($supplier_invoice_variable_expenses + $tva);
 		return $resultat;
 	 }
 
@@ -1778,6 +1805,41 @@ class General extends FactureStats
 		return $result;
 	 }
 
+	 /**
+	 * Utilise pour le calcul des charges fixes (ensemble)
+	 * seules les factures avec l'extrafield "dash_invoice_cf"> 1 sont considérées cm des charges fixes.
+	 * @param int dash_invoice_CF 		Diferentes valeurs existent :
+	 * 2 : loyer,
+	 * 3:logement,
+	 * 4:Telephone,
+	 * 5:energie,
+	 * 6:Emprunt,
+	 * 7:Divers
+	 */
+	public function supplier_invoice_static_expenses($date_start, $date_end = ''){
+
+		$sql = "SELECT SUM(ff.total_ttc) as ff.total_ttc";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn_extrafields as ffe";
+		$sql .= " INNER JOIN " . MAIN_DB_PREFIX . "facture_fourn as ff";
+		$sql .= " WHERE ffe.fk_object = ff.rowid";
+		$sql .= " AND ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end. "'";
+		$sql .= " AND ff.fk_statut != 0";
+		$sql .= " AND ff.type != 3";
+		$sql .= " AND ff.paye = 0";
+		$sql .= " AND ffe.dash_invoice_CF > 1";
+
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$supplier_invoice_variable_expenses = $obj->total_ttc;
+			}
+			$this->db->free($resql);
+		}
+
+		return $supplier_invoice_variable_expenses;
+	}
 
 	/**
 	 * Retourne le montant total des charges sociales et fiscales sur une période donnée
@@ -1800,26 +1862,33 @@ class General extends FactureStats
 		return $socialAndTaxesCharges;
 	}
 
-	/**
-	 * Retourne le montant total (capital) des emprunts sur une période donnée
+	 /**
+	 * Utilise pour le calcul des charges fixes (emprunt)
+	 * seules les factures avec l'extrafield "dash_invoice_cf" = 6 sont considérées cm des emprunts.
+	 * @param int dash_invoice_CF 		6 : Emprunt
 	 */
 	public function fetchEmprunts($date_start, $date_end){
 
-		// EMPRUNTS
-		$sql = "SELECT SUM(capital) as capital";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "loan";
-		$sql .= " WHERE datestart BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
-		// $sql .= "AND fk_bank = ".$currentAccount;
+
+		$sql = "SELECT ff.total_ttc ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn as ff";
+		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."facture_fourn_extrafields as ffe";
+		$sql .= " ON ffe.fk_object = ff.rowid";
+		$sql .= " WHERE ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end. "'";
+		$sql .= " AND ff.fk_statut != 0";
+		$sql .= " AND ff.type != 3";
+		$sql .= " AND ffe.dash_invoice_CF = 6";
 
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
 			if ($this->db->num_rows($resql)) {
 				$obj = $this->db->fetch_object($resql);
-				$emprunts = $obj->capital;
+				$emprunts = $obj->total_ttc;
 			}
 			$this->db->free($resql);
 		}
+
 		return $emprunts;
 	}
 
