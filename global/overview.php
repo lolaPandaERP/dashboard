@@ -651,14 +651,14 @@ $total_emprunts = array_sum($arrEmprunts);
 $array_suppliers_invoice_cf = $object->supplier_invoice_static_expenses($firstDayLastMonth, $lastDayLastMonth);
 $total_suppliers_invoice_cf = array_sum($array_suppliers_invoice_cf);
 
-$staticExpenses = ($arr_salarys + $socialesTaxes_charges + $total_emprunts); // static expenses total
+$staticExpenses = ($arr_salarys + $socialesTaxes_charges + $total_emprunts + $total_suppliers_invoice_cf); // static expenses total
 
 // TODO : vat by current month
 // $total_vat_by_month = $object->fetchTVA($firstDayLastMonth, $lastDayLastMonth);
 $total_expense = $object->fetchExpenses($firstDayLastMonth, $lastDayLastMonth); // expenses
 
 // Total Money flow out
-$totalMoneyOut = ($staticExpenses + $total_vat_by_month + $total_expense + $total_suppliers_invoice_cf);
+$totalMoneyOut = ($staticExpenses + $total_vat_by_month + $total_expense);
 
 /**
  *  Money flow in

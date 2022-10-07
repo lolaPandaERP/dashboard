@@ -1800,7 +1800,7 @@ class General extends FactureStats
 		$sql .= " WHERE ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end. "'";
 		$sql .= " AND ff.fk_statut != 0";
 		$sql .= " AND ff.type != 3";
-		$sql .= " AND ffe.dash_invoice_CF > 1";
+		$sql .= " AND ffe.dash_invoice_CF > 1 AND ffe.dash_invoice_CF != 5";
 
 		$resql = $this->db->query($sql);
 
