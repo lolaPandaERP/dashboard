@@ -165,6 +165,7 @@ $datenow_lastyear = date('Y-m-d', mktime(0, 0, 1, $month, date('d'), $year - 1))
 $total_invoice_month_lastyear = $object->turnover($startFiscalLastyear, $datenow_lastyear);
 $total_deposit_month_lastyear = $object->avoir($startFiscalLastyear, $datenow_lastyear);
 $closed_invoice = $object->closedInvoice($startFiscalLastyear, $datenow_lastyear);
+
 $total_month_lastyear = $total_invoice_month_lastyear + $total_deposit_month_lastyear - $closed_invoice;
 
 $result = $object->progress($total_month_year, $total_month_lastyear);
@@ -684,8 +685,13 @@ $moneyFlowIn = $total_outstandingBillOnYear + $creditnote_unpaid_supplier_year;
 $variousPaiements = $object->fetchVariousPaiements($firstDayCurrentMonth, $lastDayCurrentMonth);
 $unpaid_supplier_invoices = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 0);
 $paid_supplier_invoices = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 1);
-$total_suppliers_invoices = $unpaid_supplier_invoices + $paid_supplier_invoices;
-$variablesExpenses = $supplier_invoice_variable_expenses + $variousPaiements;
+
+$total_unpaid_supplier_invoices = array_sum($unpaid_supplier_invoices);
+$total_paid_supplier_invoices = array_sum($paid_supplier_invoices);
+
+$total_suppliers_invoices = $total_unpaid_supplier_invoices + $total_paid_supplier_invoices;
+
+$variablesExpenses = $total_suppliers_invoices + $variousPaiements;
 
 // Monthly charge
 $totalMonthlyExpenses = floatval( ($variablesExpenses + $staticExpenses));
@@ -700,7 +706,6 @@ $dataItem4 = price($tresury) . "\n€"; // Display tresury
  */
 $array_modelInvoice = $object->fetchModelInvoices($firstDayCurrentMonth, $lastDayCurrentMonth);
 $total_modelInvoice = array_sum($array_modelInvoice);
-
 $dataInfo8 = price($total_modelInvoice) . "\n€";
 
 // TRESURY GRAPH

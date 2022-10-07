@@ -586,7 +586,7 @@ $fivePop_data1 = "Somme des factures fournisseurs impayées <strong>(".price($to
 		$listeB .= '<ul class="list-group">';
 		$listeB .=	'<li class="list-group-item list-group-item-action">';
 		$listeB .=	'<strong><a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$societe->id.'"></i>'.$societe->name.'</a></br></strong>';
-		$listeB .=	'<a href="'.DOL_URL_ROOT.'/compta/facture/card.php?facid='.$supplier_invoice->id.'">';
+		$listeB .=	'<a href="'.DOL_URL_ROOT.'/fourn/facture/card.php?facid='.$supplier_invoice->id.'">';
 		$listeB .= '<div class="pull-left" style="color:blue;">
 						Réf. Facture :  '.$supplier_invoice->ref.'</br>
 						Date : '.date('Y-m-d', $supplier_invoice->date_echeance).'</a></div>';

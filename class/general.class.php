@@ -1644,23 +1644,23 @@ class General extends FactureStats
 	  public function fetchSupplierBillExceed($date = '', $first, $byPage){
 		global $db;
 
-	    $sql = "SELECT * ";
-	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-	   $sql .= " WHERE paye = 0";
-	   $sql .= " AND fk_statut = 1";
-	   $sql .= " AND type != 3";
-	   $sql .= " AND date_lim_reglement < '" . $date . "' ";
-	   $sql .= " ORDER BY date_lim_reglement ASC LIMIT ".$first.",$byPage";
+		$sql = "SELECT * ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+		$sql .= " WHERE paye = 0";
+		$sql .= " AND fk_statut = 1";
+		$sql .= " AND type != 3";
+		$sql .= " AND date_lim_reglement < '" . $date . "' ";
+		$sql .= " ORDER BY date_lim_reglement ASC LIMIT ".$first.",$byPage";
 
-		$resql = $db->query($sql);
-		$result = [];
+			$resql = $db->query($sql);
+			$result = [];
 
-		if($resql){
-			while($obj = $db->fetch_object(($resql))){
-				$result[] = $obj;
+			if($resql){
+				while($obj = $db->fetch_object(($resql))){
+					$result[] = $obj;
+				}
 			}
-		}
-	   return $result;
+		return $result;
 	}
 
 	 /*
