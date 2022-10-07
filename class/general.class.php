@@ -1543,7 +1543,7 @@ class General extends FactureStats
 	 /*
 	  Fetch details of all unpaid customer invoices whose due date has passed
 	  */
-	public function fetchCustomerBillExceed($date = ''){
+	public function fetchCustomerBillExceed($date = '', $first, $byPage){
 		global $db;
 
 	   $sql = "SELECT * ";
@@ -1552,7 +1552,7 @@ class General extends FactureStats
 	   $sql .= " AND fk_statut = 1";
 	   $sql .= " AND type != 3";
 	   $sql .= " AND date_lim_reglement < '" . $date . "' ";
-	   $sql .= " ORDER BY date_lim_reglement DESC ";
+	   $sql .= " ORDER BY date_lim_reglement ASC LIMIT ".$first.",$byPage";
 
 		$resql = $db->query($sql);
 		$result = [];
@@ -1641,7 +1641,7 @@ class General extends FactureStats
 	 /*
 	  Fetch details for all unpaid supplier invoices whose due date has passed
 	  */
-	  public function fetchSupplierBillExceed($date = ''){
+	  public function fetchSupplierBillExceed($date = '', $first, $byPage){
 		global $db;
 
 	    $sql = "SELECT * ";
@@ -1650,7 +1650,7 @@ class General extends FactureStats
 	   $sql .= " AND fk_statut = 1";
 	   $sql .= " AND type != 3";
 	   $sql .= " AND date_lim_reglement < '" . $date . "' ";
-	   $sql .= " ORDER BY date_lim_reglement DESC ";
+	   $sql .= " ORDER BY date_lim_reglement ASC LIMIT ".$first.",$byPage";
 
 		$resql = $db->query($sql);
 		$result = [];

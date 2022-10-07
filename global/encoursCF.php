@@ -276,14 +276,14 @@ $info4 = "Progression";
 $outstandingSupplierLastMonthCurrentMonth = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 0); // Encours C sur le mois dernier de l'exercice fiscal précédent
 $total_outstandingSupplierCurrentMonth = array_sum($outstandingSupplierLastMonthCurrentMonth);
 
-$resultat = $object->progress($total_outstandingSupplierOnLastMonth, $total_outstandingSupplierCurrentMonth);
+$resultat = $object->progress($total_outstandingSupplierCurrentMonth, $total_outstandingSupplierOnLastMonth);
 $dataInfo4 = intval($resultat). "\n%";
 
 // View data intuitively (positive or negative development)
 if ($total_outstandingSupplierCurrentMonth > $total_outstandingSupplierOnLastMonth) {
 	$dataInfo4 = '<p style=color:red>' . $dataInfo4;
 } else {
-	$dataInfo4 = '<p style=color:green>-'. $dataInfo4;
+	$dataInfo4 = '<p style=color:green>'. $dataInfo4;
 }
 
 // Load info for outstanding supplier popupinfo
@@ -480,17 +480,38 @@ $graphiqueC = $px3->show($amount_total_CFChart);
 
 
 /**
+ *  PAGINATION LISTES:
+ */
+
+// On détermine sur quelle page on se trouve
+if(isset($_GET['page']) && !empty($_GET['page'])){
+    $currentPage = (int) strip_tags($_GET['page']);
+} else {
+    $currentPage = 1;
+}
+
+/**
  * CUSTOMER OUSTANDING EXCEED
  */
 
 $invoice = new Facture($db);
 $date_now = date('Y-m-d', dol_now());
+
 $arr_amount_exceed = $object->amountCustomerBillExceed($date_now);
 $total_amount_exceed = array_sum($arr_amount_exceed);
 
+// On détermine le nombre d'enregistrements par page
+$byPage = 10;
+
+// Calcul du premier enregistrement de la page
+$first = ($currentPage * $byPage) - $byPage;
+
 // Array of invoices who date due has passed - from oldest to newest
-$invoiceExceedArray = $object->fetchCustomerBillExceed($date_now);
-$nb_total_exceed = count($invoiceExceedArray);
+$invoiceExceedArray = $object->fetchCustomerBillExceed($date_now, $first, $byPage);
+$nb_total_exceed = count($invoiceExceedArray); // nb invoices
+
+// On calcule le nombre de pages total pour la pagination
+$pagesCustomerInvoice = ceil($nb_total_exceed / $byPage);
 
 $titleItem4 =  '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_options_paf=0">Encours clients dépassés (' . $nb_total_exceed . ') </a>';
 
@@ -525,19 +546,20 @@ foreach ($invoiceExceedArray as $res)
 		$listeA .= '<div class="pull-right">Montant :  '.price($invoice->total_ht).' € </span></div>';
 		$listeA .= '</li></ul>';
 }
-
-
-
 /**
 * SUPPLIER OUSTANDING EXCEED
 */
+
 $supplier_invoice = new FactureFournisseur($db);
 $arr_amount_supplier_exceed = $object->amountSupplierBillExceed($date_now);
 $total_amount_supplier_exceed = array_sum($arr_amount_supplier_exceed);
 
 // Array of suppliers invoices who date due has passed - from oldest to newest
-$invoiceSupplierExceed = $object->fetchSupplierBillExceed($date_now);
+$invoiceSupplierExceed = $object->fetchSupplierBillExceed($date_now, $first, $byPage);
 $nb_supplier_exceed = count($invoiceSupplierExceed);
+
+// On calcule le nombre de pages total pour la pagination
+$pagesSupplierInvoices = ceil($nb_supplier_exceed / $byPage);
 
 $titleItem5 =  '<a href="'.DOL_URL_ROOT.'/fourn/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_options_paf=0">Encours fournisseurs dépassés (' . $nb_supplier_exceed . ') </a>';
 
@@ -551,7 +573,7 @@ $fivePop_info1 = $titleItem5;
 $fivePop_data1 = "Somme des factures fournisseurs impayées <strong>(".price($total_amount_supplier_exceed)." €)</strong> dont la date d'échéance a été dépassée
 				  (date limite de réglement est inférieure à la date d'aujourd'hui : <strong>".date('Y-m-d', dol_now())."</strong>";
 
-// On laisse 10 factures par listes
+
 	foreach ($invoiceSupplierExceed as $res2){
 		$societe = new Societe($db);
 		$societe->fetch($res2->fk_soc);
@@ -581,8 +603,11 @@ $arr_amount_older_exceed = $object->amountCustomerBillExceed($exceedInvoiceOlder
 $total_amount_older_invoice_exceed = array_sum($arr_amount_older_exceed);
 
 // Array of invoices who date due has passed - from oldest to newest
-$invoiceOlderExceedArray = $object->fetchCustomerBillExceed($exceedInvoiceOlderThanOneYear);
+$invoiceOlderExceedArray = $object->fetchCustomerBillExceed($exceedInvoiceOlderThanOneYear, $first, $byPage);
 $nb_total_older_invoice_exceed = count($invoiceOlderExceedArray);
+
+// On calcule le nombre de pages total pour la pagination
+$pagesOlderInvoice = ceil($nb_total_older_invoice_exceed / $byPage);
 
 $titleItem6 =  '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?sortfield=f.date_lim_reglement&sortorder=desc&begin=&socid=&contextpage=invoicelist&limit=500&search_datelimit_endday='.date('j', $datetime).'&search_datelimit_endmonth='.date('m', $datetime).'&search_datelimit_endyear='.$year.'&search_type=-1&search_status=1&search_options_paf=0">Encours clients dépassés (' . $nb_total_older_invoice_exceed . ')
 			    <strong> depuis + de 12 mois </strong></a>';
