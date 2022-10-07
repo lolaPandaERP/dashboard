@@ -154,7 +154,7 @@ $outstandingCustomerCurrentMonth = $object->outstandingBill($firstDayCurrentMont
 $total_outstandingCurrentMonth = array_sum($outstandingCustomerCurrentMonth);
 
 $info2 = "Progression ";
-$resultat = $object->progress($total_outstandingCurrentMonth, $total_outstandingLastMonth);
+$resultat = ( ($total_outstandingLastMonth - $total_outstandingCurrentMonth) / $total_outstandingLastMonth) * 100;
 $dataInfo2 = intval($resultat) . "\n%";
 
 // Condition d'affichage pour la progression
@@ -276,7 +276,8 @@ $info4 = "Progression";
 $outstandingSupplierLastMonthCurrentMonth = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 0); // Encours C sur le mois dernier de l'exercice fiscal précédent
 $total_outstandingSupplierCurrentMonth = array_sum($outstandingSupplierLastMonthCurrentMonth);
 
-$resultat = $object->progress($total_outstandingSupplierCurrentMonth, $total_outstandingSupplierOnLastMonth);
+// $resultat = $object->progress($total_outstandingSupplierCurrentMonth, $total_outstandingSupplierOnLastMonth);
+$resultat = ( ($total_outstandingSupplierOnLastMonth - $total_outstandingSupplierCurrentMonth) / $total_outstandingSupplierOnLastMonth) * 100;
 $dataInfo4 = intval($resultat). "\n%";
 
 // View data intuitively (positive or negative development)
