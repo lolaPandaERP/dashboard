@@ -4,6 +4,7 @@ include('../template/template_admin.php');
 
 <!-- Template 3 -->
 
+<section class="page-content-general">
 <div class="card-deck">
 
 <div class="card">
@@ -27,10 +28,9 @@ function showGraph() {
 	firstPopup.classList.toggle("show");
 }
 </script>
-<ul>
 	<h4><?php print $titleItem1 ?></h4>
 	<h2><?php print $dataItem1 ?></p></h2>
-</ul>
+<hr>
     <div class="card-body">
 		<div class="center-block">
 			<div class="pull-left"><?php print $info1 ?> <h4 class="center"><?php print $dataInfo1 ?></h4></div>
@@ -63,10 +63,9 @@ function showPop2() {
 	secondPopup.classList.toggle("show");
 }
 </script>
-<ul>
 	<h4><?php print $titleItem2 ?></h4>
 	<h2><?php print $dataItem2 ?></p></h2>
-</ul>
+<hr>
     <div class="card-body">
 		<div class="center-block">
 			<div class="pull-left"><?php print $info3 ?> <h4 class="center"><?php print $dataInfo3 ?></h4></div>
@@ -76,6 +75,6 @@ function showPop2() {
 	<div class="chart "><?php print $graphiqueB ?></div>
   </div>
 
-
 </div>
 
+</section>

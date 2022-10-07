@@ -103,9 +103,6 @@ $endyear = $year;
 $startFiscalYear = $conf->global->START_FISCAL_YEAR;
 $startMonthFiscalYear = $object->startMonthForGraphLadder($startFiscalYear, 12);
 
-$currentAccount = $object->getIdBankAccount();
-$currentAccount = intval($currentAccount);
-
 /**
  * TRESURY
  */
