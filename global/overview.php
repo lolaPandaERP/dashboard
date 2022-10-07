@@ -624,7 +624,7 @@ $idaccounts = $object->fetchAllBankAccount();
 $currentAccount = min($idaccounts);
 $currentAccount = (int)$currentAccount;
 
- // Current balance on n year
+// Current balance on n year
 $solde = $object->totalSoldeCurrentAccount($currentAccount);
 
 // details datas for popupinfo (variables charges)
@@ -645,21 +645,24 @@ $info8 = "Recurrent mensuel";
 // Static Expenses details (on prev month)
 $arr_salarys = $object->fetchSalarys($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
 $socialesTaxes_charges = $object->fetchSocialAndTaxesCharges($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
-$emprunts = $object->fetchEmprunts($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
+$arrEmprunts = $object->fetchEmprunts($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
+$total_emprunts = array_sum($arrEmprunts);
 
-$staticExpenses = ($arr_salarys + $socialesTaxes_charges + $emprunts); // static expenses total
+$array_suppliers_invoice_cf = $object->supplier_invoice_static_expenses($firstDayLastMonth, $lastDayLastMonth);
+$total_suppliers_invoice_cf = array_sum($array_suppliers_invoice_cf);
+
+$staticExpenses = ($arr_salarys + $socialesTaxes_charges + $total_emprunts); // static expenses total
 
 // TODO : vat by current month
 // $total_vat_by_month = $object->fetchTVA($firstDayLastMonth, $lastDayLastMonth);
 $total_expense = $object->fetchExpenses($firstDayLastMonth, $lastDayLastMonth); // expenses
 
 // Total Money flow out
-$totalMoneyOut = ($staticExpenses + $total_vat_by_month + $total_expense + $total_supplierOutstandingYear);
+$totalMoneyOut = ($staticExpenses + $total_vat_by_month + $total_expense + $total_suppliers_invoice_cf);
 
 /**
  *  Money flow in
  */
-
 
 // facture client impayes
 $outstandingBillOnYear = $object->outstandingBill($startFiscalyear, $endYear);
@@ -679,7 +682,9 @@ $moneyFlowIn = $total_outstandingBillOnYear + $creditnote_unpaid_supplier_year;
 
 // Variable expenses
 $variousPaiements = $object->fetchVariousPaiements($firstDayCurrentMonth, $lastDayCurrentMonth);
-$supplier_invoice_variable_expenses = $object->supplier_invoice_variable_expenses($firstDayCurrentMonth, $lastDayCurrentMonth);
+$unpaid_supplier_invoices = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 0);
+$paid_supplier_invoices = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 1);
+$total_suppliers_invoices = $unpaid_supplier_invoices + $paid_supplier_invoices;
 $variablesExpenses = $supplier_invoice_variable_expenses + $variousPaiements;
 
 // Monthly charge
@@ -827,7 +832,7 @@ $fourPop_data1 = '<i>Solde du compte en banque <strong>'.$currentAccount->bank.'
 
 $fourPop_data2 = "<ul><li>charges variables (".price($variablesExpenses)."\n€)</strong> + charges fixes (".price($staticExpenses)."\n€)</strong> </li>
 
-				<br> <strong> <li>Détail charges fixes </strong> : Salaires (".price($arr_salarys)."\n€) </strong> +  emprunts (".price($emprunts)."\n€) </strong> + charges sociales et fiscales (".price($socialesTaxes_charges)."\n€) </strong> </li>
+				<br> <strong> <li>Détail charges fixes </strong> : Salaires (".price($arr_salarys)."\n€) </strong> +  emprunts (".price($total_emprunts)."\n€) </strong> + charges sociales et fiscales (".price($socialesTaxes_charges)."\n€) </strong> + factures fournisseurs validées (".price($total_suppliers_invoice_cf)."\n€) </strong> </li>
 				<i style='color:blue;'>Les charges fixes sont calculées sur le mois précédent </i></br>
 				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur le mois courant (".price($supplier_invoice_variable_expenses)."\n€) </strong> + paiements divers (sens crédit : ".price($variousPaiements)."\n€) + TVA du mois courant (indisponible) + notes frais payés  (".price($total_expense)."\n€) </li>
 				</ul>";
