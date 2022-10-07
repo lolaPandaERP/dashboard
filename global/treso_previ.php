@@ -109,30 +109,34 @@ $currentAccount = intval($currentAccount);
 /**
  * TRESURY
  */
-$titleItem1 = "Trésorerie";
+$titleItem1 = "Trésorerie nette";
 
-$idBankAccount = $object->getIdBankAccount();
-$total_tresury = $object->totalSoldeCurrentAccount($idBankAccount);
-// $total_tresury = array_sum($array_tresury);
+$idaccounts = $object->fetchAllBankAccount();
+$currentAccount = min($idaccounts);
+$currentAccount = (int)$currentAccount;
 
-$dataItem1 = price($total_tresury) ."\n€";
+// Current balance on n year
+$solde = $object->totalSoldeCurrentAccount($currentAccount);
 
-$info1 = "Trésorerie M-1";
+$dataItem1 = '<a href="'.DOL_URL_ROOT.'/compta/bank/bankentries_list.php?id='.$currentAccount.'">';
+$dataItem1 .= price($solde) ."\n€";
+$dataItem1 .= '</a>';
 
-// $soldeOnLastMonth = $object->fetchSoldeOnYear();
-// $dataInfo1 = price($soldeOnLastMonth) ."\n€";
+$info1 = "Trésorerie M-1 :";
 
-$info2 = "Progression";
+$info2 = "Progression : ";
 
 // For tresury (popupinfo)
 $firstPop_info1 = $titleItem1;
 $firstPop_info2 = $info1;
 $firstPop_info3 = $info2;
 
-$firstPop_data1 = "Cumul des montants du compte courant sur l'exercice en cours";
-$firstPop_data2 = "Cumul des montants du compte courant sur l'exercice précédent (N-1)";
-$firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100) ";
-
+$firstPop_data1 = "Solde du compte courant sur l'exercice en cours";
+$firstPop_data2 = "Solde du compte courant sur l'exercice précédent ";
+$firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100) où :
+					</br> <strong> VA </strong> = solde de l'exercice fiscal en cours
+					</br> <strong> VD </strong> = solde de l'exercice fiscal précédent
+				   <strong> ( (".$total_month_year." - ".$total_month_lastyear.") / ".$total_month_year.") x 100 </strong>";
 
 $monthsArr = monthArray($langs, 1); // months
 
