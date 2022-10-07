@@ -192,10 +192,12 @@ $graphiqueA = $p1->show($tresuryChart);
 
 // Total charge
 $info3 = "Charges fixes";
+
 // Static Expenses details (on prev month)
 $arr_salarys = $object->fetchSalarys($startFiscalYear, $endYear, $currentAccount);
 $socialesTaxes_charges = $object->fetchSocialAndTaxesCharges($startFiscalYear, $endYear, $currentAccount);
-$emprunts = $object->fetchEmprunts($startFiscalYear, $endYear, $currentAccount);
+$arr_emprunts = $object->fetchEmprunts($startFiscalYear, $endYear, $currentAccount);
+$total_emprunts = array_sum($arr_emprunts);
 
 $staticExpenses = ($arr_salarys + $socialesTaxes_charges + $emprunts); // static expenses total
 

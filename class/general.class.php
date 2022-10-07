@@ -1900,10 +1900,11 @@ class General extends FactureStats
 
 		$salarys = $this->fetchSalarys($date_start, $date_end, $currentAccount);
 		$socialesTaxes_charges = $this->fetchSocialAndTaxesCharges($date_start, $date_end, $currentAccount);
-		$emprunts = $this->fetchEmprunts($date_start, $date_end, $currentAccount);
+		$arr_emprunts = $this->fetchEmprunts($date_start, $date_end, $currentAccount);
+		$total_emprunts = array_sum($arr_emprunts);
 		$variousPaiements = $this->fetchVariousPaiements($date_start, $date_end, $currentAccount);
 
-		$resultat = ($salarys + $socialesTaxes_charges + $emprunts + $variousPaiements);
+		$resultat = ($salarys + $socialesTaxes_charges + $total_emprunts + $variousPaiements);
 
 		return $resultat;
 	}
