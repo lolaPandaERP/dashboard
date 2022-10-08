@@ -1717,7 +1717,8 @@ class General extends FactureStats
 	}
 
 	/**
-	 * Retourne le montant total des notes de frais sur une période donnée
+	 * Retourne le montant total des notes de frais
+	 * sur une période donnée
 	 */
 	public function fetchExpenses($date_start, $date_end = ''){
 
@@ -1782,7 +1783,7 @@ class General extends FactureStats
 
 	 /**
 	 * Utilise pour le calcul des charges fixes (ensemble)
-	 * seules les factures avec l'extrafield "dash_invoice_cf"> 1 sont considérées cm des charges fixes.
+	 * seules les factures avec l'extrafield "dash_invoice_cf"> 1 sont considérées cm des charges fixes (hors enprunts).
 	 * @param int dash_invoice_CF 		Diferentes valeurs existent :
 	 * 2 : loyer,
 	 * 3:logement,
@@ -1791,7 +1792,7 @@ class General extends FactureStats
 	 * 6:Emprunt,
 	 * 7:Divers
 	 */
-	public function supplier_invoice_static_expenses($date_start, $date_end = ''){
+	public function static_charge_excluding_loan($date_start, $date_end = ''){
 
 		$sql = "SELECT * ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn as ff";
@@ -1800,19 +1801,54 @@ class General extends FactureStats
 		$sql .= " WHERE ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end. "'";
 		$sql .= " AND ff.fk_statut != 0";
 		$sql .= " AND ff.type != 3";
-		$sql .= " AND ffe.dash_invoice_CF > 1 AND ffe.dash_invoice_CF != 5";
+		$sql .= " AND ffe.dash_invoice_CF > 0 AND ffe.dash_invoice_CF != 5";
 
 		$resql = $this->db->query($sql);
 
-		$supplier_invoice_variable_expenses = [];
+		$supplier_invoice_variable_charge = [];
 
 		if($resql){
 			while($obj = $this->db->fetch_object(($resql))){
-				$supplier_invoice_variable_expenses[] = $obj->total_ttc;
+				$supplier_invoice_variable_charge[] = $obj->total_ttc;
 			}
 		}
 
-		return $supplier_invoice_variable_expenses;
+		return $supplier_invoice_variable_charge;
+	}
+
+	 /**
+	 * Utilise pour le calcul des charges fixes (ensemble)
+	 * seules les factures avec l'extrafield "dash_invoice_cf"> 1 sont considérées cm des charges fixes (hors enprunts).
+	 * @param int dash_invoice_CF 		Diferentes valeurs existent :
+	 * 2 : loyer,
+	 * 3:logement,
+	 * 4:Telephone,
+	 * 5:energie,
+	 * 6:Emprunt,
+	 * 7:Divers
+	 */
+	public function all_static_charge($date_start, $date_end = ''){
+
+		$sql = "SELECT * ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn as ff";
+		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."facture_fourn_extrafields as ffe";
+		$sql .= " ON ffe.fk_object = ff.rowid";
+		$sql .= " WHERE ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end. "'";
+		$sql .= " AND ff.fk_statut != 0";
+		$sql .= " AND ff.type != 3";
+		$sql .= " AND ffe.dash_invoice_CF > 0 ";
+
+		$resql = $this->db->query($sql);
+
+		$supplier_invoice_variable_charge = [];
+
+		if($resql){
+			while($obj = $this->db->fetch_object(($resql))){
+				$supplier_invoice_variable_charge[] = $obj->total_ttc;
+			}
+		}
+
+		return $supplier_invoice_variable_charge;
 	}
 
 	/**
@@ -1877,12 +1913,12 @@ class General extends FactureStats
 
 		$resql = $this->db->query($sql);
 
-		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$variouspaiments = $obj->amount;
+		$variouspaiments = [];
+
+		if($resql){
+			while($obj = $this->db->fetch_object(($resql))){
+				$variouspaiments[] = $obj->amount;
 			}
-			$this->db->free($resql);
 		}
 
 		return $variouspaiments;

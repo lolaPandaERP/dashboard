@@ -643,15 +643,16 @@ $info8 = "Recurrent mensuel";
  *  Money flow out :
 */
 
-// Static Expenses details (on prev month)
+// Static charges details (on prev month)
 $arr_salarys = $object->fetchSalarys($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
 $socialesTaxes_charges = $object->fetchSocialAndTaxesCharges($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
 $arrEmprunts = $object->fetchEmprunts($firstDayLastMonth, $lastDayLastMonth, $currentAccount);
 $total_emprunts = array_sum($arrEmprunts);
 
-$array_suppliers_invoice_cf = $object->supplier_invoice_static_expenses($firstDayLastMonth, $lastDayLastMonth);
+$array_suppliers_invoice_cf = $object->static_charge_excluding_loan($firstDayLastMonth, $lastDayLastMonth);
 $total_suppliers_invoice_cf = array_sum($array_suppliers_invoice_cf);
 
+// Total static charges
 $staticExpenses = ($arr_salarys + $socialesTaxes_charges + $total_emprunts + $total_suppliers_invoice_cf); // static expenses total
 
 // TODO : vat by current month
@@ -681,20 +682,25 @@ $moneyFlowIn = $total_outstandingBillOnYear + $creditnote_unpaid_supplier_year;
  *  DETAIL CHARGES
  */
 
-// Variable expenses
+// Variable charges
+
+// Various paiements
 $variousPaiements = $object->fetchVariousPaiements($firstDayCurrentMonth, $lastDayCurrentMonth);
+$total_various_paiements = array_sum($variousPaiements);
+
+// All validated supplier invoices (excluding static charges)
 $unpaid_supplier_invoices = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 0);
 $paid_supplier_invoices = $object->outstandingSupplier($firstDayCurrentMonth, $lastDayCurrentMonth, 1);
-
 $total_unpaid_supplier_invoices = array_sum($unpaid_supplier_invoices);
 $total_paid_supplier_invoices = array_sum($paid_supplier_invoices);
 
 $total_suppliers_invoices = $total_unpaid_supplier_invoices + $total_paid_supplier_invoices;
 
-$variablesExpenses = $total_suppliers_invoices + $variousPaiements;
+// Total Variable charges
+$variablesExpenses = $total_suppliers_invoices + $total_various_paiements;
 
 // Monthly charge
-$totalMonthlyExpenses = floatval( ($variablesExpenses + $staticExpenses));
+$totalMonthlyExpenses = floatval(($variablesExpenses + $staticExpenses));
 $dataInfo7 = price($totalMonthlyExpenses) . "\n€";
 
 $tresury = $solde - $totalMoneyOut + $moneyFlowIn; // calcul for net tresury
@@ -837,9 +843,10 @@ $fourPop_data1 = '<i>Solde du compte en banque <strong>'.$currentAccount->bank.'
 
 $fourPop_data2 = "<ul><li>charges variables (".price($variablesExpenses)."\n€)</strong> + charges fixes (".price($staticExpenses)."\n€)</strong> </li>
 
-				<br> <strong> <li>Détail charges fixes </strong> : Salaires (".price($arr_salarys)."\n€) </strong> +  emprunts (".price($total_emprunts)."\n€) </strong> + charges sociales et fiscales (".price($socialesTaxes_charges)."\n€) </strong> + factures fournisseurs validées (".price($total_suppliers_invoice_cf)."\n€) </strong> </li>
+				<br>
+				<strong><li>Détail charges fixes </strong> : Salaires (".price($arr_salarys)."\n€) </strong> + emprunts (".price($total_emprunts)."\n€) </strong> + charges sociales et fiscales (".price($socialesTaxes_charges)."\n€) </strong> + factures fournisseurs validées (hors emprunts : ".price($total_suppliers_invoice_cf)."\n€) </strong> </li>
 				<i style='color:blue;'>Les charges fixes sont calculées sur le mois précédent </i></br>
-				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur le mois courant (".price($supplier_invoice_variable_expenses)."\n€) </strong> + paiements divers (sens crédit : ".price($variousPaiements)."\n€) + TVA du mois courant (indisponible) + notes frais payés  (".price($total_expense)."\n€) </li>
+				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur le mois courant (".price($total_suppliers_invoices)."\n€) </strong> + paiements divers (sens crédit : ".price($total_various_paiements)."\n€) + TVA du mois courant (indisponible) + notes frais payés  (".price($total_expense)."\n€) </li>
 				</ul>";
 
 $fourPop_data3 = "Montant total (HT) des modèles de factures client ".price($total_modelInvoice)."\n€";
