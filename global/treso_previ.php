@@ -74,9 +74,14 @@ $duree = 1;
 $TimestampCurrentYear = strtotime($startFiscalyear);
 $TimestampCurrentLastYear = strtotime($startFiscalLastyear);
 
-// calcul the end date for current and last year
-$endYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentYear));
-$endLastYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentLastYear));
+// the end date automatically for current and last year
+$dateEndYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentYear));
+$TimestampendYear = strtotime($dateEndYear);
+$endYear = date('Y-m-d', strtotime('-'.$duree.'day', $TimestampendYear));
+
+$dateEndLastYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentLastYear));
+$TimestampendLastYear = strtotime($dateEndLastYear);
+$endLastYear = date('Y-m-d', strtotime('-'.$duree.'day', $TimestampendLastYear));
 
 // First day and last day of current mounth
 $firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
@@ -138,11 +143,19 @@ $firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100) où :
 $monthsArr = monthArray($langs, 1); // months
 
 // Graph tresury
-$data = [];
 $file = "tresuryChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 
-for($i = $startMonthFiscalYear; $i <= 12; $i++){
+for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
+
+	if(!$yy){
+		$yy = $year;
+	}
+
+	if($mm == $startMonthFiscalYear && $yy == $year+1){
+		break;
+	}
+
 
 	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
 
@@ -150,22 +163,26 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 	$date_start = $year.'-'.$i.'-01';
 	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
 
-	// $solde = $object->fetchSoldeOnYear($date_start, $date_end, $idaccount);
-	// $total_solde = array_sum($solde);
+	$solde = $object->soldeOfCurrentAccount($date_start, $date_end, $idaccount);
 
 	// $supplier_paid_invoice = $object->allSupplierUnPaidInvoices($date_start, $date_end, 1);
 	// $supplier_paid_deposit = $object->allSupplierUnPaidDeposit($date_start, $date_end, 1);
 
-	$tresury = $total_solde - ($supplier_paid_invoice + $supplier_paid_deposit);
+	$tresury = $solde - ($supplier_paid_invoice + $supplier_paid_deposit);
 
 	if(date('n', $date_start) == $i){
 		$tresury += $account->amount;
 	}
 
-	$data[] = [
-		html_entity_decode($monthsArr[$i]), // month
+	$data1[] = [
+		$ladder = html_entity_decode($monthsArr[$mm]), // months
 		$tresury,
 	];
+
+	if($mm >= 12){
+		$mm = 0;
+		$yy++;
+	}
 
 }
 
@@ -176,7 +193,7 @@ $legend = ['Année N'];
 if (!$mesg){
 	$p1->SetTitle("Evolution de la trésorerie nette");
 	$p1->datacolor = array(array(138,233,232));
-	$p1->SetData($data);
+	$p1->SetData($data1);
 	$p1->SetLegend($legend);
 	$p1->SetType(array('lines'));
 	$p1->setHeight('250');
@@ -187,43 +204,60 @@ if (!$mesg){
 $graphiqueA = $p1->show($tresuryChart);
 
 
-// Total charge
+// TOTAL CHARGES BOX
 $info3 = "Charges fixes";
 
-// Static Expenses details (on prev month)
+/**
+ * Details charges : static charges + variable charges
+ */
+
+// Salarys
 $arr_salarys = $object->fetchSalarys($startFiscalYear, $endYear, $currentAccount);
-$socialesTaxes_charges = $object->fetchSocialAndTaxesCharges($startFiscalYear, $endYear, $currentAccount);
-$arr_emprunts = $object->fetchEmprunts($startFiscalYear, $endYear, $currentAccount);
-$total_emprunts = array_sum($arr_emprunts);
 
-$staticExpenses = ($arr_salarys + $socialesTaxes_charges + $emprunts); // static expenses total
+// Sociales Taxes and charges
+$socialesTaxes_charges = $object->fetchSocialAndTaxesCharges($startFiscalYear, $endYear);
 
-// TODO : vat by current month
-// $total_vat_by_month = $object->fetchTVA($firstDayLastMonth, $lastDayLastMonth);
-$total_expense = $object->fetchExpenses($startFiscalYear, $endYear); // expenses
-$dataInfo3 = price($total_expense)."\n€";
+// Validated supplier invoice (excluding loan)
+$arr_supp_invoices_exluding_loan = $object->static_charge_excluding_loan($startFiscalYear, $endYear);
+$total_supp_invoices_exluding_loan = array_sum($arr_supp_invoices_exluding_loan);
+
+// Loan
+$arr_loan = $object->fetchEmprunts($startFiscalYear, $endYear);
+$total_loan = array_sum($arr_loan);
+
+$total_static_charges = ($arr_salarys + $socialesTaxes_charges + $total_supp_invoices_exluding_loan + $total_loan); // static expenses total
+
+$dataInfo3 = price($total_static_charges)."\n€";
 
 /**
- * Variable expenses
+ * Variable charges
  */
 $info4 = "Charges variables";
 
-// supplier invoices
-$array_suppliers_invoice_paid = $object->outstandingSupplier($startFiscalYear, $endYear, 1 ); // paid
+// validated supplier invoices (excluding static charges)
+$array_suppliers_invoice_paid = $object->outstandingSupplier($startFiscalYear, $endYear, 1); // paid
+$array_suppliers_invoice_unpaid = $object->outstandingSupplier($startFiscalYear, $endYear, 0); // paid
 $total_suppliers_invoice_paid = array_sum($array_suppliers_invoice_paid);
-
-$array_suppliers_invoice_unpaid = $object->outstandingSupplier($startFiscalYear, $endYear, 0); // unpaid
 $total_suppliers_invoice_unpaid = array_sum($array_suppliers_invoice_unpaid);
 
-$total_suppliers_invoice_paid_and_unpaid = $total_suppliers_invoice_unpaid + $total_suppliers_invoice_paid;
+$total_supplier_invoices = $total_suppliers_invoice_unpaid + $total_suppliers_invoice_paid;
 
+// Various paiements
 $variousPaiements = $object->fetchVariousPaiements($startFiscalYear, $endYear, $currentAccount);
-$variablesExpenses = $total_suppliers_invoice_paid_and_unpaid + $total_vat_by_month + $variousPaiements;
-$dataInfo4 = price($variablesExpenses)."\n€";
+$total_various_paiements = array_sum($variousPaiements);
 
+$variables_charges = $total_supplier_invoices + $total_vat_by_month + $total_various_paiements;
+
+// VAT
+// TODO : Total VAT of current month
+
+// Expense reports paid
+$totalExpenses = $object->fetchExpenses($startFiscalYear, $endYear);
+
+$dataInfo4 = price($variables_charges)."\n€";
 
 $titleItem2 = "Charge totale";
-$result3 = ($variablesExpenses + $staticExpenses);
+$result3 = ($variables_charges + $total_static_charges);
 $dataItem2 = price($result3). "\n€";
 
 // For tresury (popupinfo)
@@ -231,51 +265,98 @@ $secondPop_info1 = $titleItem2;
 $secondPop_info2 = $info3;
 $secondPop_info3 = $info4;
 
-$secondPop_data1 = "Charges fixes + charges variables";
-$secondPop_data2 = "Additions des dépenses fixes : salaire + charges sociales et fiscales + emprunts (crédits) + paiements divers";
-$secondPop_data3 = "Additions des dépenses variables : total (ht) des factures fournisseurs (hors brouillon) + le montant total de TVA sur l'exercice en cours ";
+$secondPop_data1 = "Charges fixes (".price($total_static_charges)." €) + charges variables (".price($variables_charges)." €)  sur l'exercice en cours ";
+$secondPop_data2 = " <strong> Additions des dépenses fixes sur l'exercice en cours </strong>
+					</br> Calcul : Salaire ( ".price($arr_salarys)." €) + charges sociales et fiscales ( ".price($socialesTaxes_charges)." €) + emprunts (<i>crédits</i> - ".price($total_loan)." €) + factures fournisseurs validées (hors emprunts : ".price($total_supp_invoices_exluding_loan)." €) ";
+$secondPop_data3 = " <strong> Additions des dépenses variables fixes sur l'exercice en cours</strong> :
+					</br> Calcul : Factures fournisseurs (hors brouillon) payées ( ".price($total_supplier_invoices)." €) + le montant total de TVA du mois courant (indisponible) + paiements divers ( ".price($total_various_paiements)." €) + notes de frais payés ( ".price($totalExpenses)." ) sur l'exercice en cours ";
 
 /**
- * GRAPH 2
+ * GRAPH 2 : TOTAL CHARGES
  */
+
 $file = "ChargesGraph";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
-$data = [];
 $supplier_invoice = new FactureFournisseur($db);
+unset($yy);
 
-for($i = $startMonthFiscalYear; $i <= 12 ; $i++){
+for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 
- 	strtotime('Last Year');
-	$lastyear = date($year-1);
+	if(!$yy){
+		$yy = $year;
+	}
 
-	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+	if($mm == $startMonthFiscalYear && $yy == $year+1){
+		break;
+	}
 
-	// Start and end of each month on current years
-	$date_start = $year.'-'.$i.'-01';
-	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
+	strtotime('Last Year');
+	$lastyear = date($yy-1);
+	$month = date('n');
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $mm, $yy);
 
-	$staticExpenses += $object->fetchStaticExpenses($date_start, $date_end, $currentAccount); // static
-	// $variableExpenses += $object->fetchVariablesExpenses($date_start, $date_end, $total_suppliers_invoice_paid_and_unpaid, $tva); // variables
+	// Current Year
+	$date_start = $yy.'-'.$mm.'-01';
+	$date_end = $yy.'-'.$mm.'-'.$lastDayMonth;
 
-	$total_charges = ($staticExpenses + $variableExpenses);
+	// Variables charges
 
-	// if(date('n', $date_start))
+	// validated supplier invoices (excluding static charges)
+	$array_suppliers_invoice_paid = $object->outstandingSupplier($date_start, $date_end, 1); // paid
+	$array_suppliers_invoice_unpaid = $object->outstandingSupplier($date_start, $date_end, 0); // paid
+	$total_suppliers_invoice_paid = array_sum($array_suppliers_invoice_paid);
+	$total_suppliers_invoice_unpaid = array_sum($array_suppliers_invoice_unpaid);
 
-	$data[] = [
-		html_entity_decode($monthsArr[$i]),
-		$total_charges,
+	$total_supplier_invoices = $total_suppliers_invoice_unpaid + $total_suppliers_invoice_paid;
+
+	// Various paiements
+	$variousPaiements = $object->fetchVariousPaiements($date_start, $date_end, $currentAccount);
+	$total_various_paiements = array_sum($variousPaiements);
+
+	$variables_charges = $total_supplier_invoices + $total_vat_by_month + $total_various_paiements;
+
+	// Static expenses
+	// Salarys
+	$arr_salarys = $object->fetchSalarys($date_start, $date_end, $currentAccount);
+
+	// Sociales Taxes and charges
+	$socialesTaxes_charges = $object->fetchSocialAndTaxesCharges($date_start, $date_end);
+
+	// Validated supplier invoice (excluding loan)
+	$arr_supp_invoices_exluding_loan = $object->static_charge_excluding_loan($date_start, $date_end);
+	$total_supp_invoices_exluding_loan = array_sum($arr_supp_invoices_exluding_loan);
+
+	// Loan
+	$arr_loan = $object->fetchEmprunts($date_start, $date_end);
+	$total_loan = array_sum($arr_loan);
+
+	$staticExpenses = ($arr_salarys + $socialesTaxes_charges + $total_supp_invoices_exluding_loan + $total_loan); // static expenses total
+
+	if(date('n', $date_start) == $mm){
+		$staticExpenses += $supplier_invoice->total_ttc;
+		$variables_charges += $supplier_invoice->total_ttc;
+	}
+
+	$data2[] = [
+		$ladder = html_entity_decode($monthsArr[$mm]), // months
+		$staticExpenses, // nb
+		$variables_charges, // amount
 	];
 
+	if($mm >= 12){
+		$mm = 0;
+		$yy++;
+	}
 }
 
 $px2 = new DolGraph();
 $mesg = $px2->isGraphKo();
-$legend = ['Année N'];
+$legend = ['Charges fixes', 'Charges variables'];
 
 if (!$mesg){
-	$px2->SetTitle("Evolution du montant des charges");
-	$px2->datacolor = array(array(255,206,126), array(138,233,232));
-	$px2->SetData($data);
+	$px2->SetTitle("Evolution du montant des charges - TTC");
+	$px2->datacolor = array(array(255,123,143), array(123,123,255));
+	$px2->SetData($data2);
 	$px2->SetLegend($legend);
 	$px2->SetType(array('lines'));
 	$px2->setHeight('250');
@@ -431,7 +512,6 @@ $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes
 ?>
 
 <!-- BOX FOR OUTSTANDING 30 DAYS -->
-
 <div class="container-fluid-1">
 	<div class="card bg-c-white order-card">
 		<div class="card-body">
