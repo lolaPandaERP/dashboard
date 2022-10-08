@@ -473,7 +473,7 @@ $dataInfo7 = price($customerToCash) . "\n€";
  * STAY IN BANK
  */
 
-$info8 = "Reste en banque";
+$info8 = "Reste en banque - HT";
 $totalSoldesAccount = $object->totalSoldes();
 $stayBank = ($totalSoldesAccount + $customerToCash); // addition du solde des 3 comptes bq + "client a encaisser"
 $dataInfo8 = price($stayBank) . "\n€";
@@ -481,7 +481,7 @@ $dataInfo8 = price($stayBank) . "\n€";
 /**
  * SUPPLIER TO PAID
  */
-$info10 = "Fournisseurs à payer"; // total factures F impayées et commandes fournisseurs validées
+$info10 = "Fournisseurs à payer - HT"; // total factures F impayées et commandes fournisseurs validées
 $supplier_unpaid_invoices = $object->outstandingSupplier($startFiscalyear, $endYear, 0);
 $total_supplier_unpaid_invoices = array_sum($supplier_unpaid_invoices);
 
@@ -537,51 +537,47 @@ $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes
 							popup.classList.toggle("show");
 						}
 					</script>
-			<h3 class="text-center">
-				<?php print $titleItem3 ?>
-			</h3>
-			<hr>
-			<div class="row text-center pb-md-4 justify-content-sm-center ">
-				<?php
+					<h3 class="text-center">
+						<?php print $titleItem3 ?>
+					</h3>
+					<hr>
+					<div class="pull-left">
+						<?php
+							foreach($accounts as $account){
 
-					foreach($accounts as $account){
+								$acc = new Account($db);
+								$acc->fetch($account->rowid);
 
-						$acc = new Account($db);
-						$acc->fetch($account->rowid);
+								$solde = $acc->solde(1);
 
-						$solde = $acc->solde(1);
+								$listAccount .= '<ul class="list-group">';
+								$listAccount .= '<div">';
+								$listAccount .= '<strong><i class="bi bi-bank"></i>';
+								$listAccount .= '<button type="button" class="btn btn-success" style="text-align: center;">
+										<a href="'.DOL_URL_ROOT.'/compta/bank/bankentries_list.php?id='.$account->rowid.'">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="16" fill="white" class="bi bi-bank">
+												<path d="m8 0 6.61 3h.89a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H15v7a.5.5 0 0 1 .485.38l.5 2a.498.498 0 0 1-.485.62H.5a.498.498 0 0 1-.485-.62l.5-2A.501.501 0 0 1 1 13V6H.5a.5.5 0 0 1-.5-.5v-2A.5.5 0 0 1 .5 3h.89L8 0ZM3.777 3h8.447L8 1 3.777 3ZM2 6v7h1V6H2Zm2 0v7h2.5V6H4Zm3.5 0v7h1V6h-1Zm2 0v7H12V6H9.5ZM13 6v7h1V6h-1Zm2-1V4H1v1h14Zm-.39 9H1.39l-.25 1h13.72l-.25-1Z"/>
+											</svg></i>'.$account->label.'</a></br></strong>';
+								$listAccount .= '<div class="pull-right">Solde du compte :  '.price($solde).' € </span></div></br>';
+								$listAccount .= '</li></ul></br>';
 
-						print '<div class="mainbq">';
-
-						print '<i class="bi bi-bank"></i>';
-						print '<button type="button" class="btn btn-success">
-								<a href="'.DOL_URL_ROOT.'/compta/bank/bankentries_list.php?id='.$account->rowid.'">
-									<svg xmlns="http://www.w3.org/2000/svg" width="20" height="16" fill="white" class="bi bi-bank">
-										<path d="m8 0 6.61 3h.89a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H15v7a.5.5 0 0 1 .485.38l.5 2a.498.498 0 0 1-.485.62H.5a.498.498 0 0 1-.485-.62l.5-2A.501.501 0 0 1 1 13V6H.5a.5.5 0 0 1-.5-.5v-2A.5.5 0 0 1 .5 3h.89L8 0ZM3.777 3h8.447L8 1 3.777 3ZM2 6v7h1V6H2Zm2 0v7h2.5V6H4Zm3.5 0v7h1V6h-1Zm2 0v7H12V6H9.5ZM13 6v7h1V6h-1Zm2-1V4H1v1h14Zm-.39 9H1.39l-.25 1h13.72l-.25-1Z"/>
-									</svg>
-								</button>';
-
-						print '<div></br><h3>'.$account->label;
-						print '</br>'.price($solde) . "\n€" .'</h3></div></a>';
-						print '</div>';
-					}
-
-
-					?>
+							}
+							print $listAccount;
+							?>
 					</div>
 					<div class="pull-right">
-						<?php print $info7 ?> : <h4 class="center"><?php print $dataInfo7 ?></h4><hr>
-						<?php print $info8 ?> : <h4 class="center"><?php print $dataInfo8 ?></h4>
-						<?php print $info9 ?> : <h4 class="center"><?php print $dataInfo9 ?></h4><hr>
-						<?php print $info10 ?> : <h4 class="center"><?php print $dataInfo10 ?></h4>
+						<?php print $info7 ?> : <?php print $dataInfo7 ?></h4><hr>
+						<?php print $info8 ?> : <?php print $dataInfo8 ?></h4><hr>
+						<?php print $info9 ?> : <?php print $dataInfo9 ?></h4><hr>
+						<?php print $info10 ?> : <?php print $dataInfo10 ?></h4>
 					</div>
 					<div>
 						<?php
 							print $graphiqueC;
 						?>
-					</div>
+							</div>
+						</div>
 				</div>
-			</div>
 
 
 <?php

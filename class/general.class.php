@@ -1077,7 +1077,7 @@ class General extends FactureStats
 
 	/**
 	 * Detail et lié avec la table gérant les comptes et les ecritures bancaires
-	 * pour retrouver le solde de chaque compte
+	 * pour retrouver le solde de chaque compte sur l'année
 	 */
 	public function soldeOfCurrentAccount($account, $year){
 		$sql = "SELECT SUM(b.amount)";
