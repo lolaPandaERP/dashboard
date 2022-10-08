@@ -544,7 +544,8 @@ foreach ($invoiceExceedArray as $res)
 		$listeA .= '<div class="pull-left" style="color:blue;">
 						Réf. Facture :  '.$invoice->ref.'</br>
 						Date : '.date('Y-m-d', $invoice->date_lim_reglement).'</a></div>';
-		$listeA .= '<div class="pull-right">Montant :  '.price($invoice->total_ht).' € </span></div>';
+		$listeA .= '<div class="pull-right">Montant HT :  '.price($invoice->total_ht).' € </span></div>';
+		$listeA .= '<div class="pull-right">Montant TTC :  '.price($invoice->total_ttc).' € </span></div>';
 		$listeA .= '</li></ul>';
 }
 /**
@@ -590,7 +591,8 @@ $fivePop_data1 = "Somme des factures fournisseurs impayées <strong>(".price($to
 		$listeB .= '<div class="pull-left" style="color:blue;">
 						Réf. Facture :  '.$supplier_invoice->ref.'</br>
 						Date : '.date('Y-m-d', $supplier_invoice->date_echeance).'</a></div>';
-		$listeB .= '<div class="pull-right">Montant :  '.price($supplier_invoice->total_ht).' € </span></div>';
+		$listeB .= '<div class="pull-right">Montant HT :  '.price($supplier_invoice->total_ht).' € </span></div></br>';
+		$listeB .= '<div class="pull-right">Montant TTC :  '.price($supplier_invoice->total_ttc).' € </span></div>';
 		$listeB .= '</li></ul>';
 	}
 
@@ -642,7 +644,8 @@ if(is_array($invoiceOlderExceedArray) && $invoiceOlderExceedArray != null){
 		$listeC .= '<div class="pull-left" style="color:blue;">
 						Réf. Facture :  '.$invoice->ref.'</br>
 						Date : '.date('Y-m-d', $invoice->date_lim_reglement).'</a></div>';
-		$listeC .= '<div class="pull-right">Montant :  '.price($invoice->total_ht).' € </span></div>';
+		$listeC .= '<div class="pull-right">Montant HT :  '.price($invoice->total_ht).' € </span></div></br>';
+		$listeC .= '<div class="pull-right">Montant TTC :  '.price($invoice->total_ttc).' € </span></div>';
 		$listeC .= '</li></ul>';
 	}
 }
