@@ -154,38 +154,10 @@ $dataInfo1 = price($totalCA_lastyear)."\n€"; // Display datas
 * Dats infos for turnover's progress
 */
 
-// CA by current month on current year
-$invoice_month_year = $object->turnover($startFiscalYear, date('Y-m-d',$datetime));
-$deposit_month_year = $object->avoir($startFiscalYear, date('Y-m-d',$datetime));
-$total_month_year = $invoice_month_year + $deposit_month_year;
-
-// CA by current month on last year
-$datenow_lastyear = date('Y-m-d', mktime(0, 0, 1, $month, date('d'), $year - 1)); // last year
-
-$total_invoice_month_lastyear = $object->turnover($startFiscalLastyear, $datenow_lastyear);
-$total_deposit_month_lastyear = $object->avoir($startFiscalLastyear, $datenow_lastyear);
-$closed_invoice = $object->closedInvoice($startFiscalLastyear, $datenow_lastyear);
-
-$total_month_lastyear = $total_invoice_month_lastyear + $total_deposit_month_lastyear - $closed_invoice;
-
-$result = $object->progress($total_month_year, $total_month_lastyear);
-$dataInfo2 = $result . "\n%";
-
-// Display increase/decrease
-if($dataInfo2 < 0){
-	$dataInfo2 = '<p style=color:red>'.$dataInfo2.'</p>';
-} else {
-	$dataInfo2 = '<p style=color:green>+'.$dataInfo2.'</p>';
-}
-
 // For first info popup
 $firstPop_info1 = $titleItem1;
 $firstPop_info2 = $info1;
 $firstPop_info3 = $info2;
-
-$firstPop_data1 = 'Factures clients validées <strong>('.price($totalCA_year + $total_deposit_year).' €)</strong> + Avoirs clients validées <strong>('.price(abs($total_deposit_year)).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
-$firstPop_data2 = 'Factures clients validées <strong>('.price($totalCA_lastyear - $total_deposit_lastyear).' €)</strong> + Avoirs clients validées <strong>('.price(abs($total_deposit_lastyear)).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
-$firstPop_data3 = "Taux de variation : ((VA - VD) / VD) x 100 ) où </br> <strong> ( (".$total_month_year." - ".$total_month_lastyear.") / ".$total_month_year.") x 100 </strong>";
 
 /**
  * GRAPH 1
@@ -197,6 +169,7 @@ $file = "evolutionCAchart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 $invoice = new Facture($db);
 unset($yy);
+
 for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 
 	if(!$yy){
@@ -220,8 +193,9 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 	// Fiscal Year
 	$total_invoice_month_year += $object->turnover($date_start, $date_end);
 	$total_deposit_month_year += $object->avoir($date_start, $date_end);
+	$closed_invoice_month_year += $object->closedInvoice($startFiscalYear, date('Y-m-d',$datetime));
 
-	$total_month_year = $total_invoice_month_year + $total_deposit_month_year;
+	$total_month_year_graph = $total_invoice_month_year + $total_deposit_month_year + $closed_invoice_month_year;
 
 	// Start and end of each month on last year
 	$date_start_lastYear = $lastyear.'-'.$mm.'-01';
@@ -230,26 +204,31 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 	$invoice_paid_month_lastyear += $object->fetchInvoices($date_start_lastYear, $date_end_lastYear);
 	$invoice_unpaid_month_lastyear += $object->fetchUnpaidInvoice($date_start_lastYear, $date_end_lastYear);
 
-	$total_month_lastyear = $invoice_paid_month_lastyear + $invoice_unpaid_month_lastyear;
+	$total_month_lastyear_graph = $invoice_paid_month_lastyear + $invoice_unpaid_month_lastyear;
 
 	// Last fiscal year
 	if(date('n', $date_start) == $mm)
 	{
-		$total_month_year += $invoice->total_ht;
-		$total_month_lastyear += $invoice->total_ht;
+		$total_month_year_graph += $invoice->total_ht;
+		$total_month_lastyear_graph += $invoice->total_ht;
 	}
 
 	$data1[] = [
 		html_entity_decode($monthsArr[$mm]),
-		$total_month_lastyear,
-		$total_month_year
+		$total_month_lastyear_graph,
+		$total_month_year_graph
 	];
 
 	if($mm >= 12){
 		$mm = 0;
 		$yy++;
 	}
+
 }
+
+// Progression
+$result = $object->progress($total_month_year_graph, $total_month_lastyear_graph);
+$dataInfo2 = intval($result). "\n%";
 
 $px1 = new DolGraph();
 $mesg = $px1->isGraphKo();
@@ -267,6 +246,25 @@ if (!$mesg){
 }
 $graphiqueA = $px1->show($turnoverChart);
 
+// Display increase / decrease
+if($dataInfo2 < 0){
+	$dataInfo2 = '<p style=color:red>'.$dataInfo2.'</p>';
+} else {
+	$dataInfo2 = '<p style=color:green>'.$dataInfo2.'</p>';
+}
+
+$firstPop_data1 = 'Factures clients validées <strong>('.price($totalCA_year + $total_deposit_year).' €)</strong> + Avoirs clients validées <strong>('.price(abs($total_deposit_year)).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
+$firstPop_data2 = 'Factures clients validées <strong>('.price($totalCA_lastyear - $total_deposit_lastyear).' €)</strong> + Avoirs clients validées <strong>('.price(abs($total_deposit_lastyear)).' €)</strong> sur l\'exercice fiscal en cours (HORS BROUILLON)';
+
+/**
+ * For progress : cumulative N-1 turnover since the beginning of the fiscal year to today's date
+ */
+$total_paid_invoice_month_lastyear_prog = $object->fetchInvoices($startFiscalLastyear, $lastDayCurrentMonthLastYear);
+$total_unpaid_invoice_month_lastyear_progress = $object->fetchUnpaidInvoice($startFiscalLastyear, $lastDayCurrentMonthLastYear);
+
+$total_month_last_year_progress = $total_paid_invoice_month_lastyear_prog + $total_unpaid_invoice_month_lastyear_progress;
+
+$firstPop_data3 = "Taux de variation : ((VA - VD) / VD) x 100 ) où </br> <strong> ( (".$total_month_year_graph." - ".$total_month_last_year_progress.") / ".$total_month_year_graph.") x 100 </strong>";
 
 /**
  * OUTSTANDING CUSTOMER AND SUPPLIER

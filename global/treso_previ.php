@@ -146,62 +146,75 @@ $monthsArr = monthArray($langs, 1); // months
 $file = "tresuryChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 
-for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
+$tblyear[2] = array();
 
-	if(!$yy){
-		$yy = $year;
+		$sql = "SELECT date_format(b.datev,'%m')";
+		$sql .= ", SUM(b.amount)";
+		$sql .= " FROM ".MAIN_DB_PREFIX."bank as b";
+		$sql .= ", ".MAIN_DB_PREFIX."bank_account as ba";
+		$sql .= " WHERE b.fk_account = ba.rowid";
+		$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
+		$sql .= " AND b.datev >= '".($year - $annee)."-01-01 00:00:00'";
+		$sql .= " AND b.datev <= '".($year - $annee)."-12-31 23:59:59'";
+		$sql .= " AND b.amount > 0";
+		if ($id && $_GET["option"] != 'all') {
+			$sql .= " AND b.fk_account IN (".$db->sanitize($id).")";
+		}
+		$sql .= " GROUP BY date_format(b.datev,'%m');";
+
+		$resql = $db->query($sql);
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$row = $db->fetch_row($resql);
+				$tblyear[$annee][$row[0]] = $row[1];
+				$i++;
+			}
+			$db->free($resql);
+		} else {
+			dol_print_error($db);
+		}
+
+	// Chargement de labels et data_xxx pour tableau 4 Mouvements
+	$labels = array();
+	$data_year_0 = array();
+	$data_year_1 = array();
+	$data_year_2 = array();
+
+	for ($i = 0; $i < 12; $i++) {
+		$data_year_0[$i] = isset($tblyear[0][substr("0".($i + 1), -2)]) ? $tblyear[0][substr("0".($i + 1), -2)] : 0;
+		$data_year_1[$i] = isset($tblyear[1][substr("0".($i + 1), -2)]) ? $tblyear[1][substr("0".($i + 1), -2)] : 0;
+		$data_year_2[$i] = isset($tblyear[2][substr("0".($i + 1), -2)]) ? $tblyear[2][substr("0".($i + 1), -2)] : 0;
+		$labels[$i] = $langs->transnoentitiesnoconv("MonthVeryShort".sprintf("%02d", $i + 1));
+		$datamin[$i] = 0;
 	}
 
-	if($mm == $startMonthFiscalYear && $yy == $year+1){
-		break;
+
+	$graph_datas = array();
+	for ($i = 0; $i < 12; $i++) {
+		$graph_datas[$i] = array($labels[$i], $data_year_0[$i], $data_year_1[$i], $data_year_2[$i]);
 	}
 
+	$px1 = new DolGraph();
+	$px1->SetData($graph_datas);
+	$px1->SetLegend(array(($year)));
+	$px1->SetLegendWidthMin(180);
+	$px1->SetMaxValue($px1->GetCeilMaxValue() < 0 ? 0 : $px1->GetCeilMaxValue());
+	$px1->SetMinValue($px1->GetFloorMinValue() > 0 ? 0 : $px1->GetFloorMinValue());
+	$px1->SetTitle($title);
+	$px1->SetWidth('500');
+	$px1->SetHeight('200');
+	$px1->SetType(array('line', 'line', 'line'));
+	$px1->SetShading(3);
+	$px1->setBgColor('onglet');
+	$px1->setBgColorGrid(array(255, 255, 255));
+	$px1->SetHorizTickIncrement(1);
+	$px1->draw($file, $fileurl);
 
-	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
+	$graphiqueA = $px1->show();
 
-	// Current Year
-	$date_start = $year.'-'.$i.'-01';
-	$date_end = $year.'-'.$i.'-'.$lastDayMonth;
-
-	$solde = $object->soldeOfCurrentAccount($date_start, $date_end, $idaccount);
-
-	// $supplier_paid_invoice = $object->allSupplierUnPaidInvoices($date_start, $date_end, 1);
-	// $supplier_paid_deposit = $object->allSupplierUnPaidDeposit($date_start, $date_end, 1);
-
-	$tresury = $solde - ($supplier_paid_invoice + $supplier_paid_deposit);
-
-	if(date('n', $date_start) == $i){
-		$tresury += $account->amount;
-	}
-
-	$data1[] = [
-		$ladder = html_entity_decode($monthsArr[$mm]), // months
-		$tresury,
-	];
-
-	if($mm >= 12){
-		$mm = 0;
-		$yy++;
-	}
-
-}
-
-$p1 = new DolGraph();
-$mesg = $p1->isGraphKo();
-$legend = ['Année N'];
-
-if (!$mesg){
-	$p1->SetTitle("Evolution de la trésorerie nette");
-	$p1->datacolor = array(array(138,233,232));
-	$p1->SetData($data1);
-	$p1->SetLegend($legend);
-	$p1->SetType(array('lines'));
-	$p1->setHeight('250');
-	$p1->SetWidth('500');
-	$tresuryChart = $p1->draw($file, $fileurl);
-}
-
-$graphiqueA = $p1->show($tresuryChart);
+// $ = $p1->show($tresuryChart);
 
 
 // TOTAL CHARGES BOX
@@ -433,6 +446,8 @@ for($i = $startMonthFiscalYear; $i <= 12; $i++){
 		$data[] = [
 			html_entity_decode($monthsArr[$i]), // month
 			$amount_treso_by_account,
+			$amount_treso_by_account,
+			$amount_treso_by_account,
 		];
 
 }
@@ -443,7 +458,7 @@ $legend = ['Compte 1', 'Compte 2', 'Compte 3'];
 
 if (!$mesg){
 	$px3->SetTitle("Evolution des comptes");
-	$px3->datacolor = array(array(93, 173, 226), array(82, 190, 128), array(230, 126, 34 ));
+	$px3->datacolor = array(array(93, 173, 226), array(82, 190, 128), array(230, 126, 34));
 	$px3->SetData($data);
 	$px3->SetLegend($legend);
 	$px3->SetType(array('lines')); // Array with type for each serie. Example: array('type1', 'type2', ...) where type can be: 'pie', 'piesemicircle', 'polar', 'lines', 'linesnopoint', 'bars', 'horizontalbars'...

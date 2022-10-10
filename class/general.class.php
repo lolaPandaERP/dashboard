@@ -1328,8 +1328,8 @@ class General extends FactureStats
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
-		$sql .= " AND paye=1";
-		$sql .= " AND fk_statut !=0";
+		$sql .= " AND paye = 1";
+		$sql .= " AND fk_statut != 0";
 
 		$resql = $this->db->query($sql);
 
@@ -1351,7 +1351,7 @@ class General extends FactureStats
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 		$sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
 		$sql .= " AND paye = 0 ";
-		$sql .= " AND fk_statut =1 "; // are validated
+		$sql .= " AND fk_statut = 1 "; // are validated
 
 		$resql = $this->db->query($sql);
 
