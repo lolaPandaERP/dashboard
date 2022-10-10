@@ -226,10 +226,6 @@ for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 
 }
 
-// Progression
-$result = $object->progress($total_month_year_graph, $total_month_lastyear_graph);
-$dataInfo2 = intval($result). "\n%";
-
 $px1 = new DolGraph();
 $mesg = $px1->isGraphKo();
 $legend = ['Exercice N-1', 'Exercice N'];
@@ -259,10 +255,22 @@ $firstPop_data2 = 'Factures clients validées <strong>('.price($totalCA_lastyear
 /**
  * For progress : cumulative N-1 turnover since the beginning of the fiscal year to today's date
  */
+
+// Current year
+$total_paid_invoice_month_year_prog = $object->fetchInvoices($startFiscalYear, $lastDayCurrentMonth);
+$total_unpaid_invoice_month_year_progress = $object->fetchUnpaidInvoice($startFiscalLastyear, $lastDayCurrentMonth);
+
+$total_month_last_year_progress = $total_paid_invoice_month_year_prog + $total_unpaid_invoice_month_year_progress;
+
+// Last year
 $total_paid_invoice_month_lastyear_prog = $object->fetchInvoices($startFiscalLastyear, $lastDayCurrentMonthLastYear);
 $total_unpaid_invoice_month_lastyear_progress = $object->fetchUnpaidInvoice($startFiscalLastyear, $lastDayCurrentMonthLastYear);
 
-$total_month_last_year_progress = $total_paid_invoice_month_lastyear_prog + $total_unpaid_invoice_month_lastyear_progress;
+$total_month_last_lastyear_progress = $total_paid_invoice_month_lastyear_prog + $total_unpaid_invoice_month_lastyear_progress;
+
+// Progression
+$result = $object->progress($total_month_last_year_progress, $total_month_last_lastyear_progress);
+$dataInfo2 = intval($result). "\n%";
 
 $firstPop_data3 = "Taux de variation : ((VA - VD) / VD) x 100 ) où </br> <strong> ( (".$total_month_year_graph." - ".$total_month_last_year_progress.") / ".$total_month_year_graph.") x 100 </strong>";
 
