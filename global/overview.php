@@ -256,6 +256,7 @@ $firstPop_data2 = 'Factures clients validées <strong>('.price($totalCA_lastyear
  * For progress : cumulative N-1 turnover since the beginning of the fiscal year to today's date
  */
 
+
 // Current year
 $total_validated_invoices_until_now = $object->turnover($startFiscalYear, $lastDayCurrentMonth);
 $total_deposit_until_now = $object->avoir($startFiscalYear, $lastDayCurrentMonth);
@@ -272,7 +273,8 @@ $total_month_last_year_progress = $total_paid_invoice_month_lastyear_prog + $tot
 $result = $object->progress($total_month_year_progress, $total_month_last_year_progress);
 $dataInfo2 = intval($result). "\n%";
 
-$firstPop_data3 = "Taux de variation : ((VA - VD) / VD) x 100 ) où </br> <strong> ( (".$total_month_year_progress." - ".$total_month_last_year_progress.") / ".$total_month_year_progress.") x 100 </strong>";
+$firstPop_data3 = "Taux de variation : ((VD - VA) / VA) x 100 ) où </br> <strong> VA = ( (CA N - CA N-1) / Ca N-1 x 100 )
+</br> Calcul : ( (".$total_month_year_progress." - ".$total_month_last_year_progress.") / ".$total_month_last_year_progress.") x 100 </strong>";
 
 /**
  * OUTSTANDING CUSTOMER AND SUPPLIER
@@ -771,7 +773,7 @@ $xyear = substr($textdate, 0, 4);
 $xday = substr($textdate, 6, 2);
 
 $i = 0;
-while ($xyear == $yy && $day <= $datetime) {
+while ($xyear == $year && $day <= $datetime) {
 	$subtotal = $subtotal + (isset($amounts[$textdate]) ? $amounts[$textdate] : 0);
 	if ($day > $now) {
 		$datas[$i] = ''; // Valeur speciale permettant de ne pas tracer le graph
