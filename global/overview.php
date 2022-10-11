@@ -273,7 +273,7 @@ $total_month_last_year_progress = $total_paid_invoice_month_lastyear_prog + $tot
 $result = $object->progress($total_month_year_progress, $total_month_last_year_progress);
 $dataInfo2 = intval($result). "\n%";
 
-$firstPop_data3 = "Taux de variation : ((VD - VA) / VA) x 100 ) où </br> <strong> VA = ( (CA N - CA N-1) / Ca N-1 x 100 )
+$firstPop_data3 = "Taux de variation : ((VA - VD) / VD) x 100 ) où </br> <strong> VA = CA N et VD = CA N-1 </strong>
 </br> Calcul : ( (".$total_month_year_progress." - ".$total_month_last_year_progress.") / ".$total_month_last_year_progress.") x 100 </strong>";
 
 /**

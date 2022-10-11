@@ -1203,8 +1203,8 @@ class General extends FactureStats
 		// ((VA - VD) / VD) * 100
 		$arrival_value;
 		$starting_value;
-		$res = ($starting_value - $arrival_value);
-		$res = ($res / $arrival_value);
+		$res = ($arrival_value - $starting_value);
+		$res = ($res / $starting_value);
 		$resultat = $res * 100;
 		$resultat = round($resultat, 2);
 
