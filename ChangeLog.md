@@ -9,9 +9,3 @@ Initial version
 - Création du nouveau template pour l'onglet des encours
     - 3 graphiques
     - 3 listes
-    
-## 2.5
-- 
-
-## 3.3
-- Update progression CA

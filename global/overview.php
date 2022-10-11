@@ -257,22 +257,22 @@ $firstPop_data2 = 'Factures clients validées <strong>('.price($totalCA_lastyear
  */
 
 // Current year
-$total_paid_invoice_month_year_prog = $object->fetchInvoices($startFiscalYear, $lastDayCurrentMonth);
-$total_unpaid_invoice_month_year_progress = $object->fetchUnpaidInvoice($startFiscalLastyear, $lastDayCurrentMonth);
+$total_validated_invoices_until_now = $object->turnover($startFiscalYear, $lastDayCurrentMonth);
+$total_deposit_until_now = $object->avoir($startFiscalYear, $lastDayCurrentMonth);
 
-$total_month_last_year_progress = $total_paid_invoice_month_year_prog + $total_unpaid_invoice_month_year_progress;
+$total_month_year_progress = $total_validated_invoices_until_now + $total_deposit_until_now;
 
 // Last year
 $total_paid_invoice_month_lastyear_prog = $object->fetchInvoices($startFiscalLastyear, $lastDayCurrentMonthLastYear);
 $total_unpaid_invoice_month_lastyear_progress = $object->fetchUnpaidInvoice($startFiscalLastyear, $lastDayCurrentMonthLastYear);
 
-$total_month_last_lastyear_progress = $total_paid_invoice_month_lastyear_prog + $total_unpaid_invoice_month_lastyear_progress;
+$total_month_last_year_progress = $total_paid_invoice_month_lastyear_prog + $total_unpaid_invoice_month_lastyear_progress;
 
 // Progression
-$result = $object->progress($total_month_last_year_progress, $total_month_last_lastyear_progress);
+$result = $object->progress($total_month_year_progress, $total_month_last_year_progress);
 $dataInfo2 = intval($result). "\n%";
 
-$firstPop_data3 = "Taux de variation : ((VA - VD) / VD) x 100 ) où </br> <strong> ( (".$total_month_year_graph." - ".$total_month_last_year_progress.") / ".$total_month_year_graph.") x 100 </strong>";
+$firstPop_data3 = "Taux de variation : ((VA - VD) / VD) x 100 ) où </br> <strong> ( (".$total_month_year_progress." - ".$total_month_last_year_progress.") / ".$total_month_year_progress.") x 100 </strong>";
 
 /**
  * OUTSTANDING CUSTOMER AND SUPPLIER
@@ -771,7 +771,7 @@ $xyear = substr($textdate, 0, 4);
 $xday = substr($textdate, 6, 2);
 
 $i = 0;
-while ($xyear == $year && $day <= $datetime) {
+while ($xyear == $yy && $day <= $datetime) {
 	$subtotal = $subtotal + (isset($amounts[$textdate]) ? $amounts[$textdate] : 0);
 	if ($day > $now) {
 		$datas[$i] = ''; // Valeur speciale permettant de ne pas tracer le graph
