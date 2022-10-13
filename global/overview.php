@@ -665,7 +665,7 @@ $staticExpenses = ($arr_salarys + $socialesTaxes_charges + $total_emprunts + $to
 
 // TODO : vat by current month
 // $total_vat_by_month = $object->fetchTVA($firstDayLastMonth, $lastDayLastMonth);
-$total_expense = $object->fetchExpenses($firstDayLastMonth, $lastDayLastMonth); // expenses
+$total_expense = $object->fetchExpenses($firstDayCurrentMonth, $lastDayCurrentMonth); // expenses
 
 // Total Money flow out
 $totalMoneyOut = ($staticExpenses + $total_vat_by_month + $total_expense);
@@ -854,7 +854,7 @@ $fourPop_data2 = "<ul><li>charges variables (".price($variablesExpenses)."\n€)
 				<br>
 				<strong><li>Détail charges fixes </strong> : Salaires (".price($arr_salarys)."\n€) </strong> + emprunts (".price($total_emprunts)."\n€) </strong> + charges sociales et fiscales (".price($socialesTaxes_charges)."\n€) </strong> + factures fournisseurs validées (hors emprunts : ".price($total_suppliers_invoice_cf)."\n€) </strong> </li>
 				<i style='color:blue;'>Les charges fixes sont calculées sur le mois précédent </i></br>
-				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur le mois courant (".price($total_suppliers_invoices)."\n€) </strong> + paiements divers (sens crédit : ".price($total_various_paiements)."\n€) + TVA du mois courant (indisponible) + notes frais payés  (".price($total_expense)."\n€) </li>
+				<br> <strong> <li> Détail charges variables </strong> :  Factures fournisseurs impayées + payées sur le mois courant (".price($total_suppliers_invoices)."\n€) </strong> + paiements divers (sens crédit : ".price($total_various_paiements)."\n€) + TVA du mois courant (indisponible) + notes de frais payés (".price($total_expense)."\n€) </li>
 				</ul>";
 
 $fourPop_data3 = "Montant total (HT) des modèles de factures client ".price($total_modelInvoice)."\n€";
