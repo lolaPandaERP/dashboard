@@ -1724,20 +1724,21 @@ class General extends FactureStats
 
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "expensereport";
-		$sql .= " WHERE date_debut >= '" . $date_start . "' AND date_fin <= '" . $date_end. "'";
+		$sql .= " WHERE date_debut BETWEEN '" . $date_start .  "' AND '" . $date_end . "'";
 		$sql .= " AND fk_statut != 0";
-		$sql .= " AND paye = 1";
+		$sql .= " AND paid = 1";
+		// $sql = "SELECT SUM(total_ht) as total_ht FROM `llx_expensereport` WHERE date_debut BETWEEN \"2022-10-01\" AND \"2022-10-31\" AND paid = 1;";
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
 			if ($this->db->num_rows($resql)) {
 				$obj = $this->db->fetch_object($resql);
-				$tva = $obj->total_ht;
+				$result = $obj->total_ht;
 			}
 			$this->db->free($resql);
 		}
 
-		return $tva;
+		return $result;
 	}
 
 	/**
@@ -1783,14 +1784,14 @@ class General extends FactureStats
 
 	 /**
 	 * Utilise pour le calcul des charges fixes (ensemble)
-	 * seules les factures avec l'extrafield "dash_invoice_cf"> 1 sont considérées cm des charges fixes (hors enprunts).
+	 * seules les factures avec l'extrafield "dash_invoice_cf"> 1 sont considérées cm des charges fixes (hors emprunts).
 	 * @param int dash_invoice_CF 		Diferentes valeurs existent :
-	 * 2 : loyer,
-	 * 3:logement,
-	 * 4:Telephone,
-	 * 5:energie,
-	 * 6:Emprunt,
-	 * 7:Divers
+	 * 1 : loyer,
+	 * 2:logement,
+	 * 3:Telephone,
+	 * 4:energie,
+	 * 5:Emprunt,
+	 * 6:Divers
 	 */
 	public function static_charge_excluding_loan($date_start, $date_end = ''){
 
@@ -1801,7 +1802,7 @@ class General extends FactureStats
 		$sql .= " WHERE ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end. "'";
 		$sql .= " AND ff.fk_statut != 0";
 		$sql .= " AND ff.type != 3";
-		$sql .= " AND ffe.dash_invoice_CF > 0 AND ffe.dash_invoice_CF != 5";
+		$sql .= " AND ffe.dash_invoice_CF > 1 AND ffe.dash_invoice_CF != 6";
 
 		$resql = $this->db->query($sql);
 
@@ -1887,7 +1888,7 @@ class General extends FactureStats
 		$sql .= " WHERE ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end. "'";
 		$sql .= " AND ff.fk_statut != 0";
 		$sql .= " AND ff.type != 3";
-		$sql .= " AND ffe.dash_invoice_CF = 5";
+		$sql .= " AND ffe.dash_invoice_CF = 6";
 
 		$resql = $this->db->query($sql);
 		$emprunts = [];
