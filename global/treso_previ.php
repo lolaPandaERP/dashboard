@@ -133,11 +133,11 @@ $firstPop_info1 = $titleItem1;
 $firstPop_info2 = $info1;
 $firstPop_info3 = $info2;
 
-$firstPop_data1 = "Solde du compte courant sur l'exercice en cours";
-$firstPop_data2 = "Solde du compte courant sur l'exercice précédent ";
-$firstPop_data3 = "Taux de variation : ( (VA - VD) / VA) x 100) où :
-					</br> <strong> VA </strong> = solde de l'exercice fiscal en cours
-					</br> <strong> VD </strong> = solde de l'exercice fiscal précédent
+$firstPop_data1 = "Solde du compte courant sur l'exercice fiscal en cours";
+$firstPop_data2 = "Solde du compte courant du mois précédent sur l'exercice fiscal en cours ";
+$firstPop_data3 = "Taux de variation : ( (VA - VD) / VD) x 100) où :
+					</br> <strong> VA </strong> = solde du mois courant sur l'exercice fiscal en cours
+					</br> <strong> VD </strong> = solde de mois courant sur l'exercice fiscal précédent
 				   <strong> ( (".$total_month_year." - ".$total_month_lastyear.") / ".$total_month_year.") x 100 </strong>";
 
 $monthsArr = monthArray($langs, 1); // months
@@ -146,75 +146,58 @@ $monthsArr = monthArray($langs, 1); // months
 $file = "tresuryChart";
 $fileurl = DOL_DOCUMENT_ROOT.'/custom/tab/img';
 
-$tblyear[2] = array();
+// todo graph
 
-		$sql = "SELECT date_format(b.datev,'%m')";
-		$sql .= ", SUM(b.amount)";
-		$sql .= " FROM ".MAIN_DB_PREFIX."bank as b";
-		$sql .= ", ".MAIN_DB_PREFIX."bank_account as ba";
-		$sql .= " WHERE b.fk_account = ba.rowid";
-		$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
-		$sql .= " AND b.datev >= '".($year - $annee)."-01-01 00:00:00'";
-		$sql .= " AND b.datev <= '".($year - $annee)."-12-31 23:59:59'";
-		$sql .= " AND b.amount > 0";
-		if ($id && $_GET["option"] != 'all') {
-			$sql .= " AND b.fk_account IN (".$db->sanitize($id).")";
-		}
-		$sql .= " GROUP BY date_format(b.datev,'%m');";
+for($mm = $startMonthFiscalYear; $mm < 13; $mm++){
 
-		$resql = $db->query($sql);
-		if ($resql) {
-			$num = $db->num_rows($resql);
-			$i = 0;
-			while ($i < $num) {
-				$row = $db->fetch_row($resql);
-				$tblyear[$annee][$row[0]] = $row[1];
-				$i++;
-			}
-			$db->free($resql);
-		} else {
-			dol_print_error($db);
-		}
-
-	// Chargement de labels et data_xxx pour tableau 4 Mouvements
-	$labels = array();
-	$data_year_0 = array();
-	$data_year_1 = array();
-	$data_year_2 = array();
-
-	for ($i = 0; $i < 12; $i++) {
-		$data_year_0[$i] = isset($tblyear[0][substr("0".($i + 1), -2)]) ? $tblyear[0][substr("0".($i + 1), -2)] : 0;
-		$data_year_1[$i] = isset($tblyear[1][substr("0".($i + 1), -2)]) ? $tblyear[1][substr("0".($i + 1), -2)] : 0;
-		$data_year_2[$i] = isset($tblyear[2][substr("0".($i + 1), -2)]) ? $tblyear[2][substr("0".($i + 1), -2)] : 0;
-		$labels[$i] = $langs->transnoentitiesnoconv("MonthVeryShort".sprintf("%02d", $i + 1));
-		$datamin[$i] = 0;
+	if(!$yy){
+		$yy = $year;
 	}
 
-
-	$graph_datas = array();
-	for ($i = 0; $i < 12; $i++) {
-		$graph_datas[$i] = array($labels[$i], $data_year_0[$i], $data_year_1[$i], $data_year_2[$i]);
+	if($mm == $startMonthFiscalYear && $yy == $year+1){
+		break;
 	}
 
-	$px1 = new DolGraph();
-	$px1->SetData($graph_datas);
-	$px1->SetLegend(array(($year)));
-	$px1->SetLegendWidthMin(180);
-	$px1->SetMaxValue($px1->GetCeilMaxValue() < 0 ? 0 : $px1->GetCeilMaxValue());
-	$px1->SetMinValue($px1->GetFloorMinValue() > 0 ? 0 : $px1->GetFloorMinValue());
-	$px1->SetTitle($title);
+	strtotime('Last Year');
+	$lastyear = date($yy-1);
+	$month = date('n');
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $mm, $yy);
+	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $mm, $lastyear);
+
+	// Start and end of each month on current years
+	$date_start = $yy.'-'.$mm.'-01';
+	$date_end = $yy.'-'.$mm.'-'.$lastDayMonth;
+
+	// Fiscal Year
+	$solde = $object->totalSoldeCurrentAccount($currentAccount);
+
+	$data1[] = [
+		html_entity_decode($monthsArr[$mm]),
+		$solde,
+	];
+
+	if($mm >= 12){
+		$mm = 0;
+		$yy++;
+	}
+
+}
+
+$px1 = new DolGraph();
+$mesg = $px1->isGraphKo();
+$legend = ['Exercice N'];
+
+if (!$mesg){
+	$px1->SetTitle("Evolution de la trésorerie nette");
+	$px1->datacolor = array(array(67,94,246));
+	$px1->SetData($data1);
+	$px1->SetLegend($legend);
+	$px1->SetType(array('lines'));
+	$px1->setHeight('250');
 	$px1->SetWidth('500');
-	$px1->SetHeight('200');
-	$px1->SetType(array('line', 'line', 'line'));
-	$px1->SetShading(3);
-	$px1->setBgColor('onglet');
-	$px1->setBgColorGrid(array(255, 255, 255));
-	$px1->SetHorizTickIncrement(1);
-	$px1->draw($file, $fileurl);
-
-	$graphiqueA = $px1->show();
-
-// $ = $p1->show($tresuryChart);
+	$turnoverChart = $px1->draw($file, $fileurl);
+}
+$graphiqueA = $px1->show($turnoverChart);
 
 
 // TOTAL CHARGES BOX
