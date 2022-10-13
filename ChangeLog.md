@@ -52,7 +52,7 @@ Initial version
 ## 3.3
 
 - Onglet Général terminé : 
-    - correction des notes de frais payées (onglet general - boxe tresorerie )
+    - correction des notes de frais validés (onglet general - boxe tresorerie )
     - correction des factures fournisseurs validées (hors emprunts) (onglet general - boxe tresorerie )
     - correction de l'extrafield pour spécifier si une facture fournisseur est une charge fixe ou non : 
         - Par défaut ce champs n'est plus requis et est toujours sur "Aucune". 

@@ -1717,7 +1717,7 @@ class General extends FactureStats
 	}
 
 	/**
-	 * Retourne le montant total des notes de frais
+	 * Retourne le montant total des notes de frais validés
 	 * sur une période donnée
 	 */
 	public function fetchExpenses($date_start, $date_end = ''){
@@ -1725,9 +1725,7 @@ class General extends FactureStats
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "expensereport";
 		$sql .= " WHERE date_debut BETWEEN '" . $date_start .  "' AND '" . $date_end . "'";
-		$sql .= " AND fk_statut != 0";
-		$sql .= " AND paid = 1";
-		// $sql = "SELECT SUM(total_ht) as total_ht FROM `llx_expensereport` WHERE date_debut BETWEEN \"2022-10-01\" AND \"2022-10-31\" AND paid = 1;";
+		$sql .= " AND fk_statut = 2";
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
