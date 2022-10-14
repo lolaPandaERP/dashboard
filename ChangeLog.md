@@ -57,3 +57,9 @@ Initial version
     - correction de l'extrafield pour spécifier si une facture fournisseur est une charge fixe ou non : 
         - Par défaut ce champs n'est plus requis et est toujours sur "Aucune". 
         - Il faut penser à bien définir le type de CF au besoin. 
+
+## 3.4
+
+- Onglet général - boxe trésorerie (charges variables) : 
+    - Les notes de frais récupérées sont désormais validés ET approuvés
+    - Les factures fournisseurs validées ne compte plus les charges fixes (facture avec l'extrafield - charge)
