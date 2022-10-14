@@ -1592,15 +1592,19 @@ class General extends FactureStats
 
 
 	 /**
-	  * Return all unpaid supplier invoice on period
+	  * Return all unpaid supplier invoice on period (excluding static charges)
 	  */
 	 public function outstandingSupplier($date_start, $date_end, $paye){
 
 	   $sql = "SELECT * ";
-	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-	   $sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
-	   $sql .= " AND paye = ".$paye;
-	   $sql .= " AND fk_statut != 0 ";
+	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn as f";
+	   $sql .= " INNER JOIN ".MAIN_DB_PREFIX."facture_fourn_extrafields as ffe";
+		$sql .= " ON ffe.fk_object = f.rowid";
+	   $sql .= " WHERE f.datef BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
+	   $sql .= " AND f.paye = ".$paye;
+	   $sql .= " AND f.fk_statut != 0 ";
+	   $sql .= " AND ffe.dash_invoice_cf = 1 ";
+
 
 	   $resql = $this->db->query($sql);
 	   $result = [];
@@ -1725,7 +1729,7 @@ class General extends FactureStats
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "expensereport";
 		$sql .= " WHERE date_debut BETWEEN '" . $date_start .  "' AND '" . $date_end . "'";
-		$sql .= " AND fk_statut = 2";
+		$sql .= " AND fk_statut = 5";
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
