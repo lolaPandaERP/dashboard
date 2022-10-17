@@ -518,12 +518,30 @@ $grossMargin = $margin + $marginDeposit;
 // On additionne la somme total de la marge des factures + celle des avoirs
 $dataItem3 = price(round($grossMargin, 2)) . "\n€";
 
-$info6 = "Marge brut prévisionnelle";
-$forecastMargin = $conf->global->FORECAST_MARGIN; // manual entry
-$dataInfo6 = $forecastMargin."\n€";
+
+/**
+ * For progress : cumulative N-1 turnover since the beginning of the fiscal year to today's date
+ */
+
+
+// // Current year
+// $total_validated_invoices_until_now = $object->turnover($startFiscalYear, $lastDayCurrentMonth);
+// $total_deposit_until_now = $object->avoir($startFiscalYear, $lastDayCurrentMonth);
+
+// $total_month_year_progress = $total_validated_invoices_until_now + $total_deposit_until_now;
+
+// // Last year
+// $total_paid_invoice_month_lastyear_prog = $object->fetchInvoices($startFiscalLastyear, $lastDayCurrentMonthLastYear);
+// $total_unpaid_invoice_month_lastyear_progress = $object->fetchUnpaidInvoice($startFiscalLastyear, $lastDayCurrentMonthLastYear);
+
+// $total_month_last_year_progress = $total_paid_invoice_month_lastyear_prog + $total_unpaid_invoice_month_lastyear_progress;
+
+$info6 = "Progression ";
+$dataInfo6 = $object->progress($margin, $forecast)."\n%";
 
 // Margin To produce on current mounth
 $info5 = "Marge restant à produire";
+$forecastMargin = $conf->global->FORECAST_MARGIN; // manual entry
 $dataInfo5 = price(round($forecastMargin - $grossMargin, 2));
 
 // Graph
