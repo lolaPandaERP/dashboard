@@ -1729,7 +1729,7 @@ class General extends FactureStats
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "expensereport";
 		$sql .= " WHERE date_debut BETWEEN '" . $date_start .  "' AND '" . $date_end . "'";
-		$sql .= " AND fk_statut = 5";
+		$sql .= "AND fk_statut >= 2 AND fk_statut != 6";
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
