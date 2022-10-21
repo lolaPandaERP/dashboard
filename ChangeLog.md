@@ -63,3 +63,8 @@ Initial version
 - Onglet général - boxe trésorerie (charges variables) : 
     - Les notes de frais récupérées sont désormais validés ET approuvés
     - Les factures fournisseurs validées ne compte plus les charges fixes (facture avec l'extrafield - charge)
+
+## 3.5
+
+- Onglet Encours Client et Fournisseur (listes des encours dépassés) : 
+    - Amélioration du système de pagination pour les listes des encours dépassés
