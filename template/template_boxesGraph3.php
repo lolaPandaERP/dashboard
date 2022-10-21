@@ -143,23 +143,23 @@ function showList1() {
     <div class="card-body">
 			<?php print $listeA ?>
 			<nav>
-			<ul class="pagination">
-				<!-- Lien vers la page précédente (désactivé si on se trouve sur la 1ère page) -->
-				<li class="page-item <?= ($currentPage == 1) ? "disabled" : "" ?>">
-					<a href="encoursCF.php?page=<?= $currentPage - 1 ?>" class="page-link">Précédente</a>
-				</li>
-				<?php for($page = 1; $page <= $pagesCustomerInvoice; $page++): ?>
-					<!-- Lien vers chacune des pages (activé si on se trouve sur la page correspondante) -->
-					<li class="page-item <?= ($currentPage == $page) ? "active" : "" ?>">
-						<a href="encoursCF.php?page=<?= $page ?>" class="page-link"><?= $page ?></a>
+				<ul class="pagination">
+					<!-- Lien vers la page précédente (désactivé si on se trouve sur la 1ère page) -->
+					<li class="page-item <?= ($currentPage == 1) ? "disabled" : "" ?>">
+						<a href="encoursCF.php?page=<?= $currentPage - 1 ?>" class="page-link">Préc.</a>
 					</li>
-				<?php endfor ?>
-					<!-- Lien vers la page suivante (désactivé si on se trouve sur la dernière page) -->
-					<li class="page-item <?= ($currentPage == $pagesCustomerInvoice) ? "disabled" : "" ?>">
-					<a href="encoursCF.php?page=<?= $currentPage + 1 ?>" class="page-link">Suivante</a>
-				</li>
-			</ul>
-		</nav>
+					<?php for($page = 1; $page <= $byPage; $page++): ?>
+						<!-- Lien vers chacune des pages (activé si on se trouve sur la page correspondante) -->
+						<li class="page-item <?= ($currentPage == $byPage) ? "active" : "" ?>">
+							<a href="encoursCF.php?page=<?= $page ?>" class="page-link"><?= $page ?></a>
+						</li>
+					<?php endfor ?>
+						<!-- Lien vers la page suivante (désactivé si on se trouve sur la dernière page) -->
+						<li class="page-item <?= ($currentPage == $byPage) ? "disabled" : "" ?>">
+						<a href="encoursCF.php?page=<?= $currentPage + 1 ?>" class="page-link">Suiv.</a>
+					</li>
+				</ul>
+			</nav>
     </div>
 </div>
 
@@ -187,25 +187,25 @@ function showList2() {
     <div class="card-body">
 			<?php print $listeB ?>
 			<nav>
-			<ul class="pagination">
-				<!-- Lien vers la page précédente (désactivé si on se trouve sur la 1ère page) -->
-				<li class="page-item <?= ($currentPage == 1) ? "disabled" : "" ?>">
-					<a href="encoursCF.php?page=<?= $currentPage - 1 ?>" class="page-link">Précédente</a>
-				</li>
-				<?php for($page = 1; $page <= $pagesSupplierInvoices; $page++): ?>
-					<!-- Lien vers chacune des pages (activé si on se trouve sur la page correspondante) -->
-					<li class="page-item <?= ($currentPage == $page) ? "active" : "" ?>">
-						<a href="encoursCF.php?page=<?= $page ?>" class="page-link"><?= $page ?></a>
+				<ul class="pagination">
+					<!-- Lien vers la page précédente (désactivé si on se trouve sur la 1ère page) -->
+					<li class="page-item <?= ($currentPage == 1) ? "disabled" : "" ?>">
+						<a href="encoursCF.php?page=<?= $currentPage - 1 ?>" class="page-link">Préc.</a>
 					</li>
-				<?php endfor ?>
-					<!-- Lien vers la page suivante (désactivé si on se trouve sur la dernière page) -->
-					<li class="page-item <?= ($currentPage == $pagesSupplierInvoices) ? "disabled" : "" ?>">
-					<a href="encoursCF.php?page=<?= $currentPage + 1 ?>" class="page-link">Suivante</a>
-				</li>
-			</ul>
-		</nav>
-    </div>
-</div>
+					<?php for($page = 1; $page <= $byPage; $page++): ?>
+						<!-- Lien vers chacune des pages (activé si on se trouve sur la page correspondante) -->
+						<li class="page-item <?= ($currentPage == $byPage) ? "active" : "" ?>">
+							<a href="encoursCF.php?page=<?= $page ?>" class="page-link"><?= $page ?></a>
+						</li>
+					<?php endfor ?>
+						<!-- Lien vers la page suivante (désactivé si on se trouve sur la dernière page) -->
+						<li class="page-item <?= ($currentPage == $byPage) ? "disabled" : "" ?>">
+						<a href="encoursCF.php?page=<?= $currentPage + 1 ?>" class="page-link">Suiv.</a>
+					</li>
+				</ul>
+			</nav>
+    	</div>
+	</div>
 <div class="card">
 	<div class="pull-left">
 		<div class="popup" onclick="showList3()">
@@ -233,17 +233,17 @@ function showList3() {
 			<ul class="pagination">
 				<!-- Lien vers la page précédente (désactivé si on se trouve sur la 1ère page) -->
 				<li class="page-item <?= ($currentPage == 1) ? "disabled" : "" ?>">
-					<a href="encoursCF.php?page=<?= $currentPage - 1 ?>" class="page-link">Précédente</a>
+					<a href="encoursCF.php?page=<?= $currentPage - 1 ?>" class="page-link">Préc.</a>
 				</li>
-				<?php for($page = 1; $page <= $pagesOlderInvoice; $page++): ?>
+				<?php for($page = 1; $page <= $byPage; $page++): ?>
 					<!-- Lien vers chacune des pages (activé si on se trouve sur la page correspondante) -->
-					<li class="page-item <?= ($currentPage == $page) ? "active" : "" ?>">
+					<li class="page-item <?= ($currentPage == $byPage) ? "active" : "" ?>">
 						<a href="encoursCF.php?page=<?= $page ?>" class="page-link"><?= $page ?></a>
 					</li>
 				<?php endfor ?>
 					<!-- Lien vers la page suivante (désactivé si on se trouve sur la dernière page) -->
-					<li class="page-item <?= ($currentPage == $pagesOlderInvoice) ? "disabled" : "" ?>">
-					<a href="encoursCF.php?page=<?= $currentPage + 1 ?>" class="page-link">Suivante</a>
+					<li class="page-item <?= ($currentPage == $byPage) ? "disabled" : "" ?>">
+					<a href="encoursCF.php?page=<?= $currentPage + 1 ?>" class="page-link">Suiv.</a>
 				</li>
 			</ul>
 		</nav>

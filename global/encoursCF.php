@@ -548,6 +548,7 @@ foreach ($invoiceExceedArray as $res)
 		$listeA .= '<div class="pull-right">Montant TTC :  '.price($invoice->total_ttc).' € </span></div>';
 		$listeA .= '</li></ul>';
 }
+
 /**
 * SUPPLIER OUSTANDING EXCEED
 */

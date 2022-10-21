@@ -1445,7 +1445,7 @@ class General extends FactureStats
 
 		if($resql){
 			while($obj = $this->db->fetch_object(($resql))){
-				$result[] = $obj;
+				$result[] = $obj->total_ht;
 			}
 		}
 		return $result;
@@ -1522,7 +1522,7 @@ class General extends FactureStats
 	  public function amountCustomerBillExceed($date = ''){
 		global $db;
 
-	   $sql = "SELECT SUM(total_ttc) as total_ttc";
+	   $sql = "SELECT COUNT(*), SUM(total_ttc) as total_ttc ";
 	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
 	   $sql .= " WHERE paye = 0 ";
 	   $sql .= " AND fk_statut = 1";
