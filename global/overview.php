@@ -170,59 +170,59 @@ $fileurl = DOL_DOCUMENT_ROOT . '/custom/tab/img';
 $invoice = new Facture($db);
 unset($yy);
 
-// for ($mm = $startMonthFiscalYear; $mm < 13; $mm++) {
+for ($mm = $startMonthFiscalYear; $mm < 13; $mm++) {
 
-// 	if (!$yy) {
-// 		$yy = $year;
-// 	}
+	if (!$yy) {
+		$yy = $year;
+	}
 
-// 	if ($mm == $startMonthFiscalYear && $yy == $year + 1) {
-// 		break;
-// 	}
+	if ($mm == $startMonthFiscalYear && $yy == $year + 1) {
+		break;
+	}
 
-// 	strtotime('Last Year');
-// 	$lastyear = date($yy - 1);
-// 	$month = date('n');
-// 	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $mm, $yy);
-// 	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $mm, $lastyear);
+	strtotime('Last Year');
+	$lastyear = date($yy - 1);
+	$month = date('n');
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $mm, $yy);
+	$lastDayMonthLastyear =  cal_days_in_month(CAL_GREGORIAN, $mm, $lastyear);
 
-// 	// Start and end of each month on current years
-// 	$date_start = $yy . '-' . $mm . '-01';
-// 	$date_end = $yy . '-' . $mm . '-' . $lastDayMonth;
+	// Start and end of each month on current years
+	$date_start = $yy . '-' . $mm . '-01';
+	$date_end = $yy . '-' . $mm . '-' . $lastDayMonth;
 
-// 	// Fiscal Year
-// 	$total_invoice_month_year += $object->turnover($date_start, $date_end);
-// 	$total_deposit_month_year += $object->avoir($date_start, $date_end);
-// 	$closed_invoice_month_year += $object->closedInvoice($startFiscalYear, date('Y-m-d', $datetime));
+	// Fiscal Year
+	$total_invoice_month_year += $object->turnover($date_start, $date_end);
+	$total_deposit_month_year += $object->avoir($date_start, $date_end);
+	$closed_invoice_month_year += $object->closedInvoice($startFiscalYear, date('Y-m-d', $datetime));
 
-// 	$total_month_year_graph = $total_invoice_month_year + $total_deposit_month_year + $closed_invoice_month_year;
+	$total_month_year_graph = $total_invoice_month_year + $total_deposit_month_year + $closed_invoice_month_year;
 
-// 	// Start and end of each month on last year
-// 	$date_start_lastYear = $lastyear . '-' . $mm . '-01';
-// 	$date_end_lastYear = $lastyear . '-' . $mm . '-' . $lastDayMonthLastyear;
+	// Start and end of each month on last year
+	$date_start_lastYear = $lastyear . '-' . $mm . '-01';
+	$date_end_lastYear = $lastyear . '-' . $mm . '-' . $lastDayMonthLastyear;
 
-// 	$invoice_paid_month_lastyear += $object->fetchInvoices($date_start_lastYear, $date_end_lastYear);
-// 	$invoice_unpaid_month_lastyear += $object->fetchUnpaidInvoice($date_start_lastYear, $date_end_lastYear);
+	$invoice_paid_month_lastyear += $object->fetchInvoices($date_start_lastYear, $date_end_lastYear);
+	$invoice_unpaid_month_lastyear += $object->fetchUnpaidInvoice($date_start_lastYear, $date_end_lastYear);
 
-// 	$total_month_lastyear_graph = $invoice_paid_month_lastyear + $invoice_unpaid_month_lastyear;
+	$total_month_lastyear_graph = $invoice_paid_month_lastyear + $invoice_unpaid_month_lastyear;
 
-// 	// Last fiscal year
-// 	if (date('n', $date_start) == $mm) {
-// 		$total_month_year_graph += $invoice->total_ht;
-// 		$total_month_lastyear_graph += $invoice->total_ht;
-// 	}
+	// Last fiscal year
+	if (date('n', $date_start) == $mm) {
+		$total_month_year_graph += $invoice->total_ht;
+		$total_month_lastyear_graph += $invoice->total_ht;
+	}
 
-// 	$data1[] = [
-// 		html_entity_decode($monthsArr[$mm]),
-// 		$total_month_lastyear_graph,
-// 		$total_month_year_graph
-// 	];
+	$data1[] = [
+		html_entity_decode($monthsArr[$mm]),
+		$total_month_lastyear_graph,
+		$total_month_year_graph
+	];
 
-// 	if ($mm >= 12) {
-// 		$mm = 0;
-// 		$yy++;
-// 	}
-// }
+	if ($mm >= 12) {
+		$mm = 0;
+		$yy++;
+	}
+}
 
 $px1 = new DolGraph();
 $mesg = $px1->isGraphKo();
