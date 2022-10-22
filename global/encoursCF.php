@@ -85,7 +85,38 @@ $day = dol_print_date($datetime, "%d");
 // Calcul for last day in current year according to the beginning of the fiscal year
 $duree = 1;
 
-// Transf<
+// Transform date in timestamp
+$TimestampCurrentYear = strtotime($startFiscalyear);
+$TimestampCurrentLastYear = strtotime($startFiscalLastyear);
+
+// the end date automatically for current and last year
+$dateEndYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentYear));
+$TimestampendYear = strtotime($dateEndYear);
+$endYear = date('Y-m-d', strtotime('-'.$duree.'day', $TimestampendYear));
+
+$dateEndLastYear = date('Y-m-d', strtotime('+'.$duree.'year', $TimestampCurrentLastYear));
+$TimestampendLastYear = strtotime($dateEndLastYear);
+$endLastYear = date('Y-m-d', strtotime('-'.$duree.'day', $TimestampendLastYear));
+
+// M - 1 on current year and last year
+$firstDayLastMonth = date('Y-m-d', mktime(0, 0, 0, $month - 1, 1, $year)); /// current year
+$lastDayLastMonth = date('Y-m-t', mktime(0, 0, 0, $month - 1, 1, $year));
+
+// First day and last day
+$firstDayYear = date('Y-m-d', mktime(0, 0, 0, 1, 1, $year)); // current years
+$lastDayYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year));
+
+// First day and last day of current month
+$firstDayCurrentMonth = date('Y-m-d', mktime(0, 0, 0, $month, 1, $year));
+$lastDayCurrentMonth = date('Y-m-t', mktime(0, 0, 0, $month, 1, $year));
+
+$firstDayLastYear = date('Y-m-d', mktime(0, 0, 1, 1, 1, $year - 1)); // last year
+$lastDayLastYear = date('Y-m-t', mktime(0, 0, 1, 12, 1, $year - 1));
+
+// Load start month fiscal year for datas box and graph
+$startFiscalYear = $conf->global->START_FISCAL_YEAR;
+$startMonthFiscalYear = $object->startMonthForGraphLadder($startFiscalYear, 12);
+
 $invoice = new Facture($db);
 /**
  * CUSTOMER OUTSTANDING
