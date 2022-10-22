@@ -589,7 +589,9 @@ $fivePop_data1 = "Liste des commandes validées du jour";
 	</br>
 	<?php
 
-	$result = $object->fetchValidatedOrderToday($day_now);
+	$date_now = date('Y-m-d');
+	$result = $object->fetchValidatedOrderToday($date_now);
+
 	if ($result != null) {
 
 		foreach ($result as $res) {
@@ -608,7 +610,7 @@ $fivePop_data1 = "Liste des commandes validées du jour";
 			print '</ul>';
 		}
 	} else {
-		print '<p class="center"><span class="badge badge-pill badge-danger">Aucune commande validées pour ce jour </span></p>';
+		print '<p class="center"><span class="badge badge-danger">Aucune commande(s) validée(s) pour ce jour </span></p>';
 		print '</br>';
 	}
 
