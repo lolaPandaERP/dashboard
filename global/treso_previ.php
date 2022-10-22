@@ -172,8 +172,8 @@ $sql .= " AND ba.entity IN (" . getEntity('bank_account') . ")";
 $sql .= " AND b.datev >= '" . $db->escape($year) . "-01-01 00:00:00'";
 $sql .= " AND b.datev <= '" . $db->escape($year) . "-12-31 23:59:59'";
 $sql .= " AND b.amount > 0";
-if ($account && $_GET["option"] != 'all') {
-	$sql .= " AND b.fk_account IN (" . $db->sanitize($account) . ")";
+if ($currentAccount && $_GET["option"] != 'all') {
+	$sql .= " AND b.fk_account IN (" . $db->sanitize($currentAccount) . ")";
 }
 $sql .= " GROUP BY date_format(b.datev,'%m');";
 
@@ -202,7 +202,7 @@ $sql .= " AND b.datev >= '" . $db->escape($year) . "-01-01 00:00:00'";
 $sql .= " AND b.datev <= '" . $db->escape($year) . "-12-31 23:59:59'";
 $sql .= " AND b.amount < 0";
 if ($account && $_GET["option"] != 'all') {
-	$sql .= " AND b.fk_account IN (" . $db->sanitize($account) . ")";
+	$sql .= " AND b.fk_account IN (" . $db->sanitize($acccurrentAccountount) . ")";
 }
 $sql .= " GROUP BY date_format(b.datev,'%m')";
 
@@ -254,8 +254,12 @@ for ($i = $currentMonthLastYear; $i < 13; $i++) {
 	}
 }
 
-
-$title = "Mouvements du solde sur l'exercice N";
+$accounts = $object->fetchAllbankAccount();
+foreach($accounts as $account){
+	$acc = new Account($db);
+	$acc->fetch($currentAccount);
+	$title = "Mouvements du solde du compte ".$acc->label."";
+}
 $px4 = new DolGraph();
 $px4->SetData($graph_datas);
 $px4->SetLegend(array($langs->transnoentities("Credit"), $langs->transnoentities("Debit")));
@@ -472,42 +476,46 @@ $accounts = $object->fetchAllBankAccount();
 $nbAccount = count($accounts);
 
 // Graph
-$data = [];
 $file = "EvolutionAccountsChart";
 $fileurl = DOL_DOCUMENT_ROOT . '/custom/tab/img';
 $account = new Account($db);
+unset($yy);
 
-// Construire le tableau de tout les comptes en bq
-$array_total_account = $object->fetchAllBankAccount($date_start, $date_end);
+for ($mm = $startMonthFiscalYear; $mm < 13; $mm++) {
 
-for ($i = $startMonthFiscalYear; $i <= 12; $i++) {
-
-	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $i, $year);
-
-	$lastyear = strtotime('Last Year');
-	$lastyear = date($year - 1);
-
-	// Current Year
-	$date_start = $year . '-' . $i . '-01';
-	$date_end = $year . '-' . $i . '-' . $lastDayMonth;
-
-	foreach ($array_total_account as $acc) {
-		$idaccount = $acc->rowid;
-
-		$solde = $object->soldeOfCurrentAccount($date_start, $date_end, $idaccount, $year);
-		// $amount_treso_by_account = array_sum($solde);
-
-		if (date('n', $date_start) == $i) {
-			$amount_treso_by_account += $acc->amount;
-		}
+	if (!$yy) {
+		$yy = $year;
 	}
 
-	$data[] = [
-		html_entity_decode($monthsArr[$i]), // month
-		$amount_treso_by_account,
-		$amount_treso_by_account,
-		$amount_treso_by_account,
+	if ($mm == $startMonthFiscalYear && $yy == $year + 1) {
+		break;
+	}
+
+	$lastDayMonth = cal_days_in_month(CAL_GREGORIAN, $mm, $yy);
+
+	// Start and end of each month on current years
+	$date_start = $yy . '-' . $mm . '-01';
+	$date_end = $yy . '-' . $mm . '-' . $lastDayMonth;
+
+
+	$totalSoldes = $object->totalSoldes();
+
+	// Last fiscal year
+	if (date('n', $date_start) == $mm) {
+		$totalSoldes += $invoice->total_ht;
+		// $total_month_lastyear_graph += $invoice->total_ht;
+	}
+
+	$data3[] = [
+		html_entity_decode($monthsArr[$mm]),
+		$totalSoldes,
+		// $total_month_year_graph
 	];
+
+	if ($mm >= 12) {
+		$mm = 0;
+		$yy++;
+	}
 }
 
 $px3 = new DolGraph();
@@ -517,7 +525,7 @@ $legend = ['Compte 1', 'Compte 2', 'Compte 3'];
 if (!$mesg) {
 	$px3->SetTitle("Evolution des comptes");
 	$px3->datacolor = array(array(93, 173, 226), array(82, 190, 128), array(230, 126, 34));
-	$px3->SetData($data);
+	$px3->SetData($data3);
 	$px3->SetLegend($legend);
 	$px3->SetType(array('lines')); // Array with type for each serie. Example: array('type1', 'type2', ...) where type can be: 'pie', 'piesemicircle', 'polar', 'lines', 'linesnopoint', 'bars', 'horizontalbars'...
 	$px3->setHeight('250');
@@ -527,18 +535,19 @@ if (!$mesg) {
 $graphiqueC = $px3->show($customerToDaysChart);
 
 
-
 /**
  * CUSTOMER TO CASH
  */
 
 // total factures impayées et commandes clients validées sur l'année
 $info7 = "Clients à encaisser";
-$customer_validated_orders = $object->fetchValidatedOrder($startFiscalyear, $endYear); // unpaid invoices
-$customer_validated_invoices = $object->outstandingBill($startFiscalyear, $endYear); // validated orders
-$total_customer_validated_invoices = array_sum($customer_validated_invoices);
+$customer_validated_orders = $object->fetchValidatedOrder($startFiscalyear, $endYear);
+$total_validated_orders = array_sum($customer_validated_orders);
 
-$customerToCash = ($total_customer_validated_invoices + $customer_validated_orders);
+$customer_unpaid_invoices = $object->outstandingBill($startFiscalyear, $endYear);
+$total_customer_unpaid_invoices = array_sum($customer_unpaid_invoices);
+
+$customerToCash = ($total_customer_unpaid_invoices + $total_validated_orders);
 $dataInfo7 = price($customerToCash) . "\n€";
 
 
@@ -577,7 +586,7 @@ $thirdPop_info4 = $info9;
 $thirdPop_info5 = $info10;
 
 $thirdPop_data1 = "Banques | Caisses - Comptes bancaires : solde du compte ";
-$thirdPop_data2 = "Total des factures clients impayées + commandes client validées sur l'exercice en cours";
+$thirdPop_data2 = "Factures clients impayées (".price($total_customer_unpaid_invoices)."\n€) + commandes client validées (".price($total_validated_orders)."\n€) sur l'exercice en cours";
 $thirdPop_data3 = "Addition du solde des 3 comptes bancaires et du 'reste à payer' sur les factures fournisseurs";
 $thirdPop_data4 = "Addition du solde des 3 comptes bancaires - le montant 'fournisseurs à payer' ";
 $thirdPop_data5 = "Addition des factures fournisseurs impayées et des commandes fournisseurs validées";

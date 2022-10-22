@@ -1270,11 +1270,10 @@ class General extends FactureStats
 	{
 
 		global $db;
-		$today = date('Y-m-d');
 
 		// request
 		$sql = "SELECT * FROM " . MAIN_DB_PREFIX . "commande";
-		$sql .= " WHERE date_commande = '" . $now ."' ";
+		$sql .= " WHERE date_commande = '" . $now . "' ";
 		$sql .= "AND fk_statut = 1";
 
 		// $sql = "SELECT * FROM `llx_commande` where date_commande = \"2022-10-22\" and fk_statut = 1;";
