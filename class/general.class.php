@@ -25,8 +25,8 @@
 
 
 // Put here all includes required by your class file
-require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
-require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facturestats.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facturestats.class.php';
 
 /**
  * Class for General
@@ -100,25 +100,25 @@ class General extends FactureStats
 	/**
 	 * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
 	 */
-	public $fields=array(
-		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>'1', 'position'=>1, 'notnull'=>1, 'visible'=>0, 'noteditable'=>'1', 'index'=>1, 'css'=>'left', 'comment'=>"Id"),
-		'ref' => array('type'=>'varchar(128)', 'label'=>'Ref', 'enabled'=>'1', 'position'=>10, 'notnull'=>1, 'visible'=>4, 'noteditable'=>'1', 'default'=>'(PROV)', 'index'=>1, 'searchall'=>1, 'showoncombobox'=>'1', 'comment'=>"Reference of object"),
-		'label' => array('type'=>'varchar(255)', 'label'=>'Label', 'enabled'=>'1', 'position'=>30, 'notnull'=>0, 'visible'=>1, 'searchall'=>1, 'css'=>'minwidth300', 'help'=>"Help text", 'showoncombobox'=>'1',),
-		'amount' => array('type'=>'price', 'label'=>'Amount', 'enabled'=>'1', 'position'=>40, 'notnull'=>0, 'visible'=>1, 'default'=>'null', 'isameasure'=>'1', 'help'=>"Help text for amount",),
-		'qty' => array('type'=>'real', 'label'=>'Qty', 'enabled'=>'1', 'position'=>45, 'notnull'=>0, 'visible'=>1, 'default'=>'0', 'isameasure'=>'1', 'css'=>'maxwidth75imp', 'help'=>"Help text for quantity",),
-		'fk_soc' => array('type'=>'integer:Societe:societe/class/societe.class.php:1:status=1 AND entity IN (__SHARED_ENTITIES__)', 'label'=>'ThirdParty', 'enabled'=>'1', 'position'=>50, 'notnull'=>-1, 'visible'=>1, 'index'=>1, 'help'=>"LinkToThirparty",),
-		'fk_project' => array('type'=>'integer:Project:projet/class/project.class.php:1', 'label'=>'Project', 'enabled'=>'1', 'position'=>52, 'notnull'=>-1, 'visible'=>-1, 'index'=>1,),
-		'description' => array('type'=>'text', 'label'=>'Description', 'enabled'=>'1', 'position'=>60, 'notnull'=>0, 'visible'=>3,),
-		'note_public' => array('type'=>'html', 'label'=>'NotePublic', 'enabled'=>'1', 'position'=>61, 'notnull'=>0, 'visible'=>0,),
-		'note_private' => array('type'=>'html', 'label'=>'NotePrivate', 'enabled'=>'1', 'position'=>62, 'notnull'=>0, 'visible'=>0,),
-		'date_creation' => array('type'=>'datetime', 'label'=>'DateCreation', 'enabled'=>'1', 'position'=>500, 'notnull'=>1, 'visible'=>-2,),
-		'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'enabled'=>'1', 'position'=>501, 'notnull'=>0, 'visible'=>-2,),
-		'fk_user_creat' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserAuthor', 'enabled'=>'1', 'position'=>510, 'notnull'=>1, 'visible'=>-2, 'foreignkey'=>'user.rowid',),
-		'fk_user_modif' => array('type'=>'integer:User:user/class/user.class.php', 'label'=>'UserModif', 'enabled'=>'1', 'position'=>511, 'notnull'=>-1, 'visible'=>-2,),
-		'last_main_doc' => array('type'=>'varchar(255)', 'label'=>'LastMainDoc', 'enabled'=>'1', 'position'=>600, 'notnull'=>0, 'visible'=>0,),
-		'import_key' => array('type'=>'varchar(14)', 'label'=>'ImportId', 'enabled'=>'1', 'position'=>1000, 'notnull'=>-1, 'visible'=>-2,),
-		'model_pdf' => array('type'=>'varchar(255)', 'label'=>'Model pdf', 'enabled'=>'1', 'position'=>1010, 'notnull'=>-1, 'visible'=>0,),
-		'status' => array('type'=>'smallint', 'label'=>'Status', 'enabled'=>'1', 'position'=>1000, 'notnull'=>1, 'visible'=>1, 'index'=>1, 'arrayofkeyval'=>array('0'=>'Brouillon', '1'=>'Valid&eacute;', '9'=>'Annul&eacute;'),),
+	public $fields = array(
+		'rowid' => array('type' => 'integer', 'label' => 'TechnicalID', 'enabled' => '1', 'position' => 1, 'notnull' => 1, 'visible' => 0, 'noteditable' => '1', 'index' => 1, 'css' => 'left', 'comment' => "Id"),
+		'ref' => array('type' => 'varchar(128)', 'label' => 'Ref', 'enabled' => '1', 'position' => 10, 'notnull' => 1, 'visible' => 4, 'noteditable' => '1', 'default' => '(PROV)', 'index' => 1, 'searchall' => 1, 'showoncombobox' => '1', 'comment' => "Reference of object"),
+		'label' => array('type' => 'varchar(255)', 'label' => 'Label', 'enabled' => '1', 'position' => 30, 'notnull' => 0, 'visible' => 1, 'searchall' => 1, 'css' => 'minwidth300', 'help' => "Help text", 'showoncombobox' => '1',),
+		'amount' => array('type' => 'price', 'label' => 'Amount', 'enabled' => '1', 'position' => 40, 'notnull' => 0, 'visible' => 1, 'default' => 'null', 'isameasure' => '1', 'help' => "Help text for amount",),
+		'qty' => array('type' => 'real', 'label' => 'Qty', 'enabled' => '1', 'position' => 45, 'notnull' => 0, 'visible' => 1, 'default' => '0', 'isameasure' => '1', 'css' => 'maxwidth75imp', 'help' => "Help text for quantity",),
+		'fk_soc' => array('type' => 'integer:Societe:societe/class/societe.class.php:1:status=1 AND entity IN (__SHARED_ENTITIES__)', 'label' => 'ThirdParty', 'enabled' => '1', 'position' => 50, 'notnull' => -1, 'visible' => 1, 'index' => 1, 'help' => "LinkToThirparty",),
+		'fk_project' => array('type' => 'integer:Project:projet/class/project.class.php:1', 'label' => 'Project', 'enabled' => '1', 'position' => 52, 'notnull' => -1, 'visible' => -1, 'index' => 1,),
+		'description' => array('type' => 'text', 'label' => 'Description', 'enabled' => '1', 'position' => 60, 'notnull' => 0, 'visible' => 3,),
+		'note_public' => array('type' => 'html', 'label' => 'NotePublic', 'enabled' => '1', 'position' => 61, 'notnull' => 0, 'visible' => 0,),
+		'note_private' => array('type' => 'html', 'label' => 'NotePrivate', 'enabled' => '1', 'position' => 62, 'notnull' => 0, 'visible' => 0,),
+		'date_creation' => array('type' => 'datetime', 'label' => 'DateCreation', 'enabled' => '1', 'position' => 500, 'notnull' => 1, 'visible' => -2,),
+		'tms' => array('type' => 'timestamp', 'label' => 'DateModification', 'enabled' => '1', 'position' => 501, 'notnull' => 0, 'visible' => -2,),
+		'fk_user_creat' => array('type' => 'integer:User:user/class/user.class.php', 'label' => 'UserAuthor', 'enabled' => '1', 'position' => 510, 'notnull' => 1, 'visible' => -2, 'foreignkey' => 'user.rowid',),
+		'fk_user_modif' => array('type' => 'integer:User:user/class/user.class.php', 'label' => 'UserModif', 'enabled' => '1', 'position' => 511, 'notnull' => -1, 'visible' => -2,),
+		'last_main_doc' => array('type' => 'varchar(255)', 'label' => 'LastMainDoc', 'enabled' => '1', 'position' => 600, 'notnull' => 0, 'visible' => 0,),
+		'import_key' => array('type' => 'varchar(14)', 'label' => 'ImportId', 'enabled' => '1', 'position' => 1000, 'notnull' => -1, 'visible' => -2,),
+		'model_pdf' => array('type' => 'varchar(255)', 'label' => 'Model pdf', 'enabled' => '1', 'position' => 1010, 'notnull' => -1, 'visible' => 0,),
+		'status' => array('type' => 'smallint', 'label' => 'Status', 'enabled' => '1', 'position' => 1000, 'notnull' => 1, 'visible' => 1, 'index' => 1, 'arrayofkeyval' => array('0' => 'Brouillon', '1' => 'Valid&eacute;', '9' => 'Annul&eacute;'),),
 	);
 	public $rowid;
 	public $ref;
@@ -200,31 +200,23 @@ class General extends FactureStats
 		}*/
 
 		// Unset fields that are disabled
-		foreach ($this->fields as $key => $val)
-		{
-			if (isset($val['enabled']) && empty($val['enabled']))
-			{
+		foreach ($this->fields as $key => $val) {
+			if (isset($val['enabled']) && empty($val['enabled'])) {
 				unset($this->fields[$key]);
 			}
 		}
 
 		// Translate some data of arrayofkeyval
-		if (is_object($langs))
-		{
-			foreach ($this->fields as $key => $val)
-			{
-				if (!empty($val['arrayofkeyval']) && is_array($val['arrayofkeyval']))
-				{
-					foreach ($val['arrayofkeyval'] as $key2 => $val2)
-					{
+		if (is_object($langs)) {
+			foreach ($this->fields as $key => $val) {
+				if (!empty($val['arrayofkeyval']) && is_array($val['arrayofkeyval'])) {
+					foreach ($val['arrayofkeyval'] as $key2 => $val2) {
 						$this->fields[$key]['arrayofkeyval'][$key2] = $langs->trans($val2);
 					}
 				}
 			}
 		}
 	}
-
-
 
 
 
@@ -272,21 +264,24 @@ class General extends FactureStats
 		unset($object->import_key);
 
 		// Clear fields
-		if (property_exists($object, 'ref')) $object->ref = empty($this->fields['ref']['default']) ? "Copy_Of_".$object->ref : $this->fields['ref']['default'];
-		if (property_exists($object, 'label')) $object->label = empty($this->fields['label']['default']) ? $langs->trans("CopyOf")." ".$object->label : $this->fields['label']['default'];
-		if (property_exists($object, 'status')) { $object->status = self::STATUS_DRAFT; }
-		if (property_exists($object, 'date_creation')) { $object->date_creation = dol_now(); }
-		if (property_exists($object, 'date_modification')) { $object->date_modification = null; }
+		if (property_exists($object, 'ref')) $object->ref = empty($this->fields['ref']['default']) ? "Copy_Of_" . $object->ref : $this->fields['ref']['default'];
+		if (property_exists($object, 'label')) $object->label = empty($this->fields['label']['default']) ? $langs->trans("CopyOf") . " " . $object->label : $this->fields['label']['default'];
+		if (property_exists($object, 'status')) {
+			$object->status = self::STATUS_DRAFT;
+		}
+		if (property_exists($object, 'date_creation')) {
+			$object->date_creation = dol_now();
+		}
+		if (property_exists($object, 'date_modification')) {
+			$object->date_modification = null;
+		}
 		// ...
 		// Clear extrafields that are unique
-		if (is_array($object->array_options) && count($object->array_options) > 0)
-		{
+		if (is_array($object->array_options) && count($object->array_options) > 0) {
 			$extrafields->fetch_name_optionals_label($this->table_element);
-			foreach ($object->array_options as $key => $option)
-			{
+			foreach ($object->array_options as $key => $option) {
 				$shortkey = preg_replace('/options_/', '', $key);
-				if (!empty($extrafields->attributes[$this->table_element]['unique'][$shortkey]))
-				{
+				if (!empty($extrafields->attributes[$this->table_element]['unique'][$shortkey])) {
 					//var_dump($key); var_dump($clonedObj->array_options[$key]); exit;
 					unset($object->array_options[$key]);
 				}
@@ -302,20 +297,16 @@ class General extends FactureStats
 			$this->errors = $object->errors;
 		}
 
-		if (!$error)
-		{
+		if (!$error) {
 			// copy internal contacts
-			if ($this->copy_linked_contact($object, 'internal') < 0)
-			{
+			if ($this->copy_linked_contact($object, 'internal') < 0) {
 				$error++;
 			}
 		}
 
-		if (!$error)
-		{
+		if (!$error) {
 			// copy external contacts if same company
-			if (property_exists($this, 'socid') && $this->socid == $object->socid)
-			{
+			if (property_exists($this, 'socid') && $this->socid == $object->socid) {
 				if ($this->copy_linked_contact($object, 'external') < 0)
 					$error++;
 			}
@@ -382,43 +373,42 @@ class General extends FactureStats
 
 		$sql = 'SELECT ';
 		$sql .= $this->getFieldList();
-		$sql .= ' FROM '.MAIN_DB_PREFIX.$this->table_element.' as t';
-		if (isset($this->ismultientitymanaged) && $this->ismultientitymanaged == 1) $sql .= ' WHERE t.entity IN ('.getEntity($this->table_element).')';
+		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element . ' as t';
+		if (isset($this->ismultientitymanaged) && $this->ismultientitymanaged == 1) $sql .= ' WHERE t.entity IN (' . getEntity($this->table_element) . ')';
 		else $sql .= ' WHERE 1 = 1';
 		// Manage filter
 		$sqlwhere = array();
 		if (count($filter) > 0) {
 			foreach ($filter as $key => $value) {
 				if ($key == 't.rowid') {
-					$sqlwhere[] = $key.'='.$value;
+					$sqlwhere[] = $key . '=' . $value;
 				} elseif (in_array($this->fields[$key]['type'], array('date', 'datetime', 'timestamp'))) {
-					$sqlwhere[] = $key.' = \''.$this->db->idate($value).'\'';
+					$sqlwhere[] = $key . ' = \'' . $this->db->idate($value) . '\'';
 				} elseif ($key == 'customsql') {
 					$sqlwhere[] = $value;
 				} elseif (strpos($value, '%') === false) {
-					$sqlwhere[] = $key.' IN ('.$this->db->sanitize($this->db->escape($value)).')';
+					$sqlwhere[] = $key . ' IN (' . $this->db->sanitize($this->db->escape($value)) . ')';
 				} else {
-					$sqlwhere[] = $key.' LIKE \'%'.$this->db->escape($value).'%\'';
+					$sqlwhere[] = $key . ' LIKE \'%' . $this->db->escape($value) . '%\'';
 				}
 			}
 		}
 		if (count($sqlwhere) > 0) {
-			$sql .= ' AND ('.implode(' '.$filtermode.' ', $sqlwhere).')';
+			$sql .= ' AND (' . implode(' ' . $filtermode . ' ', $sqlwhere) . ')';
 		}
 
 		if (!empty($sortfield)) {
 			$sql .= $this->db->order($sortfield, $sortorder);
 		}
 		if (!empty($limit)) {
-			$sql .= ' '.$this->db->plimit($limit, $offset);
+			$sql .= ' ' . $this->db->plimit($limit, $offset);
 		}
 
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			$num = $this->db->num_rows($resql);
 			$i = 0;
-			while ($i < ($limit ? min($limit, $num) : $num))
-			{
+			while ($i < ($limit ? min($limit, $num) : $num)) {
 				$obj = $this->db->fetch_object($resql);
 
 				$record = new self($this->db);
@@ -432,8 +422,8 @@ class General extends FactureStats
 
 			return $records;
 		} else {
-			$this->errors[] = 'Error '.$this->db->lasterror();
-			dol_syslog(__METHOD__.' '.join(',', $this->errors), LOG_ERR);
+			$this->errors[] = 'Error ' . $this->db->lasterror();
+			dol_syslog(__METHOD__ . ' ' . join(',', $this->errors), LOG_ERR);
 
 			return -1;
 		}
@@ -474,8 +464,7 @@ class General extends FactureStats
 	 */
 	public function deleteLine(User $user, $idline, $notrigger = false)
 	{
-		if ($this->status < 0)
-		{
+		if ($this->status < 0) {
 			$this->error = 'ErrorDeleteLineNotAllowedByObjectStatus';
 			return -2;
 		}
@@ -495,14 +484,13 @@ class General extends FactureStats
 	{
 		global $conf, $langs;
 
-		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+		require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
 
 		$error = 0;
 
 		// Protection
-		if ($this->status == self::STATUS_VALIDATED)
-		{
-			dol_syslog(get_class($this)."::validate action abandonned: already validated", LOG_WARNING);
+		if ($this->status == self::STATUS_VALIDATED) {
+			dol_syslog(get_class($this) . "::validate action abandonned: already validated", LOG_WARNING);
 			return 0;
 		}
 
@@ -529,24 +517,22 @@ class General extends FactureStats
 
 		if (!empty($num)) {
 			// Validate
-			$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
-			$sql .= " SET ref = '".$this->db->escape($num)."',";
-			$sql .= " status = ".self::STATUS_VALIDATED;
-			if (!empty($this->fields['date_validation'])) $sql .= ", date_validation = '".$this->db->idate($now)."'";
-			if (!empty($this->fields['fk_user_valid'])) $sql .= ", fk_user_valid = ".$user->id;
-			$sql .= " WHERE rowid = ".$this->id;
+			$sql = "UPDATE " . MAIN_DB_PREFIX . $this->table_element;
+			$sql .= " SET ref = '" . $this->db->escape($num) . "',";
+			$sql .= " status = " . self::STATUS_VALIDATED;
+			if (!empty($this->fields['date_validation'])) $sql .= ", date_validation = '" . $this->db->idate($now) . "'";
+			if (!empty($this->fields['fk_user_valid'])) $sql .= ", fk_user_valid = " . $user->id;
+			$sql .= " WHERE rowid = " . $this->id;
 
-			dol_syslog(get_class($this)."::validate()", LOG_DEBUG);
+			dol_syslog(get_class($this) . "::validate()", LOG_DEBUG);
 			$resql = $this->db->query($sql);
-			if (!$resql)
-			{
+			if (!$resql) {
 				dol_print_error($this->db);
 				$this->error = $this->db->lasterror();
 				$error++;
 			}
 
-			if (!$error && !$notrigger)
-			{
+			if (!$error && !$notrigger) {
 				// Call trigger
 				$result = $this->call_trigger('GENERAL_VALIDATE', $user);
 				if ($result < 0) $error++;
@@ -554,39 +540,37 @@ class General extends FactureStats
 			}
 		}
 
-		if (!$error)
-		{
+		if (!$error) {
 			$this->oldref = $this->ref;
 
 			// Rename directory if dir was a temporary ref
-			if (preg_match('/^[\(]?PROV/i', $this->ref))
-			{
+			if (preg_match('/^[\(]?PROV/i', $this->ref)) {
 				// Now we rename also files into index
-				$sql = 'UPDATE '.MAIN_DB_PREFIX."ecm_files set filename = CONCAT('".$this->db->escape($this->newref)."', SUBSTR(filename, ".(strlen($this->ref) + 1).")), filepath = 'general/".$this->db->escape($this->newref)."'";
-				$sql .= " WHERE filename LIKE '".$this->db->escape($this->ref)."%' AND filepath = 'general/".$this->db->escape($this->ref)."' and entity = ".$conf->entity;
+				$sql = 'UPDATE ' . MAIN_DB_PREFIX . "ecm_files set filename = CONCAT('" . $this->db->escape($this->newref) . "', SUBSTR(filename, " . (strlen($this->ref) + 1) . ")), filepath = 'general/" . $this->db->escape($this->newref) . "'";
+				$sql .= " WHERE filename LIKE '" . $this->db->escape($this->ref) . "%' AND filepath = 'general/" . $this->db->escape($this->ref) . "' and entity = " . $conf->entity;
 				$resql = $this->db->query($sql);
-				if (!$resql) { $error++; $this->error = $this->db->lasterror(); }
+				if (!$resql) {
+					$error++;
+					$this->error = $this->db->lasterror();
+				}
 
 				// We rename directory ($this->ref = old ref, $num = new ref) in order not to lose the attachments
 				$oldref = dol_sanitizeFileName($this->ref);
 				$newref = dol_sanitizeFileName($num);
-				$dirsource = $conf->tab->dir_output.'/general/'.$oldref;
-				$dirdest = $conf->tab->dir_output.'/general/'.$newref;
-				if (!$error && file_exists($dirsource))
-				{
-					dol_syslog(get_class($this)."::validate() rename dir ".$dirsource." into ".$dirdest);
+				$dirsource = $conf->tab->dir_output . '/general/' . $oldref;
+				$dirdest = $conf->tab->dir_output . '/general/' . $newref;
+				if (!$error && file_exists($dirsource)) {
+					dol_syslog(get_class($this) . "::validate() rename dir " . $dirsource . " into " . $dirdest);
 
-					if (@rename($dirsource, $dirdest))
-					{
+					if (@rename($dirsource, $dirdest)) {
 						dol_syslog("Rename ok");
 						// Rename docs starting with $oldref with $newref
-						$listoffiles = dol_dir_list($conf->tab->dir_output.'/general/'.$newref, 'files', 1, '^'.preg_quote($oldref, '/'));
-						foreach ($listoffiles as $fileentry)
-						{
+						$listoffiles = dol_dir_list($conf->tab->dir_output . '/general/' . $newref, 'files', 1, '^' . preg_quote($oldref, '/'));
+						foreach ($listoffiles as $fileentry) {
 							$dirsource = $fileentry['name'];
-							$dirdest = preg_replace('/^'.preg_quote($oldref, '/').'/', $newref, $dirsource);
-							$dirsource = $fileentry['path'].'/'.$dirsource;
-							$dirdest = $fileentry['path'].'/'.$dirdest;
+							$dirdest = preg_replace('/^' . preg_quote($oldref, '/') . '/', $newref, $dirsource);
+							$dirsource = $fileentry['path'] . '/' . $dirsource;
+							$dirdest = $fileentry['path'] . '/' . $dirdest;
 							@rename($dirsource, $dirdest);
 						}
 					}
@@ -595,14 +579,12 @@ class General extends FactureStats
 		}
 
 		// Set new ref and current status
-		if (!$error)
-		{
+		if (!$error) {
 			$this->ref = $num;
 			$this->status = self::STATUS_VALIDATED;
 		}
 
-		if (!$error)
-		{
+		if (!$error) {
 			$this->db->commit();
 			return 1;
 		} else {
@@ -622,8 +604,7 @@ class General extends FactureStats
 	public function setDraft($user, $notrigger = 0)
 	{
 		// Protection
-		if ($this->status <= self::STATUS_DRAFT)
-		{
+		if ($this->status <= self::STATUS_DRAFT) {
 			return 0;
 		}
 
@@ -647,8 +628,7 @@ class General extends FactureStats
 	public function cancel($user, $notrigger = 0)
 	{
 		// Protection
-		if ($this->status != self::STATUS_VALIDATED)
-		{
+		if ($this->status != self::STATUS_VALIDATED) {
 			return 0;
 		}
 
@@ -672,8 +652,7 @@ class General extends FactureStats
 	public function reopen($user, $notrigger = 0)
 	{
 		// Protection
-		if ($this->status != self::STATUS_CANCELED)
-		{
+		if ($this->status != self::STATUS_CANCELED) {
 			return 0;
 		}
 
@@ -705,17 +684,16 @@ class General extends FactureStats
 
 		$result = '';
 
-		$label = img_picto('', $this->picto).' <u>'.$langs->trans("General").'</u>';
+		$label = img_picto('', $this->picto) . ' <u>' . $langs->trans("General") . '</u>';
 		if (isset($this->status)) {
-			$label .= ' '.$this->getLibStatut(5);
+			$label .= ' ' . $this->getLibStatut(5);
 		}
 		$label .= '<br>';
-		$label .= '<b>'.$langs->trans('Ref').':</b> '.$this->ref;
+		$label .= '<b>' . $langs->trans('Ref') . ':</b> ' . $this->ref;
 
-		$url = dol_buildpath('/tab/general_card.php', 1).'?id='.$this->id;
+		$url = dol_buildpath('/tab/general_card.php', 1) . '?id=' . $this->id;
 
-		if ($option != 'nolink')
-		{
+		if ($option != 'nolink') {
 			// Add param to save lastsearch_values or not
 			$add_save_lastsearch_values = ($save_lastsearch_value == 1 ? 1 : 0);
 			if ($save_lastsearch_value == -1 && preg_match('/list\.php/', $_SERVER["PHP_SELF"])) $add_save_lastsearch_values = 1;
@@ -723,46 +701,44 @@ class General extends FactureStats
 		}
 
 		$linkclose = '';
-		if (empty($notooltip))
-		{
-			if (!empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER))
-			{
+		if (empty($notooltip)) {
+			if (!empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) {
 				$label = $langs->trans("ShowGeneral");
-				$linkclose .= ' alt="'.dol_escape_htmltag($label, 1).'"';
+				$linkclose .= ' alt="' . dol_escape_htmltag($label, 1) . '"';
 			}
-			$linkclose .= ' title="'.dol_escape_htmltag($label, 1).'"';
-			$linkclose .= ' class="classfortooltip'.($morecss ? ' '.$morecss : '').'"';
-		} else $linkclose = ($morecss ? ' class="'.$morecss.'"' : '');
+			$linkclose .= ' title="' . dol_escape_htmltag($label, 1) . '"';
+			$linkclose .= ' class="classfortooltip' . ($morecss ? ' ' . $morecss : '') . '"';
+		} else $linkclose = ($morecss ? ' class="' . $morecss . '"' : '');
 
-		$linkstart = '<a href="'.$url.'"';
-		$linkstart .= $linkclose.'>';
+		$linkstart = '<a href="' . $url . '"';
+		$linkstart .= $linkclose . '>';
 		$linkend = '</a>';
 
 		$result .= $linkstart;
 
 		if (empty($this->showphoto_on_popup)) {
-			if ($withpicto) $result .= img_object(($notooltip ? '' : $label), ($this->picto ? $this->picto : 'generic'), ($notooltip ? (($withpicto != 2) ? 'class="paddingright"' : '') : 'class="'.(($withpicto != 2) ? 'paddingright ' : '').'classfortooltip"'), 0, 0, $notooltip ? 0 : 1);
+			if ($withpicto) $result .= img_object(($notooltip ? '' : $label), ($this->picto ? $this->picto : 'generic'), ($notooltip ? (($withpicto != 2) ? 'class="paddingright"' : '') : 'class="' . (($withpicto != 2) ? 'paddingright ' : '') . 'classfortooltip"'), 0, 0, $notooltip ? 0 : 1);
 		} else {
 			if ($withpicto) {
-				require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+				require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
 
 				list($class, $module) = explode('@', $this->picto);
-				$upload_dir = $conf->$module->multidir_output[$conf->entity]."/$class/".dol_sanitizeFileName($this->ref);
+				$upload_dir = $conf->$module->multidir_output[$conf->entity] . "/$class/" . dol_sanitizeFileName($this->ref);
 				$filearray = dol_dir_list($upload_dir, "files");
 				$filename = $filearray[0]['name'];
 				if (!empty($filename)) {
 					$pospoint = strpos($filearray[0]['name'], '.');
 
-					$pathtophoto = $class.'/'.$this->ref.'/thumbs/'.substr($filename, 0, $pospoint).'_mini'.substr($filename, $pospoint);
-					if (empty($conf->global->{strtoupper($module.'_'.$class).'_FORMATLISTPHOTOSASUSERS'})) {
-						$result .= '<div class="floatleft inline-block valignmiddle divphotoref"><div class="photoref"><img class="photo'.$module.'" alt="No photo" border="0" src="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$module.'&entity='.$conf->entity.'&file='.urlencode($pathtophoto).'"></div></div>';
+					$pathtophoto = $class . '/' . $this->ref . '/thumbs/' . substr($filename, 0, $pospoint) . '_mini' . substr($filename, $pospoint);
+					if (empty($conf->global->{strtoupper($module . '_' . $class) . '_FORMATLISTPHOTOSASUSERS'})) {
+						$result .= '<div class="floatleft inline-block valignmiddle divphotoref"><div class="photoref"><img class="photo' . $module . '" alt="No photo" border="0" src="' . DOL_URL_ROOT . '/viewimage.php?modulepart=' . $module . '&entity=' . $conf->entity . '&file=' . urlencode($pathtophoto) . '"></div></div>';
 					} else {
-						$result .= '<div class="floatleft inline-block valignmiddle divphotoref"><img class="photouserphoto userphoto" alt="No photo" border="0" src="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$module.'&entity='.$conf->entity.'&file='.urlencode($pathtophoto).'"></div>';
+						$result .= '<div class="floatleft inline-block valignmiddle divphotoref"><img class="photouserphoto userphoto" alt="No photo" border="0" src="' . DOL_URL_ROOT . '/viewimage.php?modulepart=' . $module . '&entity=' . $conf->entity . '&file=' . urlencode($pathtophoto) . '"></div>';
 					}
 
 					$result .= '</div>';
 				} else {
-					$result .= img_object(($notooltip ? '' : $label), ($this->picto ? $this->picto : 'generic'), ($notooltip ? (($withpicto != 2) ? 'class="paddingright"' : '') : 'class="'.(($withpicto != 2) ? 'paddingright ' : '').'classfortooltip"'), 0, 0, $notooltip ? 0 : 1);
+					$result .= img_object(($notooltip ? '' : $label), ($this->picto ? $this->picto : 'generic'), ($notooltip ? (($withpicto != 2) ? 'class="paddingright"' : '') : 'class="' . (($withpicto != 2) ? 'paddingright ' : '') . 'classfortooltip"'), 0, 0, $notooltip ? 0 : 1);
 				}
 			}
 		}
@@ -774,7 +750,7 @@ class General extends FactureStats
 
 		global $action, $hookmanager;
 		$hookmanager->initHooks(array('generaldao'));
-		$parameters = array('id'=>$this->id, 'getnomurl'=>$result);
+		$parameters = array('id' => $this->id, 'getnomurl' => $result);
 		$reshook = $hookmanager->executeHooks('getNomUrl', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
 		if ($reshook > 0) $result = $hookmanager->resPrint;
 		else $result .= $hookmanager->resPrint;
@@ -804,8 +780,7 @@ class General extends FactureStats
 	public function LibStatut($status, $mode = 0)
 	{
 		// phpcs:enable
-		if (empty($this->labelStatus) || empty($this->labelStatusShort))
-		{
+		if (empty($this->labelStatus) || empty($this->labelStatusShort)) {
 			global $langs;
 			//$langs->load("tab@tab");
 			$this->labelStatus[self::STATUS_DRAFT] = $langs->trans('Draft');
@@ -816,7 +791,7 @@ class General extends FactureStats
 			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->trans('Disabled');
 		}
 
-		$statusType = 'status'.$status;
+		$statusType = 'status' . $status;
 		//if ($status == self::STATUS_VALIDATED) $statusType = 'status1';
 		if ($status == self::STATUS_CANCELED) $statusType = 'status6';
 
@@ -833,31 +808,26 @@ class General extends FactureStats
 	{
 		$sql = 'SELECT rowid, date_creation as datec, tms as datem,';
 		$sql .= ' fk_user_creat, fk_user_modif';
-		$sql .= ' FROM '.MAIN_DB_PREFIX.$this->table_element.' as t';
-		$sql .= ' WHERE t.rowid = '.$id;
+		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element . ' as t';
+		$sql .= ' WHERE t.rowid = ' . $id;
 		$result = $this->db->query($sql);
-		if ($result)
-		{
-			if ($this->db->num_rows($result))
-			{
+		if ($result) {
+			if ($this->db->num_rows($result)) {
 				$obj = $this->db->fetch_object($result);
 				$this->id = $obj->rowid;
-				if ($obj->fk_user_author)
-				{
+				if ($obj->fk_user_author) {
 					$cuser = new User($this->db);
 					$cuser->fetch($obj->fk_user_author);
 					$this->user_creation = $cuser;
 				}
 
-				if ($obj->fk_user_valid)
-				{
+				if ($obj->fk_user_valid) {
 					$vuser = new User($this->db);
 					$vuser->fetch($obj->fk_user_valid);
 					$this->user_validation = $vuser;
 				}
 
-				if ($obj->fk_user_cloture)
-				{
+				if ($obj->fk_user_cloture) {
 					$cluser = new User($this->db);
 					$cluser->fetch($obj->fk_user_cloture);
 					$this->user_cloture = $cluser;
@@ -895,10 +865,9 @@ class General extends FactureStats
 		$this->lines = array();
 
 		$objectline = new GeneralLine($this->db);
-		$result = $objectline->fetchAll('ASC', 'position', 0, 0, array('customsql'=>'fk_general = '.$this->id));
+		$result = $objectline->fetchAll('ASC', 'position', 0, 0, array('customsql' => 'fk_general = ' . $this->id));
 
-		if (is_numeric($result))
-		{
+		if (is_numeric($result)) {
 			$this->error = $this->error;
 			$this->errors = $this->errors;
 			return $result;
@@ -922,26 +891,23 @@ class General extends FactureStats
 			$conf->global->TAB_GENERAL_ADDON = 'mod_general_standard';
 		}
 
-		if (!empty($conf->global->TAB_GENERAL_ADDON))
-		{
+		if (!empty($conf->global->TAB_GENERAL_ADDON)) {
 			$mybool = false;
 
-			$file = $conf->global->TAB_GENERAL_ADDON.".php";
+			$file = $conf->global->TAB_GENERAL_ADDON . ".php";
 			$classname = $conf->global->TAB_GENERAL_ADDON;
 
 			// Include file with class
 			$dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
-			foreach ($dirmodels as $reldir)
-			{
-				$dir = dol_buildpath($reldir."core/modules/tab/");
+			foreach ($dirmodels as $reldir) {
+				$dir = dol_buildpath($reldir . "core/modules/tab/");
 
 				// Load file with numbering class (if found)
-				$mybool |= @include_once $dir.$file;
+				$mybool |= @include_once $dir . $file;
 			}
 
-			if ($mybool === false)
-			{
-				dol_print_error('', "Failed to include file ".$file);
+			if ($mybool === false) {
+				dol_print_error('', "Failed to include file " . $file);
 				return '';
 			}
 
@@ -949,8 +915,7 @@ class General extends FactureStats
 				$obj = new $classname();
 				$numref = $obj->getNextValue($this);
 
-				if ($numref != '' && $numref != '-1')
-				{
+				if ($numref != '' && $numref != '-1') {
 					return $numref;
 				} else {
 					$this->error = $obj->error;
@@ -958,7 +923,7 @@ class General extends FactureStats
 					return "";
 				}
 			} else {
-				print $langs->trans("Error")." ".$langs->trans("ClassNotFound").' '.$classname;
+				print $langs->trans("Error") . " " . $langs->trans("ClassNotFound") . ' ' . $classname;
 				return "";
 			}
 		} else {
@@ -1038,14 +1003,15 @@ class General extends FactureStats
 
 	/**
 	 * ---- FUNCTIONS FOR DASHBOARD ----
-	*/
+	 */
 
 	/**
 	 * Retourne le compte courant utilisé par la dite entreprise (premier identiant)
 	 */
-	public function getIdBankAccount(){
+	public function getIdBankAccount()
+	{
 		$sql = "SELECT MIN(rowid)";
-		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "bank_account";
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
@@ -1061,14 +1027,15 @@ class General extends FactureStats
 	/**
 	 * Retourne tous les comptes en banque
 	 */
-	public function fetchAllBankAccount(){
+	public function fetchAllBankAccount()
+	{
 		$sql = "SELECT * ";
-		$sql .= " FROM ".MAIN_DB_PREFIX."bank_account";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "bank_account";
 		$resql = $this->db->query($sql);
 
 		$result = [];
-		if($resql){
-			while($obj = $this->db->fetch_object(($resql))){
+		if ($resql) {
+			while ($obj = $this->db->fetch_object(($resql))) {
 				$result[] = $obj;
 			}
 		}
@@ -1079,15 +1046,16 @@ class General extends FactureStats
 	 * Detail et lié avec la table gérant les comptes et les ecritures bancaires
 	 * pour retrouver le solde de chaque compte sur l'année
 	 */
-	public function soldeOfCurrentAccount($account, $year){
+	public function soldeOfCurrentAccount($account, $year)
+	{
 		$sql = "SELECT SUM(b.amount)";
-		$sql .= " FROM ".MAIN_DB_PREFIX."bank as b";
-		$sql .= ", ".MAIN_DB_PREFIX."bank_account as ba";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "bank as b";
+		$sql .= ", " . MAIN_DB_PREFIX . "bank_account as ba";
 		$sql .= " WHERE b.fk_account = ba.rowid";
-		$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
-		$sql .= " AND b.datev < '".$this->db->escape($year)."-01-01'";
+		$sql .= " AND ba.entity IN (" . getEntity('bank_account') . ")";
+		$sql .= " AND b.datev < '" . $this->db->escape($year) . "-01-01'";
 		if ($account && $_GET["option"] != 'all') {
-			$sql .= " AND b.fk_account IN (".$this->db->sanitize($account).")";
+			$sql .= " AND b.fk_account IN (" . $this->db->sanitize($account) . ")";
 		}
 
 		$resql = $this->db->query($sql);
@@ -1108,27 +1076,43 @@ class General extends FactureStats
 	 */
 	public function load_navbar()
 	{
-			$path = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-			$current = basename($path);
-			$datetime = dol_now();
-			$year = dol_print_date($datetime, "%Y");
+		$path = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+		$current = basename($path);
+		$datetime = dol_now();
+		$year = dol_print_date($datetime, "%Y");
 
-		?>
-			<div class="navbar">
-				<li class="<?php if ($current == "overview.php?mode=customer&filter=".$year || $current == 'overview.php?mode=supplier' ){ print 'current';} else{ echo'no_current';}?>">
+?>
+		<div class="navbar">
+			<li class="<?php if ($current == "overview.php?mode=customer&filter=" . $year || $current == 'overview.php?mode=supplier') {
+							print 'current';
+						} else {
+							echo 'no_current';
+						} ?>">
 				<a href="overview.php?mode=customer&filter=2022"><i class="fa fa-fw fa-home"></i> Général</a>
-				</li>
-				<li class="<?php if ($current == "./encoursCF.php?filter=".$year){ echo 'current';} else{ echo'no_current';}?>">
+			</li>
+			<li class="<?php if ($current == "./encoursCF.php?filter=" . $year) {
+							echo 'current';
+						} else {
+							echo 'no_current';
+						} ?>">
 				<a href="./encoursCF.php?page=1"><i class="fa fa-pie-chart"></i> Encours C/F</a>
-				</li>
-				<li class="<?php if ($current == 'treso_previ.php'){ echo 'current';} else{ echo'no_current';}?>">
+			</li>
+			<li class="<?php if ($current == 'treso_previ.php') {
+							echo 'current';
+						} else {
+							echo 'no_current';
+						} ?>">
 				<a href="treso_previ.php"><i class="fa fa-bank"></i> Trésorerie</a>
-				</li>
-				<li class="<?php if ($current == 'netProduce.php'){ echo 'current';} else{ echo'no_current';}?>">
+			</li>
+			<li class="<?php if ($current == 'netProduce.php') {
+							echo 'current';
+						} else {
+							echo 'no_current';
+						} ?>">
 				<a href="netProduce.php"><i class="fa fa-briefcase"></i> Net à produire</a>
-				</li>
-			</div>
-			<?php
+			</li>
+		</div>
+<?php
 	}
 
 
@@ -1140,13 +1124,14 @@ class General extends FactureStats
 	 *  @param  int     $start                  	date of start month fiscal year/last year or 1
 	 *  @return	string|int                          1 or string (date)
 	 */
-	public function startMonthForGraphLadder($startFiscalyear, $duree) {
+	public function startMonthForGraphLadder($startFiscalyear, $duree)
+	{
 		global $conf;
 
-		if(!empty($conf->global->START_FISCAL_YEAR)){
+		if (!empty($conf->global->START_FISCAL_YEAR)) {
 			$startMonthTimestamp = strtotime($startFiscalyear);
 			$duree = 12;
-			$startMonthFiscalYear = date('n', strtotime('+'.$duree.'month', $startMonthTimestamp));
+			$startMonthFiscalYear = date('n', strtotime('+' . $duree . 'month', $startMonthTimestamp));
 			$start = $startMonthFiscalYear;
 		} else {
 			$start = 1;
@@ -1157,11 +1142,12 @@ class General extends FactureStats
 	/**
 	 * Return le cumul des montants du compte courant
 	 */
-	public function totalSoldeCurrentAccount($account){
+	public function totalSoldeCurrentAccount($account)
+	{
 
 		$sql = "SELECT SUM(amount) as amount
 				FROM `llx_bank`
-				WHERE fk_account = ".$account;
+				WHERE fk_account = " . $account;
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
@@ -1175,7 +1161,8 @@ class General extends FactureStats
 	}
 
 	// Retourne le montant des soldes de tous les comptes enregistrés
-	public function totalSoldes(){
+	public function totalSoldes()
+	{
 
 		$sql = "SELECT SUM(amount) as amount";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "bank";
@@ -1198,7 +1185,8 @@ class General extends FactureStats
 	 * The rate of change measures the evolution of a variable between two dates compared to its starting value.
 	 * This relative variation is expressed as a percentage (%).
 	 */
-	public function progress($arrival_value, $starting_value){
+	public function progress($arrival_value, $starting_value)
+	{
 
 		// ((VA - VD) / VD) * 100
 		$arrival_value;
@@ -1214,61 +1202,62 @@ class General extends FactureStats
 	/**
 	 * Return all order by passing the status as a parameter to filter the search
 	 */
-	function fetchOrder($fk_statut){
+	function fetchOrder($fk_statut)
+	{
 
 		global $db;
 
-		$sql = "SELECT * FROM ".MAIN_DB_PREFIX."commande";
-		$sql .= " WHERE fk_statut = ".$fk_statut." ORDER BY date_livraison ASC ";
+		$sql = "SELECT * FROM " . MAIN_DB_PREFIX . "commande";
+		$sql .= " WHERE fk_statut = " . $fk_statut . " ORDER BY date_livraison ASC ";
 		$resql = $db->query($sql);
 		$resql = $this->db->query($sql);
 
+		$result = [];
 		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$result = $obj->total_ht;
+			while ($obj = $db->fetch_object(($resql))) {
+				$result[] = $obj->total_ht;
 			}
-			$this->db->free($resql);
 		}
 		return $result;
 	}
 
 
-	function fetchValidatedOrder($date_start, $date_end){
-
+	function fetchValidatedOrder($date_start, $date_end)
+	{
 
 		global $db;
 
-		$sql = "SELECT * FROM ".MAIN_DB_PREFIX."commande";
+		$sql = "SELECT * FROM " . MAIN_DB_PREFIX . "commande";
 		$sql .= " WHERE date_commande BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
 		$sql .= " AND fk_statut = 1";
 		$resql = $db->query($sql);
 		$resql = $this->db->query($sql);
+		$result = [];
 
 		if ($resql) {
-			if ($this->db->num_rows($resql)) {
-				$obj = $this->db->fetch_object($resql);
-				$result = $obj->total_ht;
+			while ($obj = $db->fetch_object(($resql))) {
+				$result[] = $obj->total_ht;
 			}
-			$this->db->free($resql);
 		}
 
 		return $result;
 	}
 
-	function fetchDeliveredOrder($date_start, $date_end){
+	// Retourne les commandes livrées sur une période donnée
+	function fetchOrderTypes($date_start, $date_end, $fk_statut)
+	{
 
 		global $db;
 
-		$sql = "SELECT * FROM ".MAIN_DB_PREFIX."commande";
+		$sql = "SELECT total_ht FROM " . MAIN_DB_PREFIX . "commande";
 		$sql .= " WHERE date_commande BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
-		$sql .= " AND fk_statut = 3";
+		$sql .= " AND fk_statut = " . $fk_statut;
 		$resql = $db->query($sql);
 		$result = [];
 
-		if($resql){
-			while($obj = $db->fetch_object(($resql))){
-				$result[] = $obj;
+		if ($resql) {
+			while ($obj = $db->fetch_object(($resql))) {
+				$result[] = $obj->total_ht;
 			}
 		}
 
@@ -1277,20 +1266,23 @@ class General extends FactureStats
 
 
 	// Retourne les commandes livrées aujourd'hui
-	function fetchDeliveredOrderToday(){
+	function fetchValidatedOrderToday($now)
+	{
 
 		global $db;
 		$today = date('Y-m-d');
 
 		// request
 		$sql = "SELECT * FROM " . MAIN_DB_PREFIX . "commande";
-		$sql .= " WHERE date_commande = \"$today\" ";
+		$sql .= " WHERE date_commande = '" . $now ."' ";
 		$sql .= "AND fk_statut = 1";
+
+		// $sql = "SELECT * FROM `llx_commande` where date_commande = \"2022-10-22\" and fk_statut = 1;";
 		$resql = $db->query($sql);
 		$result = [];
 
-		if($resql){
-			while($obj = $db->fetch_object(($resql))){
+		if ($resql) {
+			while ($obj = $db->fetch_object(($resql))) {
 				$result[] = $obj;
 			}
 		}
@@ -1299,7 +1291,8 @@ class General extends FactureStats
 
 
 	// Retourne les commande validées triées par date de livraison
-	function fetchOrderSortedByDeliveryDate($date_start, $date_end){
+	function fetchOrderSortedByDeliveryDate($date_start, $date_end)
+	{
 
 		global $db;
 		// request
@@ -1309,8 +1302,8 @@ class General extends FactureStats
 		$resql = $db->query($sql);
 		$result = [];
 
-		if($resql){
-			while($obj = $db->fetch_object(($resql))){
+		if ($resql) {
+			while ($obj = $db->fetch_object(($resql))) {
 				$result[] = $obj;
 			}
 		}
@@ -1321,9 +1314,10 @@ class General extends FactureStats
 	/**
 	 * INVOICES :
 	 * Retourne les factures clients (tout types) payées sur une période xx
-	*/
+	 */
 
-	function fetchInvoices($date_start, $date_end){
+	function fetchInvoices($date_start, $date_end)
+	{
 
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
@@ -1341,11 +1335,12 @@ class General extends FactureStats
 			$this->db->free($resql);
 		}
 		return $result;
-	 }
+	}
 
 
-	 // Retourne les facturs impayées (hors brouillon et hors acomptes) sur une periode donnée
-	function fetchUnpaidInvoice($date_start, $date_end){
+	// Retourne les facturs impayées (hors brouillon et hors acomptes) sur une periode donnée
+	function fetchUnpaidInvoice($date_start, $date_end)
+	{
 
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
@@ -1363,12 +1358,13 @@ class General extends FactureStats
 			$this->db->free($resql);
 		}
 		return $result;
-	 }
+	}
 
-	 /**
-	  * @param	result array
-	  */
-	 function fetchInvoice($date_start, $date_end){
+	/**
+	 * @param	result array
+	 */
+	function fetchInvoice($date_start, $date_end)
+	{
 
 		$sql = "SELECT * ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
@@ -1378,16 +1374,17 @@ class General extends FactureStats
 		$resql = $this->db->query($sql);
 		$result = [];
 
-		if($resql){
-			while($obj = $this->db->fetch_object(($resql))){
+		if ($resql) {
+			while ($obj = $this->db->fetch_object(($resql))) {
 				$result[] = $obj;
 			}
 		}
 		return $result;
-	 }
+	}
 
-	 // Retourne toutes les factures standard payées + impayées(hors brouillon /) sur une période donnée
-	public function turnover($date_start, $date_end){
+	// Retourne toutes les factures standard payées + impayées(hors brouillon /) sur une période donnée
+	public function turnover($date_start, $date_end)
+	{
 		global $db, $conf;
 
 		$sql = "SELECT SUM(total_ht) as total_ht ";
@@ -1406,11 +1403,12 @@ class General extends FactureStats
 			$db->free($resql);
 		}
 		return $standard_invoice;
-	 }
+	}
 
 
-	 // retourne les avoirs impayes et/ou payés (hors brouillon) sur une période donnée
-	 public function avoir($startfiscalyear, $lastDayYear){
+	// retourne les avoirs impayes et/ou payés (hors brouillon) sur une période donnée
+	public function avoir($startfiscalyear, $lastDayYear)
+	{
 		global $db, $conf;
 
 		$sql = "SELECT SUM(total_ht) as total_ht ";
@@ -1429,10 +1427,11 @@ class General extends FactureStats
 			$db->free($resql);
 		}
 		return $avoir;
-	 }
+	}
 
-	  // retourne un tableau d'avoirs impayes et/ou payés (hors brouillon) sur une période donnée
-	  public function avoirForMargin($startfiscalyear, $lastDayYear){
+	// retourne un tableau d'avoirs impayes et/ou payés (hors brouillon) sur une période donnée
+	public function avoirForMargin($startfiscalyear, $lastDayYear)
+	{
 		global $db, $conf;
 
 		$sql = "SELECT * ";
@@ -1443,16 +1442,17 @@ class General extends FactureStats
 		$resql = $db->query($sql);
 		$result = [];
 
-		if($resql){
-			while($obj = $this->db->fetch_object(($resql))){
+		if ($resql) {
+			while ($obj = $this->db->fetch_object(($resql))) {
 				$result[] = $obj->total_ht;
 			}
 		}
 		return $result;
-	 }
+	}
 
-	 // Retourne les factures abandonnées sur une periode donnee
-	 public function closedInvoice($startfiscalyear, $lastDayYear){
+	// Retourne les factures abandonnées sur une periode donnee
+	public function closedInvoice($startfiscalyear, $lastDayYear)
+	{
 		global $db;
 
 		$sql = "SELECT SUM(total_ht) as total_ht ";
@@ -1470,99 +1470,103 @@ class General extends FactureStats
 			$db->free($resql);
 		}
 		return $closed_invoices;
-	 }
+	}
 
 	// Retourne un tableau de toutes les factures (hors brouillon) impayées sur une période donnée
-	 public function outstandingBill($date_start, $date_end){
+	public function outstandingBill($date_start, $date_end)
+	{
 
-		 	// Encours client total sur l'exercice fiscal
-			$sql = "SELECT *";
-			$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-			$sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
-			$sql .= " AND paye = 0";
-			$sql .= " AND fk_statut != 0 ";
+		// Encours client total sur l'exercice fiscal
+		$sql = "SELECT *";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE datef BETWEEN '" . $date_start . "' AND '" . $date_end . "' ";
+		$sql .= " AND paye = 0";
+		$sql .= " AND fk_statut != 0 ";
 
-			$resql = $this->db->query($sql);
-			$result = [];
+		$resql = $this->db->query($sql);
+		$result = [];
 
-			if($resql){
-				while($obj = $this->db->fetch_object(($resql))){
-					$result[] = $obj->total_ttc;
-				}
+		if ($resql) {
+			while ($obj = $this->db->fetch_object(($resql))) {
+				$result[] = $obj->total_ttc;
 			}
-			return $result;
-	 }
+		}
+		return $result;
+	}
 
 
 	/**
 	 * Retourne un tableau de toutes les factures standard
 	 * (hors brouillon - HT) impayées (hors periode)
 	 * */
-	public function fetchCustomerInvoices(){
+	public function fetchCustomerInvoices()
+	{
 
-	   $sql = "SELECT SUM(total_ht) as total_ht";
-	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-	   $sql .= " WHERE paye = 0 ";
-	   $sql .= " AND fk_statut =1";
+		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE paye = 0 ";
+		$sql .= " AND fk_statut =1";
 
-	   $resql = $this->db->query($sql);
-	   $result = [];
+		$resql = $this->db->query($sql);
+		$result = [];
 
-	   if($resql){
-		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj->total_ht;
-		   }
-	   }
-	   return $result;
+		if ($resql) {
+			while ($obj = $this->db->fetch_object(($resql))) {
+				$result[] = $obj->total_ht;
+			}
+		}
+		return $result;
 	}
 
 	/*
 	 Sum of all unpaid customer invoices whose due date has passed
 	*/
-	  public function amountCustomerBillExceed($date = ''){
+	public function amountCustomerBillExceed($date = '')
+	{
 		global $db;
 
-	   $sql = "SELECT COUNT(*), SUM(total_ttc) as total_ttc ";
-	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-	   $sql .= " WHERE paye = 0 ";
-	   $sql .= " AND fk_statut = 1";
-	   $sql .= " AND type != 3";
+		$sql = "SELECT COUNT(*), SUM(total_ttc) as total_ttc ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE paye = 0 ";
+		$sql .= " AND fk_statut = 1";
+		$sql .= " AND type != 3";
 		$sql .= " AND date_lim_reglement < '" . $date . "' ";
 
 		$resql = $db->query($sql);
 		$result = [];
 
-		if($resql){
-			while($obj = $db->fetch_object(($resql))){
+		if ($resql) {
+			while ($obj = $db->fetch_object(($resql))) {
 				$result[] = $obj->total_ttc;
 			}
 		}
-	   return $result;
+		return $result;
 	}
 
-	 /*
+	/*
 	  Fetch details of all unpaid customer invoices whose due date has passed
 	  */
-	public function fetchCustomerBillExceed($date = '', $first, $byPage){
+	public function fetchCustomerBillExceed($date = '', $first, $byPage)
+	{
 		global $db;
 
-	   $sql = "SELECT * ";
-	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture";
-	   $sql .= " WHERE paye = 0";
-	   $sql .= " AND fk_statut = 1";
-	   $sql .= " AND type != 3";
-	   $sql .= " AND date_lim_reglement < '" . $date . "' ";
-	   $sql .= " ORDER BY date_lim_reglement ASC LIMIT ".$first.",$byPage";
+		$sql = "SELECT * ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture";
+		$sql .= " WHERE paye = 0";
+		$sql .= " AND fk_statut = 1";
+		$sql .= " AND type != 3";
+		$sql .= " AND date_lim_reglement < '" . $date . "' ";
+		$sql .= " ORDER BY date_lim_reglement ASC LIMIT " . $first . ",$byPage";
 
 		$resql = $db->query($sql);
 		$result = [];
 
-		if($resql){
-			while($obj = $db->fetch_object(($resql))){
+		if ($resql) {
+			while ($obj = $db->fetch_object(($resql))) {
 				$result[] = $obj;
 			}
 		}
-	   return $result;
+		return $result;
 	}
 
 
@@ -1571,8 +1575,9 @@ class General extends FactureStats
 	 */
 
 
-	 	// Retourne un tableau de toutes les factures fournisseurs (hors brouillon) impayées (hors period)
-	public function fetchSupplierInvoices(){
+	// Retourne un tableau de toutes les factures fournisseurs (hors brouillon) impayées (hors period)
+	public function fetchSupplierInvoices()
+	{
 
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
@@ -1582,45 +1587,47 @@ class General extends FactureStats
 		$resql = $this->db->query($sql);
 		$result = [];
 
-		if($resql){
-			while($obj = $this->db->fetch_object(($resql))){
+		if ($resql) {
+			while ($obj = $this->db->fetch_object(($resql))) {
 				$result[] = $obj->total_ht;
 			}
 		}
 		return $result;
-	 }
+	}
 
 
-	 /**
-	  * Return all unpaid supplier invoice on period (excluding static charges)
-	  */
-	 public function outstandingSupplier($date_start, $date_end, $paye){
+	/**
+	 * Return all unpaid supplier invoice on period (excluding static charges)
+	 */
+	public function outstandingSupplier($date_start, $date_end, $paye)
+	{
 
-	   $sql = "SELECT * ";
-	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn as f";
-	   $sql .= " INNER JOIN ".MAIN_DB_PREFIX."facture_fourn_extrafields as ffe";
+		$sql = "SELECT * ";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn as f";
+		$sql .= " INNER JOIN " . MAIN_DB_PREFIX . "facture_fourn_extrafields as ffe";
 		$sql .= " ON ffe.fk_object = f.rowid";
-	   $sql .= " WHERE f.datef BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
-	   $sql .= " AND f.paye = ".$paye;
-	   $sql .= " AND f.fk_statut != 0 ";
-	   $sql .= " AND ffe.dash_invoice_cf = 1 ";
+		$sql .= " WHERE f.datef BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
+		$sql .= " AND f.paye = " . $paye;
+		$sql .= " AND f.fk_statut != 0 ";
+		$sql .= " AND ffe.dash_invoice_cf = 1 ";
 
 
-	   $resql = $this->db->query($sql);
-	   $result = [];
+		$resql = $this->db->query($sql);
+		$result = [];
 
-	   if($resql){
-		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj->total_ttc;
-		   }
-	   }
-	   return $result;
+		if ($resql) {
+			while ($obj = $this->db->fetch_object(($resql))) {
+				$result[] = $obj->total_ttc;
+			}
+		}
+		return $result;
 	}
 
 	/*
 	 Sum of all unpaid customer suppplier whose due date has passed
 	  */
-	  public function amountSupplierBillExceed($date = ''){
+	public function amountSupplierBillExceed($date = '')
+	{
 		global $db;
 
 		$sql = "SELECT SUM(total_ttc) as total_ttc";
@@ -1628,24 +1635,25 @@ class General extends FactureStats
 		$sql .= " WHERE paye = 0 ";
 		$sql .= " AND fk_statut = 1";
 		$sql .= " AND type != 3";
-		 $sql .= " AND date_lim_reglement < '" . $date . "' ";
+		$sql .= " AND date_lim_reglement < '" . $date . "' ";
 
-		 $resql = $db->query($sql);
-		 $result = [];
+		$resql = $db->query($sql);
+		$result = [];
 
-		 if($resql){
-			 while($obj = $db->fetch_object(($resql))){
-				 $result[] = $obj->total_ttc;
-			 }
-		 }
+		if ($resql) {
+			while ($obj = $db->fetch_object(($resql))) {
+				$result[] = $obj->total_ttc;
+			}
+		}
 		return $result;
 	}
 
 
-	 /*
+	/*
 	  Fetch details for all unpaid supplier invoices whose due date has passed
 	  */
-	  public function fetchSupplierBillExceed($date = '', $first, $byPage){
+	public function fetchSupplierBillExceed($date = '', $first, $byPage)
+	{
 		global $db;
 
 		$sql = "SELECT * ";
@@ -1654,40 +1662,41 @@ class General extends FactureStats
 		$sql .= " AND fk_statut = 1";
 		$sql .= " AND type != 3";
 		$sql .= " AND date_lim_reglement < '" . $date . "' ";
-		$sql .= " ORDER BY date_lim_reglement ASC LIMIT ".$first.",$byPage";
+		$sql .= " ORDER BY date_lim_reglement ASC LIMIT " . $first . ",$byPage";
 
-			$resql = $db->query($sql);
-			$result = [];
+		$resql = $db->query($sql);
+		$result = [];
 
-			if($resql){
-				while($obj = $db->fetch_object(($resql))){
-					$result[] = $obj;
-				}
+		if ($resql) {
+			while ($obj = $db->fetch_object(($resql))) {
+				$result[] = $obj;
 			}
+		}
 		return $result;
 	}
 
-	 /*
+	/*
 	  Retourne la somme total (TTC) des factures récurrentes
 	  */
-	  public function fetchModelInvoices($firstDayCurrentMonth, $lastDayCurrentMonth){
+	public function fetchModelInvoices($firstDayCurrentMonth, $lastDayCurrentMonth)
+	{
 		global $db;
 
-	   $sql = "SELECT SUM(total_ht) as total_ht";
-	   $sql .= " FROM " . MAIN_DB_PREFIX . "facture_rec";
-	   $sql .= " WHERE date_last_gen BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
-	   $sql .= " AND suspended = 0";
+		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_rec";
+		$sql .= " WHERE date_last_gen BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $lastDayCurrentMonth . "'";
+		$sql .= " AND suspended = 0";
 
-	   $resql = $this->db->query($sql);
+		$resql = $this->db->query($sql);
 
-	   $result = [];
+		$result = [];
 
-	   if($resql){
-		   while($obj = $this->db->fetch_object(($resql))){
-			   $result[] = $obj->total_ht;
-		   }
-	   }
-	   return $result;
+		if ($resql) {
+			while ($obj = $this->db->fetch_object(($resql))) {
+				$result[] = $obj->total_ht;
+			}
+		}
+		return $result;
 	}
 
 
@@ -1700,13 +1709,14 @@ class General extends FactureStats
 	 * Retourne le montant total de la TVA
 	 */
 
-	public function fetchTVA($firstDayCurrentMonth, $date_now = ''){
+	public function fetchTVA($firstDayCurrentMonth, $date_now = '')
+	{
 
 		$date_now = dol_now();
 
 		$sql = "SELECT SUM(amount) as amount";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "c_tva";
-		$sql .= " WHERE datec BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $date_now. "'";
+		$sql .= " WHERE datec BETWEEN '" . $firstDayCurrentMonth . "' AND '" . $date_now . "'";
 		$resql = $this->db->query($sql);
 
 		if ($resql) {
@@ -1724,7 +1734,8 @@ class General extends FactureStats
 	 * Retourne le montant total des notes de frais validés
 	 * sur une période donnée
 	 */
-	public function fetchExpenses($date_start, $date_end = ''){
+	public function fetchExpenses($date_start, $date_end = '')
+	{
 
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "expensereport";
@@ -1749,7 +1760,8 @@ class General extends FactureStats
 	 *		- factures fournisseurs impayées
 	 *		- le total de la TVA du mois en cours
 	 */
-	 public function fetchVariablesExpenses($date_start, $date_end, $total_suppliers_invoices, $tva){
+	public function fetchVariablesExpenses($date_start, $date_end, $total_suppliers_invoices, $tva)
+	{
 
 		$total_unpaid_supplier_invoices = $this->outstandingSupplier($date_start, $date_end, 0);
 		$total_paid_supplier_invoices = $this->outstandingSupplier($date_start, $date_end, 1);
@@ -1758,16 +1770,17 @@ class General extends FactureStats
 
 		$resultat = ($total_suppliers_invoices + $tva);
 		return $resultat;
-	 }
+	}
 
 	/**
 	 * Retourne le montant total des salaires sur une période donnée
 	 */
-	 public function fetchSalarys($firstDayLastMonth, $lastDayLastMonth, $currentAccount){
+	public function fetchSalarys($firstDayLastMonth, $lastDayLastMonth, $currentAccount)
+	{
 
 		// SALARY
 		$sql = "SELECT SUM(amount) as amount";
-		$sql .= " FROM " . MAIN_DB_PREFIX . "salary" ;
+		$sql .= " FROM " . MAIN_DB_PREFIX . "salary";
 		$sql .= " WHERE datesp BETWEEN '" . $firstDayLastMonth .  "' AND '" . $lastDayLastMonth . "'";
 		$sql .= " AND paye = 1";
 
@@ -1782,9 +1795,9 @@ class General extends FactureStats
 		}
 
 		return $result;
-	 }
+	}
 
-	 /**
+	/**
 	 * Utilise pour le calcul des charges fixes (ensemble)
 	 * seules les factures avec l'extrafield "dash_invoice_cf"> 1 sont considérées cm des charges fixes (hors emprunts).
 	 * @param int dash_invoice_CF 		Diferentes valeurs existent :
@@ -1795,13 +1808,14 @@ class General extends FactureStats
 	 * 5:Emprunt,
 	 * 6:Divers
 	 */
-	public function static_charge_excluding_loan($date_start, $date_end = ''){
+	public function static_charge_excluding_loan($date_start, $date_end = '')
+	{
 
 		$sql = "SELECT * ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn as ff";
-		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."facture_fourn_extrafields as ffe";
+		$sql .= " INNER JOIN " . MAIN_DB_PREFIX . "facture_fourn_extrafields as ffe";
 		$sql .= " ON ffe.fk_object = ff.rowid";
-		$sql .= " WHERE ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end. "'";
+		$sql .= " WHERE ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
 		$sql .= " AND ff.fk_statut != 0";
 		$sql .= " AND ff.type != 3";
 		$sql .= " AND ffe.dash_invoice_CF > 1 AND ffe.dash_invoice_CF != 6";
@@ -1810,8 +1824,8 @@ class General extends FactureStats
 
 		$supplier_invoice_variable_charge = [];
 
-		if($resql){
-			while($obj = $this->db->fetch_object(($resql))){
+		if ($resql) {
+			while ($obj = $this->db->fetch_object(($resql))) {
 				$supplier_invoice_variable_charge[] = $obj->total_ttc;
 			}
 		}
@@ -1819,7 +1833,7 @@ class General extends FactureStats
 		return $supplier_invoice_variable_charge;
 	}
 
-	 /**
+	/**
 	 * Utilise pour le calcul des charges fixes (ensemble)
 	 * seules les factures avec l'extrafield "dash_invoice_cf"> 1 sont considérées cm des charges fixes (hors enprunts).
 	 * @param int dash_invoice_CF 		Diferentes valeurs existent :
@@ -1830,13 +1844,14 @@ class General extends FactureStats
 	 * 6:Emprunt,
 	 * 7:Divers
 	 */
-	public function all_static_charge($date_start, $date_end = ''){
+	public function all_static_charge($date_start, $date_end = '')
+	{
 
 		$sql = "SELECT * ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn as ff";
-		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."facture_fourn_extrafields as ffe";
+		$sql .= " INNER JOIN " . MAIN_DB_PREFIX . "facture_fourn_extrafields as ffe";
 		$sql .= " ON ffe.fk_object = ff.rowid";
-		$sql .= " WHERE ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end. "'";
+		$sql .= " WHERE ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
 		$sql .= " AND ff.fk_statut != 0";
 		$sql .= " AND ff.type != 3";
 		$sql .= " AND ffe.dash_invoice_CF > 0 ";
@@ -1845,8 +1860,8 @@ class General extends FactureStats
 
 		$supplier_invoice_variable_charge = [];
 
-		if($resql){
-			while($obj = $this->db->fetch_object(($resql))){
+		if ($resql) {
+			while ($obj = $this->db->fetch_object(($resql))) {
 				$supplier_invoice_variable_charge[] = $obj->total_ttc;
 			}
 		}
@@ -1857,7 +1872,8 @@ class General extends FactureStats
 	/**
 	 * Retourne le montant total des charges sociales et fiscales sur une période donnée
 	 */
-		public function fetchSocialAndTaxesCharges($date_start, $date_end){
+	public function fetchSocialAndTaxesCharges($date_start, $date_end)
+	{
 
 		$sql = "SELECT SUM(amount) as amount";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "chargesociales";
@@ -1875,19 +1891,20 @@ class General extends FactureStats
 		return $socialAndTaxesCharges;
 	}
 
-	 /**
+	/**
 	 * Utilise pour le calcul des charges fixes (emprunt)
 	 * seules les factures avec l'extrafield "dash_invoice_cf" = 6 sont considérées cm des emprunts.
 	 * @param int dash_invoice_CF 		6 : Emprunt
 	 */
-	public function fetchEmprunts($date_start, $date_end){
+	public function fetchEmprunts($date_start, $date_end)
+	{
 
 
 		$sql = "SELECT * ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn as ff";
-		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."facture_fourn_extrafields as ffe";
+		$sql .= " INNER JOIN " . MAIN_DB_PREFIX . "facture_fourn_extrafields as ffe";
 		$sql .= " ON ffe.fk_object = ff.rowid";
-		$sql .= " WHERE ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end. "'";
+		$sql .= " WHERE ff.datef BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
 		$sql .= " AND ff.fk_statut != 0";
 		$sql .= " AND ff.type != 3";
 		$sql .= " AND ffe.dash_invoice_CF = 6";
@@ -1895,8 +1912,8 @@ class General extends FactureStats
 		$resql = $this->db->query($sql);
 		$emprunts = [];
 
-		if($resql){
-			while($obj = $this->db->fetch_object(($resql))){
+		if ($resql) {
+			while ($obj = $this->db->fetch_object(($resql))) {
 				$emprunts[] = $obj->total_ttc;
 			}
 		}
@@ -1907,10 +1924,11 @@ class General extends FactureStats
 	/**
 	 * Retourne le montant total des paiements divers sur une période donnée
 	 */
-	public function fetchVariousPaiements($date_start, $date_end){
+	public function fetchVariousPaiements($date_start, $date_end)
+	{
 
 		$sql = "SELECT * ";
-		$sql .= " FROM ". MAIN_DB_PREFIX . "payment_various" ;
+		$sql .= " FROM " . MAIN_DB_PREFIX . "payment_various";
 		$sql .= " WHERE datep BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
 		$sql .= " AND sens = 1 ";
 
@@ -1918,8 +1936,8 @@ class General extends FactureStats
 
 		$variouspaiments = [];
 
-		if($resql){
-			while($obj = $this->db->fetch_object(($resql))){
+		if ($resql) {
+			while ($obj = $this->db->fetch_object(($resql))) {
 				$variouspaiments[] = $obj->amount;
 			}
 		}
@@ -1927,15 +1945,16 @@ class General extends FactureStats
 		return $variouspaiments;
 	}
 
-	 /**
-	  * Calcul pour retourner le montant total des charges fixes
-	  * Doit prendre en compte :
-	  *      - salaire
-	  *		 - Charges sociales et fiscales
-	  *		 - Emprunts
-	  *		 - Paiements divers
-	  */
-	  	public function fetchStaticExpenses($date_start, $date_end, $currentAccount){
+	/**
+	 * Calcul pour retourner le montant total des charges fixes
+	 * Doit prendre en compte :
+	 *      - salaire
+	 *		 - Charges sociales et fiscales
+	 *		 - Emprunts
+	 *		 - Paiements divers
+	 */
+	public function fetchStaticExpenses($date_start, $date_end, $currentAccount)
+	{
 
 		$salarys = $this->fetchSalarys($date_start, $date_end, $currentAccount);
 		$socialesTaxes_charges = $this->fetchSocialAndTaxesCharges($date_start, $date_end, $currentAccount);
@@ -1950,30 +1969,32 @@ class General extends FactureStats
 
 
 	// Retourne les factures fournisseurs réglées sur l'exercice fiscal
-	public function allSupplierUnpaidInvoices($firstDayYear, $lastDayYear){
+	public function allSupplierUnpaidInvoices($firstDayYear, $lastDayYear)
+	{
 
-	$sql = "SELECT SUM(total_ht) as total_ht";
-	$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
-	$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
-	$sql .= " AND fk_statut != 0 AND paye = 0 AND type=0";
+		$sql = "SELECT SUM(total_ht) as total_ht";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
+		$sql .= " WHERE datec BETWEEN '" . $firstDayYear . "' AND '" . $lastDayYear . "'";
+		$sql .= " AND fk_statut != 0 AND paye = 0 AND type=0";
 
-	$resql = $this->db->query($sql);
+		$resql = $this->db->query($sql);
 
-	if ($resql) {
-		if ($this->db->num_rows($resql)) {
-			$obj = $this->db->fetch_object($resql);
-			$result = $obj->total_ht;
+		if ($resql) {
+			if ($this->db->num_rows($resql)) {
+				$obj = $this->db->fetch_object($resql);
+				$result = $obj->total_ht;
+			}
+			$this->db->free($resql);
 		}
-		$this->db->free($resql);
-	}
 
-	return $result;
-}
+		return $result;
+	}
 
 	/*
 	* Retourne les factures fournisseurs réglées sur l'exercice fiscal
 	*/
-	public function allSupplierUnpaidDeposit($firstDayYear, $lastDayYear){
+	public function allSupplierUnpaidDeposit($firstDayYear, $lastDayYear)
+	{
 
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn";
@@ -1997,7 +2018,8 @@ class General extends FactureStats
 	/**
 	 * NET A PRODUIRE
 	 */
-	 public function supplier_ordered_orders($firstDayYear, $lastDayYear){
+	public function supplier_ordered_orders($firstDayYear, $lastDayYear)
+	{
 
 		$sql = "SELECT SUM(total_ht) as total_ht";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "commande_fournisseur";
@@ -2013,15 +2035,152 @@ class General extends FactureStats
 			$this->db->free($resql);
 		}
 		return $result;
-	 }
+	}
+
+	/**
+	 * Return debits of solde account
+	 */
+	public function fetchDebit($month, $year, $yearnext, $monthnext, $account)
+	{
+		$sql = "SELECT date_format(b.datev,'%d')";
+		$sql .= ", SUM(b.amount)";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "bank as b";
+		$sql .= ", " . MAIN_DB_PREFIX . "bank_account as ba";
+		$sql .= " WHERE b.fk_account = ba.rowid";
+		$sql .= " AND ba.entity IN (" . getEntity('bank_account') . ")";
+		$sql .= " AND b.datev >= '" . $this->db->escape($year) . "-" . $this->db->escape($month) . "-01 00:00:00'";
+		$sql .= " AND b.datev < '" . $this->db->escape($yearnext) . "-" . $this->db->escape($monthnext) . "-01 00:00:00'";
+		$sql .= " AND b.amount < 0";
+		if ($account && $_GET["option"] != 'all') {
+			$sql .= " AND b.fk_account IN (" . $this->db->sanitize($account) . ")";
+		}
+		$sql .= " GROUP BY date_format(b.datev,'%d')";
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($row = $this->db->fetch_row($resql)) {
+				$debits[$row[0]] = abs($row[1]);
+			}
+			$this->db->free($resql);
+		} else {
+			dol_print_error($this->db);
+		}
+
+		return $debits;
+	}
+
+	/**
+	 * Return credits of solde account
+	 */
+	public function fetchCredit($month, $year, $yearnext, $monthnext, $account)
+	{
+		$sql = "SELECT date_format(b.datev,'%d')";
+		$sql .= ", SUM(b.amount)";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "bank as b";
+		$sql .= ", " . MAIN_DB_PREFIX . "bank_account as ba";
+		$sql .= " WHERE b.fk_account = ba.rowid";
+		$sql .= " AND ba.entity IN (" . getEntity('bank_account') . ")";
+		$sql .= " AND b.datev >= '" . $this->db->escape($year) . "-" . $this->db->escape($month) . "-01 00:00:00'";
+		$sql .= " AND b.datev < '" . $this->db->escape($yearnext) . "-" . $this->db->escape($monthnext) . "-01 00:00:00'";
+		$sql .= " AND b.amount > 0";
+		if ($account && $_GET["option"] != 'all') {
+			$sql .= " AND b.fk_account IN (" . $this->db->sanitize($account) . ")";
+		}
+		$sql .= " GROUP BY date_format(b.datev,'%d')";
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$row = $this->db->fetch_row($resql);
+				$credits[$row[0]] = $row[1];
+				$i++;
+			}
+			$this->db->free($resql);
+		} else {
+			dol_print_error($this->db);
+		}
+
+		return $credits;
+	}
+
+	// Crédit
+	public function credit($year, $account)
+	{
+
+		$credits = array();
+		$debits = array();
+		$sql = "SELECT date_format(b.datev,'%m')";
+		$sql .= ", SUM(b.amount)";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "bank as b";
+		$sql .= ", " . MAIN_DB_PREFIX . "bank_account as ba";
+		$sql .= " WHERE b.fk_account = ba.rowid";
+		$sql .= " AND ba.entity IN (" . getEntity('bank_account') . ")";
+		$sql .= " AND b.datev >= '" . $this->db->escape($year) . "-01-01 00:00:00'";
+		$sql .= " AND b.datev <= '" . $this->db->escape($year) . "-12-31 23:59:59'";
+		$sql .= " AND b.amount > 0";
+		if ($account && $_GET["option"] != 'all') {
+			$sql .= " AND b.fk_account IN (" . $this->db->sanitize($account) . ")";
+		}
+		$sql .= " GROUP BY date_format(b.datev,'%m');";
+
+		$resql = $this->db->query($sql);
+
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+			$i = 0;
+			while ($i < $num) {
+				$row = $this->db->fetch_row($resql);
+				$credits[$row[0]] = $row[1];
+				$i++;
+			}
+			$this->db->free($resql);
+		} else {
+			dol_print_error($this->db);
+		}
+
+		return array($credits);
+	}
 
 
+
+	// Debit
+	public function debit($year, $account)
+	{
+		$sql = "SELECT date_format(b.datev,'%m')";
+		$sql .= ", SUM(b.amount)";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "bank as b";
+		$sql .= ", " . MAIN_DB_PREFIX . "bank_account as ba";
+		$sql .= " WHERE b.fk_account = ba.rowid";
+		$sql .= " AND ba.entity IN (" . getEntity('bank_account') . ")";
+		$sql .= " AND b.datev >= '" . $this->db->escape($year) . "-01-01 00:00:00'";
+		$sql .= " AND b.datev <= '" . $this->db->escape($year) . "-12-31 23:59:59'";
+		$sql .= " AND b.amount < 0";
+		if ($account && $_GET["option"] != 'all') {
+			$sql .= " AND b.fk_account IN (" . $this->db->sanitize($account) . ")";
+		}
+		$sql .= " GROUP BY date_format(b.datev,'%m')";
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			while ($row = $this->db->fetch_row($resql)) {
+				$debits[$row[0]] = abs($row[1]);
+			}
+			$this->db->free($resql);
+		} else {
+			dol_print_error($this->db);
+		}
+
+		// return $debits;
+
+	}
 }
 
 
 
 
-require_once DOL_DOCUMENT_ROOT.'/core/class/commonobjectline.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/commonobjectline.class.php';
 
 /**
  * Class GeneralLine. You can also remove this and generate a CRUD class for lines objects.
