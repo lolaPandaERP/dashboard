@@ -68,3 +68,8 @@ Initial version
 
 - Onglet Encours Client et Fournisseur (listes des encours dépassés) : 
     - Amélioration du système de pagination pour les listes des encours dépassés
+
+## 3.6
+
+- Onglet net à produire (validation) : 
+    
